@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'ml' => [
+        'url' => env('ML_API_URL', 'http://localhost:5000'),
+    ],
+
 ];
