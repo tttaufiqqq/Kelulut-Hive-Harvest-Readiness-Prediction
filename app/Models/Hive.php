@@ -19,6 +19,16 @@ class Hive extends Model
         return $this->belongsTo(User::class, 'beekeeper_id');
     }
 
+    public function species(): BelongsTo
+    {
+        return $this->belongsTo(MasterSpecies::class, 'species_id');
+    }
+
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(MasterSite::class, 'site_id');
+    }
+
     public function iotNodes(): HasMany
     {
         return $this->hasMany(IotNode::class);
@@ -32,5 +42,10 @@ class Hive extends Model
     public function summary(): HasOne
     {
         return $this->hasOne(HriSummary::class);
+    }
+
+    public function harvests(): HasMany
+    {
+        return $this->hasMany(Harvest::class);
     }
 }

@@ -23,6 +23,11 @@ class User extends Authenticatable
 
     protected $appends = ['role'];
 
+    public function harvests(): HasMany
+    {
+        return $this->hasMany(Harvest::class, 'beekeeper_id');
+    }
+
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');

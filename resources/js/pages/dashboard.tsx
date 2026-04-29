@@ -1,387 +1,477 @@
-import { Head } from '@inertiajs/react';
-import { Bug as Bee, Plus, Activity, Weight, Calendar, MapPin, Info, Sparkles, Droplets, LayoutDashboard, History, Settings as SettingsIcon, BarChart3 } from 'lucide-react';
-import { MoreVertical, Edit2, Trash2, Download, Share2 } from 'lucide-react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Leaf, MoreVertical, Plus, Edit2, Trash2, Power } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
-import React from 'react';
-import Markdown from 'react-markdown';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
-import { HiveChart, DataTable, Accordion } from '@/components/core/content';
+import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
 import { Alert, Progress } from '@/components/core/feedback';
 import { Input } from '@/components/core/input';
 import { Modal } from '@/components/core/modal';
-import { Tabs, Breadcrumbs } from '@/components/core/navigation';
+import { Breadcrumbs } from '@/components/core/navigation';
+import { SelectField } from '@/components/core/select-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { cn } from '@/lib/utils';
-import type { HiveData } from '@/types';
 
-interface PredictionResult {
-    readinessScore: number;
-    estimatedHarvestDate: string;
-    confidence: number;
-    recommendations: string;
+type HiveCard = {
+    id: number;
+    name: string;
+    species: string | null;
+    species_id: number | null;
+    location: string | null;
+    site_id: number | null;
+    status: 'active' | 'inactive';
+    age_months: number;
+    harvest_count: number;
+    readiness_level: string | null;
+    hri_value: number;
+    avg_temperature: number | null;
+    avg_humidity: number | null;
+    avg_mq2: number | null;
+};
+
+type MasterItem = { id: number; name: string };
+
+type Props = {
+    hives: HiveCard[];
+    species_list: MasterItem[];
+    sites_list: MasterItem[];
+};
+
+type ActiveModal =
+    | { type: 'create' }
+    | { type: 'edit'; hive: HiveCard }
+    | { type: 'delete'; hive: HiveCard }
+    | { type: 'toggle'; hive: HiveCard }
+    | null;
+
+function ReadinessBadge({ level }: { level: string | null }) {
+    if (!level) return <span className="text-amber-900/40 text-sm">No data yet</span>;
+    const styles: Record<string, string> = {
+        'Not Ready':        'bg-rose-100 text-rose-700',
+        'Approaching':      'bg-amber-100 text-amber-700',
+        'Nearly Ready':     'bg-yellow-100 text-yellow-700',
+        'Ready to Harvest': 'bg-emerald-100 text-emerald-700',
+    };
+    return (
+        <span className={cn('inline-flex items-center px-3 py-1 rounded-full text-sm font-bold', styles[level] ?? 'bg-gray-100 text-gray-500')}>
+            {level}
+        </span>
+    );
 }
 
-const chartData = [
-    { name: 'Jan', value: 2.1 },
-    { name: 'Feb', value: 2.4 },
-    { name: 'Mar', value: 3.2 },
-    { name: 'Apr', value: 3.8 },
-    { name: 'May', value: 4.5 },
-    { name: 'Jun', value: 5.2 },
-];
+export default function Dashboard({ hives, species_list, sites_list }: Props) {
+    const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
+    const flash = props.flash;
 
-function getDummyPrediction(hive: HiveData): PredictionResult {
-    const score = Math.min(100, Math.round((hive.weightKg * 8) + (hive.ageMonths * 2) + (hive.activityLevel * 0.5)));
-    const confidence = 0.75 + Math.random() * 0.2;
-    const daysUntilHarvest = score > 80 ? 7 : score > 50 ? 30 : 60;
-    const harvestDate = new Date();
-    harvestDate.setDate(harvestDate.getDate() + daysUntilHarvest);
+    const [selectedHive, setSelectedHive] = useState<HiveCard | null>(null);
+    const [activeModal, setActiveModal]   = useState<ActiveModal>(null);
+    const [deleting, setDeleting]         = useState(false);
+    const close = () => setActiveModal(null);
 
-    return {
-        readinessScore: Math.min(score, 100),
-        estimatedHarvestDate: harvestDate.toLocaleDateString('en-MY', { day: 'numeric', month: 'long', year: 'numeric' }),
-        confidence,
-        recommendations: `
-## Recommendations for ${hive.name}
+    const speciesOptions = [
+        { value: '', label: '— None —' },
+        ...species_list.map(s => ({ value: String(s.id), label: s.name })),
+    ];
+    const siteOptions = [
+        { value: '', label: '— None —' },
+        ...sites_list.map(s => ({ value: String(s.id), label: s.name })),
+    ];
+    const statusOptions = [
+        { value: 'active',   label: 'Active'   },
+        { value: 'inactive', label: 'Inactive' },
+    ];
 
-**Current Status:** ${score > 80 ? '🟢 Ready for harvest' : score > 50 ? '🟡 Nearly ready' : '🔴 Still growing'}
+    const createForm = useForm({ name: '', species_id: '', site_id: '' });
 
-### Key Observations
-- The colony weight of **${hive.weightKg}kg** is ${hive.weightKg > 4 ? 'above' : 'below'} the recommended threshold of 4kg.
-- Activity level of **${hive.activityLevel} bees/min** indicates a ${hive.activityLevel > 20 ? 'strong, healthy' : 'developing'} colony.
-- At **${hive.ageMonths} months**, the hive is ${hive.ageMonths > 12 ? 'mature and well-established' : 'still in early development'}.
+    const editForm = useForm({ name: '', species_id: '', site_id: '', status: 'active' });
 
-### Next Steps
-${score > 80
-            ? '1. Prepare harvesting equipment\n2. Schedule harvest within the next 7 days\n3. Ensure proper storage containers are ready'
-            : score > 50
-                ? '1. Monitor weight weekly\n2. Check entrance activity daily\n3. Expect harvest readiness in ~4 weeks'
-                : '1. Allow colony to develop further\n2. Ensure adequate foraging area\n3. Check for any signs of disease or pests'
-        }
-    `.trim(),
-    };
-}
-
-export default function Dashboard() {
-    const [hives, setHives] = useState<HiveData[]>([
-        { id: '1', name: 'Hive Alpha', species: 'Tetragonula iridipennis', ageMonths: 8, weightKg: 3.2, activityLevel: 15, location: 'Backyard Garden' },
-        { id: '2', name: 'Golden Box', species: 'Heterotrigona itama', ageMonths: 14, weightKg: 5.8, activityLevel: 28, location: 'Orchard' },
-    ]);
-
-    const [activeTab, setActiveTab] = useState('overview');
-    const [selectedHive, setSelectedHive] = useState<HiveData | null>(null);
-    const [prediction, setPrediction] = useState<PredictionResult | null>(null);
-    const [isPredicting, setIsPredicting] = useState(false);
-    const [isAdding, setIsAdding] = useState(false);
-
-    const [newHive, setNewHive] = useState<Partial<HiveData>>({
-        name: '',
-        species: 'Heterotrigona itama',
-        ageMonths: 0,
-        weightKg: 0,
-        activityLevel: 0,
-        location: '',
-    });
-
-    const handlePredict = (hive: HiveData) => {
-        setIsPredicting(true);
-        setSelectedHive(hive);
-        setTimeout(() => {
-            setPrediction(getDummyPrediction(hive));
-            setIsPredicting(false);
-        }, 1500);
+    const openEdit = (hive: HiveCard) => {
+        editForm.setData({
+            name:       hive.name,
+            species_id: hive.species_id ? String(hive.species_id) : '',
+            site_id:    hive.site_id    ? String(hive.site_id)    : '',
+            status:     hive.status,
+        });
+        setActiveModal({ type: 'edit', hive });
     };
 
-    const handleAddHive = (e: React.FormEvent) => {
+    const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
-        const hive: HiveData = {
-            ...newHive as HiveData,
-            id: Math.random().toString(36).substr(2, 9),
-        };
-        setHives([...hives, hive]);
-        setIsAdding(false);
-        setNewHive({ name: '', species: 'Heterotrigona itama', ageMonths: 0, weightKg: 0, activityLevel: 0, location: '' });
+        createForm.post(route('hives.store'), { onSuccess: () => { createForm.reset(); close(); } });
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (activeModal?.type !== 'edit') return;
+        editForm.patch(route('hives.update', { hive: activeModal.hive.id }), { onSuccess: () => close() });
+    };
+
+    const confirmToggle = () => {
+        if (activeModal?.type !== 'toggle') return;
+        router.patch(route('hives.toggle-status', { hive: activeModal.hive.id }), {}, { onSuccess: () => close() });
+    };
+
+    const confirmDelete = () => {
+        if (activeModal?.type !== 'delete') return;
+        setDeleting(true);
+        router.delete(route('hives.destroy', { hive: activeModal.hive.id }), {
+            onFinish: () => { setDeleting(false); close(); setSelectedHive(null); },
+        });
     };
 
     return (
         <AuthenticatedLayout>
-            <Head title="Dashboard" />
+            <Head title="My Hives" />
             <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
 
-                <div className="space-y-4">
-                    <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]} />
-                    <div className="flex justify-end">
-                        <Tabs
-                            tabs={[
-                                { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
-                                { id: 'history', label: 'History', icon: <History className="w-4 h-4" /> },
-                                { id: 'settings', label: 'Settings', icon: <SettingsIcon className="w-4 h-4" /> },
-                            ]}
-                            activeTab={activeTab}
-                            onChange={setActiveTab}
-                        />
-                    </div>
+                {/* Breadcrumb + page nav */}
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'My Hives' }]} />
+                    <nav className="flex gap-1 bg-yellow-100/50 rounded-2xl p-1.5">
+                        <Link href="/dashboard" className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap bg-white shadow-sm font-semibold text-amber-900">
+                            My Hives
+                        </Link>
+                        <Link href="/harvests" className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap text-amber-900/60 hover:bg-yellow-200/50">
+                            Harvests
+                        </Link>
+                    </nav>
                 </div>
 
-                <Alert variant="warning" title="Harvest Season Approaching">
-                    Based on regional data, stingless bee activity is peaking. Check your hives for readiness scores above 80%.
-                </Alert>
+                {flash?.success && <Alert variant="success">{flash.success}</Alert>}
+                {flash?.error   && <Alert variant="error">{flash.error}</Alert>}
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Left Column: Hive List */}
+
+                    {/* Left: Hive list */}
                     <div className="lg:col-span-5 space-y-6">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-bold text-amber-900">Your Hives</h3>
-                            <Button variant="outline" size="sm" onClick={() => setIsAdding(true)}>
-                                <Plus className="w-4 h-4 mr-2" /> New Hive
+                            <Button variant="outline" size="sm" onClick={() => setActiveModal({ type: 'create' })}>
+                                <Plus className="w-4 h-4 mr-1" /> New Hive
                             </Button>
                         </div>
 
-                        <div className="space-y-4">
-                            {hives.map((hive) => (
-                                <motion.div key={hive.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-                                    <Card
-                                        className={cn(
-                                            'cursor-pointer transition-all border-2',
-                                            selectedHive?.id === hive.id ? 'border-yellow-400 ring-4 ring-yellow-400/10' : 'border-transparent'
-                                        )}
-                                        onClick={() => handlePredict(hive)}
-                                    >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h3 className="font-bold text-lg text-amber-900">{hive.name}</h3>
-                                                <p className="text-sm text-amber-700 italic">{hive.species}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-yellow-50 p-2 rounded-lg">
-                                                    <MapPin className="w-4 h-4 text-yellow-600" />
+                        {hives.length === 0 ? (
+                            <div className="text-center py-16 border-4 border-dashed border-yellow-200 rounded-3xl">
+                                <div className="bg-yellow-100 p-6 rounded-full mb-4 inline-block">
+                                    <Bee className="w-10 h-10 text-yellow-600" />
+                                </div>
+                                <p className="text-amber-900 font-semibold">No hives yet.</p>
+                                <p className="text-amber-700/60 text-sm mt-1">Create your first hive to get started.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {hives.map((hive) => (
+                                    <motion.div key={hive.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                                        <Card
+                                            className={cn(
+                                                'cursor-pointer transition-all border-2',
+                                                selectedHive?.id === hive.id
+                                                    ? 'border-yellow-400 ring-4 ring-yellow-400/10'
+                                                    : 'border-transparent'
+                                            )}
+                                            onClick={() => setSelectedHive(hive)}
+                                        >
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h3 className="font-bold text-lg text-amber-900">{hive.name}</h3>
+                                                    <p className="text-sm text-amber-700 italic">{hive.species ?? 'Unknown species'}</p>
                                                 </div>
-                                                <Dropdown
-                                                    trigger={
-                                                        <button
-                                                            className="p-2 hover:bg-yellow-100 rounded-lg transition-colors"
-                                                        >
-                                                            <MoreVertical className="w-4 h-4 text-amber-900/40" />
-                                                        </button>
-                                                    }
-                                                    items={[
-                                                        { id: 'edit', label: 'Edit Hive', icon: <Edit2 className="w-4 h-4" />, onClick: () => console.log('Edit', hive.id) },
-                                                        { id: 'share', label: 'Share Data', icon: <Share2 className="w-4 h-4" />, onClick: () => console.log('Share', hive.id) },
-                                                        { id: 'export', label: 'Export Log', icon: <Download className="w-4 h-4" />, onClick: () => console.log('Export', hive.id) },
-                                                        { id: 'delete', label: 'Delete Hive', icon: <Trash2 className="w-4 h-4" />, variant: 'danger', onClick: () => setHives(hives.filter(h => h.id !== hive.id)) },
-                                                    ]}
-                                                />
+                                                <div className="flex items-center gap-2">
+                                                    {hive.location && (
+                                                        <div className="bg-yellow-50 p-1.5 rounded-lg flex items-center gap-1 text-xs text-amber-700">
+                                                            <MapPin className="w-3 h-3" /> {hive.location}
+                                                        </div>
+                                                    )}
+                                                    <Dropdown
+                                                        align="right"
+                                                        trigger={
+                                                            <button
+                                                                onClick={e => e.stopPropagation()}
+                                                                className="p-1.5 hover:bg-yellow-100 rounded-xl transition-colors"
+                                                            >
+                                                                <MoreVertical className="w-4 h-4 text-amber-900/50" />
+                                                            </button>
+                                                        }
+                                                        items={[
+                                                            {
+                                                                id: 'edit',
+                                                                label: 'Edit Hive',
+                                                                icon: <Edit2 className="w-4 h-4" />,
+                                                                onClick: () => openEdit(hive),
+                                                            },
+                                                            {
+                                                                id: 'toggle',
+                                                                label: hive.status === 'active' ? 'Set Inactive' : 'Set Active',
+                                                                icon: <Power className="w-4 h-4" />,
+                                                                onClick: () => setActiveModal({ type: 'toggle', hive }),
+                                                            },
+                                                            {
+                                                                id: 'delete',
+                                                                label: 'Delete Hive',
+                                                                icon: <Trash2 className="w-4 h-4" />,
+                                                                variant: 'danger' as const,
+                                                                onClick: () => setActiveModal({ type: 'delete', hive }),
+                                                            },
+                                                        ]}
+                                                    />
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div className="grid grid-cols-3 gap-4 text-sm mb-4">
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-amber-600/60 font-medium uppercase text-[10px] tracking-wider">Age</span>
-                                                <div className="flex items-center gap-1 font-semibold">
-                                                    <Calendar className="w-3 h-3" /> {hive.ageMonths}m
+                                            <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-amber-600/60 font-medium uppercase text-[10px] tracking-wider">Age</span>
+                                                    <span className="font-semibold">{hive.age_months}m</span>
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-amber-600/60 font-medium uppercase text-[10px] tracking-wider">Harvests</span>
+                                                    <span className="font-semibold">{hive.harvest_count}</span>
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-amber-600/60 font-medium uppercase text-[10px] tracking-wider">Status</span>
+                                                    <span className={cn('font-semibold text-xs', hive.status === 'active' ? 'text-emerald-600' : 'text-rose-500')}>
+                                                        {hive.status === 'active' ? 'Active' : 'Inactive'}
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-amber-600/60 font-medium uppercase text-[10px] tracking-wider">Weight</span>
-                                                <div className="flex items-center gap-1 font-semibold">
-                                                    <Weight className="w-3 h-3" /> {hive.weightKg}kg
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-amber-600/60 font-medium uppercase text-[10px] tracking-wider">Activity</span>
-                                                <div className="flex items-center gap-1 font-semibold">
-                                                    <Activity className="w-3 h-3" /> {hive.activityLevel}
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-amber-900/40">
-                                                <span>Growth Progress</span>
-                                                <span>{Math.round((hive.ageMonths / 24) * 100)}%</span>
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-amber-900/40">
+                                                    <span>Readiness</span>
+                                                    <span>{Math.round(hive.hri_value * 100)}%</span>
+                                                </div>
+                                                <Progress value={hive.hri_value * 100} />
                                             </div>
-                                            <Progress value={(hive.ageMonths / 24) * 100} />
-                                        </div>
-                                    </Card>
-                                </motion.div>
-                            ))}
-                        </div>
+                                        </Card>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {/* Right Column: Prediction & Details */}
+                    {/* Right: Detail panel */}
                     <div className="lg:col-span-7">
                         <AnimatePresence mode="wait">
-                            {isPredicting ? (
+                            {selectedHive ? (
                                 <motion.div
-                                    key="loading"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="h-full flex flex-col items-center justify-center min-h-[400px] text-center space-y-4"
-                                >
-                                    <div className="relative">
-                                        <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
-                                        <Bee className="w-6 h-6 text-yellow-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-amber-900">Analyzing Hive Data...</h3>
-                                        <p className="text-amber-700">Calculating harvest readiness</p>
-                                    </div>
-                                </motion.div>
-                            ) : prediction && selectedHive ? (
-                                <motion.div
-                                    key="prediction"
+                                    key={selectedHive.id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
                                     className="space-y-6"
                                 >
                                     <Card className="bg-gradient-to-br from-yellow-400 to-amber-500 text-white border-none p-8 relative overflow-hidden">
                                         <div className="absolute top-0 right-0 p-8 opacity-10">
-                                            <Sparkles className="w-32 h-32" />
+                                            <Leaf className="w-32 h-32" />
                                         </div>
                                         <div className="relative z-10">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Sparkles className="w-5 h-5" />
+                                                <Leaf className="w-5 h-5" />
                                                 <span className="text-sm font-bold uppercase tracking-widest opacity-80">Readiness Score</span>
                                             </div>
                                             <div className="flex items-baseline gap-4">
-                                                <span className="text-7xl font-black tracking-tighter">{prediction.readinessScore}%</span>
+                                                <span className="text-7xl font-black tracking-tighter">
+                                                    {Math.round(selectedHive.hri_value * 100)}%
+                                                </span>
                                                 <div className="bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold">
-                                                    {prediction.readinessScore > 80 ? 'Ready to Harvest!' : prediction.readinessScore > 50 ? 'Almost Ready' : 'Growing'}
+                                                    {selectedHive.readiness_level ?? 'No prediction yet'}
                                                 </div>
                                             </div>
-                                            <div className="mt-8 flex items-center gap-6">
+                                            <div className="mt-6 flex items-center gap-6">
                                                 <div>
-                                                    <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Estimated Date</p>
-                                                    <p className="text-xl font-bold">{prediction.estimatedHarvestDate}</p>
+                                                    <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Total Harvests</p>
+                                                    <p className="text-xl font-bold">{selectedHive.harvest_count}</p>
                                                 </div>
                                                 <div className="w-px h-10 bg-white/20" />
                                                 <div>
-                                                    <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Confidence</p>
-                                                    <p className="text-xl font-bold">{Math.round(prediction.confidence * 100)}%</p>
+                                                    <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Hive Age</p>
+                                                    <p className="text-xl font-bold">{selectedHive.age_months} months</p>
                                                 </div>
                                             </div>
                                         </div>
                                     </Card>
 
-                                    <Card className="bg-white">
-                                        <h4 className="font-bold text-amber-900 mb-4 flex items-center gap-2">
-                                            <BarChart3 className="w-5 h-5 text-yellow-500" />
-                                            Weight Trend (6 Months)
-                                        </h4>
-                                        <HiveChart data={chartData} />
-                                    </Card>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Card className="bg-white">
-                                            <div className="flex items-center gap-2 mb-4 text-amber-900">
-                                                <Droplets className="w-5 h-5 text-blue-500" />
-                                                <h4 className="font-bold">Honey Potential</h4>
-                                            </div>
-                                            <p className="text-sm text-amber-800 leading-relaxed">
-                                                Based on the weight of <strong>{selectedHive.weightKg}kg</strong>, there's a high probability of significant honey stores.
-                                            </p>
-                                        </Card>
-                                        <Card className="bg-white">
-                                            <div className="flex items-center gap-2 mb-4 text-amber-900">
-                                                <Info className="w-5 h-5 text-yellow-500" />
-                                                <h4 className="font-bold">Hive Health</h4>
-                                            </div>
-                                            <p className="text-sm text-amber-800 leading-relaxed">
-                                                Activity level of <strong>{selectedHive.activityLevel}</strong> bees/min indicates a strong, healthy colony.
-                                            </p>
-                                        </Card>
-                                    </div>
-
-                                    <Accordion title="Harvest Recommendations" defaultOpen>
-                                        <div className="prose prose-amber prose-sm max-w-none">
-                                            <Markdown>{prediction.recommendations}</Markdown>
+                                    {(selectedHive.avg_temperature !== null || selectedHive.avg_humidity !== null || selectedHive.avg_mq2 !== null) && (
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <Card>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Thermometer className="w-4 h-4 text-orange-400" />
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">Avg Temp</span>
+                                                </div>
+                                                <p className="text-2xl font-black text-amber-900">
+                                                    {selectedHive.avg_temperature !== null ? `${selectedHive.avg_temperature}°C` : '—'}
+                                                </p>
+                                            </Card>
+                                            <Card>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Droplets className="w-4 h-4 text-blue-400" />
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">Avg Humidity</span>
+                                                </div>
+                                                <p className="text-2xl font-black text-amber-900">
+                                                    {selectedHive.avg_humidity !== null ? `${selectedHive.avg_humidity}%` : '—'}
+                                                </p>
+                                            </Card>
+                                            <Card>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <BarChart3 className="w-4 h-4 text-purple-400" />
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">Avg MQ2</span>
+                                                </div>
+                                                <p className="text-2xl font-black text-amber-900">
+                                                    {selectedHive.avg_mq2 !== null ? selectedHive.avg_mq2 : '—'}
+                                                </p>
+                                            </Card>
                                         </div>
-                                    </Accordion>
+                                    )}
 
-                                    <Card className="bg-white">
-                                        <h4 className="font-bold text-amber-900 mb-4">Recent Hive Log</h4>
-                                        <DataTable
-                                            headers={['Date', 'Action', 'Notes']}
-                                            rows={[
-                                                ['2024-03-10', 'Inspection', 'Colony active, no pests found.'],
-                                                ['2024-02-15', 'Weight Check', 'Gained 0.4kg since last month.'],
-                                                ['2024-01-12', 'Cleaning', 'Entrance cleared of debris.'],
-                                            ]}
-                                        />
+                                    <Card>
+                                        <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-3">Latest Prediction</p>
+                                        <ReadinessBadge level={selectedHive.readiness_level} />
+                                        {!selectedHive.readiness_level && (
+                                            <p className="text-xs text-amber-900/40 mt-2">
+                                                Predictions appear once sensor data has been collected and processed by the ML model.
+                                            </p>
+                                        )}
                                     </Card>
                                 </motion.div>
                             ) : (
-                                <div className="h-full flex flex-col items-center justify-center min-h-[400px] text-center p-12 border-4 border-dashed border-yellow-200 rounded-3xl">
+                                <motion.div
+                                    key="empty"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="h-full flex flex-col items-center justify-center min-h-[400px] text-center p-12 border-4 border-dashed border-yellow-200 rounded-3xl"
+                                >
                                     <div className="bg-yellow-100 p-6 rounded-full mb-6">
                                         <Bee className="w-12 h-12 text-yellow-600" />
                                     </div>
                                     <h3 className="text-2xl font-bold text-amber-900 mb-2">Select a Hive</h3>
                                     <p className="text-amber-700 max-w-xs">
-                                        Choose one of your hives from the list to get a harvest readiness prediction.
+                                        Choose one of your hives from the list to see its readiness score and sensor summary.
                                     </p>
-                                </div>
+                                </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
                 </div>
+            </div>
 
-                {/* Add Hive Modal */}
-                <Modal isOpen={isAdding} onClose={() => setIsAdding(false)} title="Add New Hive">
-                    <form onSubmit={handleAddHive} className="space-y-4">
+            {/* ── Create Hive Modal ── */}
+            <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="New Hive" maxWidth="sm">
+                <form onSubmit={submitCreate} className="space-y-4">
+                    <Input
+                        label="Hive Name"
+                        value={createForm.data.name}
+                        onChange={e => createForm.setData('name', e.target.value)}
+                        placeholder="e.g. Hive Alpha"
+                        autoFocus
+                        error={createForm.errors.name}
+                    />
+                    <SelectField
+                        label="Species (optional)"
+                        value={createForm.data.species_id}
+                        onChange={v => createForm.setData('species_id', v)}
+                        options={speciesOptions}
+                        error={createForm.errors.species_id}
+                    />
+                    <SelectField
+                        label="Site (optional)"
+                        value={createForm.data.site_id}
+                        onChange={v => createForm.setData('site_id', v)}
+                        options={siteOptions}
+                        error={createForm.errors.site_id}
+                    />
+                    <div className="flex gap-3 pt-2">
+                        <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
+                        <Button type="submit" variant="primary" disabled={createForm.processing} className="flex-1">
+                            {createForm.processing ? 'Creating...' : 'Create Hive'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* ── Edit Hive Modal ── */}
+            {activeModal?.type === 'edit' && (
+                <Modal isOpen onClose={close} title="Edit Hive" maxWidth="sm">
+                    <form onSubmit={submitEdit} className="space-y-4">
                         <Input
                             label="Hive Name"
-                            placeholder="e.g. Garden Box 1"
-                            required
-                            value={newHive.name}
-                            onChange={e => setNewHive({...newHive, name: e.target.value})}
+                            value={editForm.data.name}
+                            onChange={e => editForm.setData('name', e.target.value)}
+                            autoFocus
+                            error={editForm.errors.name}
                         />
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input
-                                label="Age (Months)"
-                                type="number"
-                                required
-                                value={newHive.ageMonths}
-                                onChange={e => setNewHive({...newHive, ageMonths: parseInt(e.target.value)})}
-                            />
-                            <Input
-                                label="Weight (kg)"
-                                type="number"
-                                step="0.1"
-                                required
-                                value={newHive.weightKg}
-                                onChange={e => setNewHive({...newHive, weightKg: parseFloat(e.target.value)})}
-                            />
-                        </div>
-                        <Input
-                            label="Activity (Bees/min)"
-                            type="number"
-                            required
-                            value={newHive.activityLevel}
-                            onChange={e => setNewHive({...newHive, activityLevel: parseInt(e.target.value)})}
+                        <SelectField
+                            label="Species (optional)"
+                            value={editForm.data.species_id}
+                            onChange={v => editForm.setData('species_id', v)}
+                            options={speciesOptions}
+                            error={editForm.errors.species_id}
                         />
-                        <Input
-                            label="Location"
-                            placeholder="e.g. Backyard"
-                            required
-                            value={newHive.location}
-                            onChange={e => setNewHive({...newHive, location: e.target.value})}
+                        <SelectField
+                            label="Site (optional)"
+                            value={editForm.data.site_id}
+                            onChange={v => editForm.setData('site_id', v)}
+                            options={siteOptions}
+                            error={editForm.errors.site_id}
                         />
-                        <div className="pt-4 flex gap-3">
-                            <Button type="button" variant="ghost" className="flex-1" onClick={() => setIsAdding(false)}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" className="flex-1">
-                                Save Hive
+                        <SelectField
+                            label="Status"
+                            value={editForm.data.status}
+                            onChange={v => editForm.setData('status', v as 'active' | 'inactive')}
+                            options={statusOptions}
+                            error={editForm.errors.status}
+                        />
+                        <div className="flex gap-3 pt-2">
+                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
+                            <Button type="submit" variant="primary" disabled={editForm.processing} className="flex-1">
+                                {editForm.processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
                     </form>
                 </Modal>
+            )}
 
-            </div>
+            {/* ── Toggle Status Confirmation ── */}
+            {activeModal?.type === 'toggle' && (
+                <Modal isOpen onClose={close} title={activeModal.hive.status === 'active' ? 'Set Hive Inactive' : 'Set Hive Active'} maxWidth="sm">
+                    <div className="space-y-4">
+                        <p className="text-sm text-amber-900/70">
+                            {activeModal.hive.status === 'active'
+                                ? `Setting "${activeModal.hive.name}" to inactive will stop it from receiving sensor data.`
+                                : `Setting "${activeModal.hive.name}" to active will allow it to receive sensor data again.`}
+                        </p>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
+                            <Button
+                                type="button"
+                                variant={activeModal.hive.status === 'active' ? 'destructive' : 'primary'}
+                                onClick={confirmToggle}
+                                className="flex-1"
+                            >
+                                {activeModal.hive.status === 'active' ? 'Set Inactive' : 'Set Active'}
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
+            {/* ── Delete Confirmation ── */}
+            {activeModal?.type === 'delete' && (
+                <Modal isOpen onClose={close} title="Delete Hive" maxWidth="sm">
+                    <div className="space-y-4">
+                        <p className="text-sm text-amber-900/70">
+                            Delete <span className="font-semibold text-amber-950">"{activeModal.hive.name}"</span>? This will permanently remove the hive and all its sensor logs. This cannot be undone.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="ghost" onClick={close} disabled={deleting} className="flex-1">Cancel</Button>
+                            <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleting} className="flex-1">
+                                {deleting ? 'Deleting...' : 'Delete Hive'}
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </AuthenticatedLayout>
     );
 }
