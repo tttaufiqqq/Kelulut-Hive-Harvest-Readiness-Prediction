@@ -9,14 +9,14 @@ class SensorLog extends Model
     const UPDATED_AT = null;
 
     protected $casts = [
-        'recorded_at' => 'datetime',
+        'record_timestamp' => 'datetime',
     ];
 
     protected $fillable = [
-        'hive_id', 'iot_node_id',
+        'hive_id', 'device_id',
         'temp', 'humidity',
         'mq2_value', 'mq3_value', 'mq5_value', 'mq135_value',
-        'recorded_at',
+        'record_timestamp',
     ];
 
     public function hive(): BelongsTo
@@ -26,6 +26,6 @@ class SensorLog extends Model
 
     public function iotNode(): BelongsTo
     {
-        return $this->belongsTo(IotNode::class);
+        return $this->belongsTo(IotNode::class, 'device_id');
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class IotNode extends Model
 {
-    protected $fillable = ['hive_id', 'device_id', 'status', 'registered_at'];
+    protected $fillable = ['hive_id', 'device_id', 'device_status', 'installation_date', 'last_maintenance_date'];
 
     public function hive(): BelongsTo
     {
@@ -17,6 +17,6 @@ class IotNode extends Model
 
     public function sensorLogs(): HasMany
     {
-        return $this->hasMany(SensorLog::class);
+        return $this->hasMany(SensorLog::class, 'device_id');
     }
 }

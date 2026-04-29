@@ -29,13 +29,8 @@ class Hive extends Model
         return $this->hasMany(SensorLog::class);
     }
 
-    public function hriRecords(): HasMany
-    {
-        return $this->hasMany(HriRecord::class);
-    }
-
     public function summary(): HasOne
     {
-        return $this->hasOne(HiveSummary::class);
+        return $this->hasOne(HriSummary::class);
     }
 }
