@@ -181,13 +181,3 @@ The deploy hook runs `migrate --force`, `config:cache`, `route:cache`, `view:cac
 | Core | hives, iot_nodes, sensor_logs, predictions, harvests, inspections, hri_summary |
 | Junction | inspection_weather, inspection_flora, sensor_log_thresholds |
 | Laravel system | users, cache, jobs, permissions (Spatie) |
-
----
-
-## Academic Context
-
-BuzzyHive 2.0 is a Final Year Project (FYP 1) submitted in partial fulfilment of a Bachelor's degree in Computer Science.
-
-**Supervisors:** Sir Shahkir (ML/system), Dr Fatin (hardware/IoT)
-
-**Target species:** *Trigona* sp. (kelulut / stingless bees) — not regular honeybees.
