@@ -8,6 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('hive_summary');
+
         Schema::create('hri_summary', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hive_id')->constrained('hives')->cascadeOnDelete();
@@ -25,5 +27,17 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('hri_summary');
+
+        Schema::create('hive_summary', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('hive_id')->constrained()->cascadeOnDelete()->unique();
+            $table->float('latest_hri_score')->nullable();
+            $table->string('latest_category', 50)->nullable();
+            $table->float('avg_hri_7d')->nullable();
+            $table->float('avg_hri_30d')->nullable();
+            $table->date('last_harvest_date')->nullable();
+            $table->unsignedInteger('total_harvests')->default(0);
+            $table->timestamp('updated_at')->nullable();
+        });
     }
 };

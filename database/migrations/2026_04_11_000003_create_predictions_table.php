@@ -11,12 +11,9 @@ return new class extends Migration
         Schema::create('predictions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sensor_log_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('hive_id')->constrained()->cascadeOnDelete();
             $table->string('readiness_level', 50);
             $table->float('hri_value');
             $table->timestamp('prediction_timestamp');
-
-            $table->index(['hive_id', 'prediction_timestamp']);
         });
     }
 

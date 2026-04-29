@@ -11,17 +11,17 @@ return new class extends Migration
         Schema::create('sensor_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hive_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('iot_node_id')->constrained('iot_nodes')->cascadeOnDelete();
+            $table->foreignId('device_id')->constrained('iot_nodes')->cascadeOnDelete();
             $table->float('temp');
             $table->float('humidity');
-            $table->unsignedInteger('smoke_adc');
-            $table->unsignedInteger('etoh_adc')->nullable();
-            $table->unsignedInteger('co2_adc')->nullable();
-            $table->unsignedInteger('ch4_adc')->nullable();
-            $table->timestamp('recorded_at');
+            $table->unsignedInteger('mq2_value');
+            $table->unsignedInteger('mq3_value')->nullable();
+            $table->unsignedInteger('mq5_value')->nullable();
+            $table->unsignedInteger('mq135_value')->nullable();
+            $table->timestamp('record_timestamp');
             $table->timestamp('created_at')->nullable();
 
-            $table->index(['hive_id', 'recorded_at']);
+            $table->index(['hive_id', 'record_timestamp']);
         });
     }
 

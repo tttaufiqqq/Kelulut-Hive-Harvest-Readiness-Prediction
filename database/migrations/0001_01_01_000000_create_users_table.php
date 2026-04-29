@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('profile_photo_path')->nullable();
             $table->string('phone', 20)->nullable();
             $table->foreignId('invited_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('telegram_chat_id', 100)->nullable();
+            $table->string('telegram_id', 100)->nullable();
             $table->string('status')->default('active');
             $table->string('role')->default('beekeeper');
             $table->rememberToken();

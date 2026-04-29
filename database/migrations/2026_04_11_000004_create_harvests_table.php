@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('flavor_id')->nullable()->constrained('master_honey_flavors')->nullOnDelete();
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
         });
     }
 
