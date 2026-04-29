@@ -10,9 +10,11 @@ class MasterDataSeeder extends Seeder
     public function run(): void
     {
         DB::table('master_species')->insert([
-            ['name' => 'Trigona itama',     'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Trigona thoracica', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Apis mellifera',    'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Heterotrigona itama',       'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Geniotrigona thoracica',    'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Tetragonula laeviceps',     'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Tetrigona binghami',        'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Lepidotrigona terminate',   'created_at' => now(), 'updated_at' => now()],
         ]);
 
         DB::table('master_sites')->insert([
@@ -37,32 +39,46 @@ class MasterDataSeeder extends Seeder
         ]);
 
         DB::table('master_honey_colors')->insert([
-            ['name' => 'White',       'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Light Amber', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Amber',       'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Dark Amber',  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Cream White',   'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Light Yellow',  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Golden Yellow', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Light Amber',   'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Amber',         'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Dark Amber',    'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Dark Brown',    'created_at' => now(), 'updated_at' => now()],
         ]);
 
         DB::table('master_honey_flavors')->insert([
-            ['name' => 'Floral',  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Earthy',  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Fruity',  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Mild',    'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Sweet',       'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Mildly Sour', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Sour',        'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Floral',      'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Earthy',      'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Mild',        'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Strong',      'created_at' => now(), 'updated_at' => now()],
         ]);
 
         DB::table('master_weather_conditions')->insert([
-            ['name' => 'Sunny',  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Cloudy', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Rainy',  'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Windy',  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Sunny',   'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Cloudy',  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Rainy',   'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Windy',   'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Humid',   'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Stormy',  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Foggy',   'created_at' => now(), 'updated_at' => now()],
         ]);
 
         DB::table('master_flora_types')->insert([
-            ['name' => 'Rubber tree', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Coconut',     'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Rambutan',    'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Acacia',      'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Mixed',       'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Gelam',           'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Tualang',         'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Durian',          'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Rambutan',        'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Longan',          'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Kelapa',          'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Getah (Rubber)',  'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Belimbing',       'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Acacia',          'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Akasia Mangium',  'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

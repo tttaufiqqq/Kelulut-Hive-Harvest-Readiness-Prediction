@@ -29,7 +29,7 @@ return null;
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}

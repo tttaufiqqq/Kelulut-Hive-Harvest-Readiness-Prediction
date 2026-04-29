@@ -86,7 +86,7 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors }: Prop
 
     const openEdit = (harvest: Harvest) => {
         editForm.setData({
-            harvest_date:       harvest.harvest_date,
+            harvest_date:       harvest.harvest_date.slice(0, 10),
             weight:             String(harvest.weight),
             productivity_level: harvest.productivity_level ?? '',
             color_id:           harvest.color_id ? String(harvest.color_id) : '',
