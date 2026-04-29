@@ -17,6 +17,8 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->profileRules($this->user()->id);
+        return array_merge($this->profileRules($this->user()->id), [
+            'telegram_id' => ['nullable', 'string', 'max:100'],
+        ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendTelegramAlert;
 use App\Models\Prediction;
 use App\Models\SensorLog;
 use Illuminate\Support\Facades\Http;
@@ -31,14 +32,19 @@ class MlPredictionService
 
             $data = $response->json();
 
-            return Prediction::create([
+            $prediction = Prediction::create([
                 'sensor_log_id'        => $log->id,
-                'hive_id'              => $log->hive_id,
                 'readiness_level'      => $data['readiness_level'],
                 'hri_value'            => $data['hri_value'],
                 'confidence_score'     => $data['confidence_score'],
                 'prediction_timestamp' => now(),
             ]);
+
+            if ($prediction->readiness_level === 'Ready to Harvest') {
+                SendTelegramAlert::dispatch($prediction->id);
+            }
+
+            return $prediction;
         } catch (\Throwable $e) {
             Log::warning('ML prediction failed', [
                 'error'         => $e->getMessage(),

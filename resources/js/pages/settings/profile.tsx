@@ -66,6 +66,15 @@ export default function Profile({
                                         error={errors.email}
                                     />
 
+                                    <Input
+                                        id="telegram_id"
+                                        label="Telegram Chat ID"
+                                        defaultValue={(auth.user as any).telegram_id ?? ''}
+                                        name="telegram_id"
+                                        placeholder="e.g. 123456789"
+                                        error={(errors as any).telegram_id}
+                                    />
+
                                     {mustVerifyEmail &&
                                         auth.user.email_verified_at === null && (
                                             <div>

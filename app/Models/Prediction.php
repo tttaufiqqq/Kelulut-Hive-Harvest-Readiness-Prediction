@@ -15,7 +15,6 @@ class Prediction extends Model
 
     protected $fillable = [
         'sensor_log_id',
-        'hive_id',
         'readiness_level',
         'hri_value',
         'confidence_score',

@@ -39,4 +39,8 @@ return [
         'url' => env('ML_API_URL', 'http://localhost:5000'),
     ],
 
+    'telegram' => [
+        'token' => env('TELEGRAM_BOT_TOKEN'),
+    ],
+
 ];
