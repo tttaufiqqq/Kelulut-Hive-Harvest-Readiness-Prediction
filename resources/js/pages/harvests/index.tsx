@@ -141,6 +141,12 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors }: Prop
                         >
                             Harvests
                         </Link>
+                        <Link
+                            href="/inspections"
+                            className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap text-amber-900/60 hover:bg-yellow-200/50"
+                        >
+                            Inspections
+                        </Link>
                     </nav>
                 </div>
 

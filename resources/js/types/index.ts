@@ -4,3 +4,4 @@ export type * from './ui';
 export type * from './hive';
 export type * from './admin';
 export type * from './harvest';
+export type * from './inspection';

@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AcceptInviteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\HiveController;
+use App\Http\Controllers\InspectionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,6 +30,11 @@ Route::middleware(['auth', 'verified', 'beekeeper'])->group(function () {
     Route::post('/harvests', [HarvestController::class, 'store'])->name('harvests.store');
     Route::patch('/harvests/{harvest}', [HarvestController::class, 'update'])->name('harvests.update');
     Route::delete('/harvests/{harvest}', [HarvestController::class, 'destroy'])->name('harvests.destroy');
+
+    Route::get('/inspections', [InspectionController::class, 'index'])->name('inspections.index');
+    Route::post('/inspections', [InspectionController::class, 'store'])->name('inspections.store');
+    Route::patch('/inspections/{inspection}', [InspectionController::class, 'update'])->name('inspections.update');
+    Route::delete('/inspections/{inspection}', [InspectionController::class, 'destroy'])->name('inspections.destroy');
 });
 
 // Invite acceptance — signed URL, no auth required
