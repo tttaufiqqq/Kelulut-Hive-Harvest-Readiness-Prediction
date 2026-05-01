@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
     { title: 'Dashboard',  href: '/admin',            icon: null, exact: true },
     { title: 'Sensors',    href: '/admin/sensors',    icon: null },
     { title: 'Beekeepers', href: '/admin/beekeepers', icon: null },
+    { title: 'Hives',      href: '/admin/hives',      icon: null },
     { title: 'Harvests',     href: '/admin/harvests',     icon: null },
     { title: 'Inspections', href: '/admin/inspections', icon: null },
     { title: 'Thesis',      href: '/admin/thesis',      icon: null },
