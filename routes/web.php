@@ -4,7 +4,6 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\AcceptInviteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HarvestController;
-use App\Http\Controllers\HiveController;
 use App\Http\Controllers\InspectionController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,11 +19,6 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified', 'beekeeper'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('hives/{hive}/analytics', [AnalyticsController::class, 'show'])->name('analytics.show');
-
-    Route::post('/hives', [HiveController::class, 'store'])->name('hives.store');
-    Route::patch('/hives/{hive}', [HiveController::class, 'update'])->name('hives.update');
-    Route::delete('/hives/{hive}', [HiveController::class, 'destroy'])->name('hives.destroy');
-    Route::patch('/hives/{hive}/toggle-status', [HiveController::class, 'toggleStatus'])->name('hives.toggle-status');
 
     Route::get('/harvests', [HarvestController::class, 'index'])->name('harvests.index');
     Route::post('/harvests', [HarvestController::class, 'store'])->name('harvests.store');

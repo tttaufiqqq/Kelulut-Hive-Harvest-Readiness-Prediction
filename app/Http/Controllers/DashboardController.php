@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hive;
-use App\Models\MasterSpecies;
-use App\Models\MasterSite;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -32,9 +30,7 @@ class DashboardController extends Controller
             ]);
 
         return Inertia::render('dashboard', [
-            'hives'        => $hives,
-            'species_list' => MasterSpecies::orderBy('name')->get(['id', 'name']),
-            'sites_list'   => MasterSite::orderBy('name')->get(['id', 'name']),
+            'hives' => $hives,
         ]);
     }
 }

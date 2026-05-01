@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\BeekeeperController;
 use App\Http\Controllers\Admin\HarvestController as AdminHarvestController;
+use App\Http\Controllers\Admin\HiveController as AdminHiveController;
 use App\Http\Controllers\Admin\InspectionController as AdminInspectionController;
 use App\Http\Controllers\Admin\SensorDashboardController;
 use App\Http\Controllers\Admin\ThesisController;
@@ -37,6 +38,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/thesis', [ThesisController::class, 'index'])->name('thesis');
     Route::post('/thesis', [ThesisController::class, 'upload'])->name('thesis.upload');
     Route::delete('/thesis', [ThesisController::class, 'destroy'])->name('thesis.destroy');
+
+    Route::get('/hives', [AdminHiveController::class, 'index'])->name('hives.index');
+    Route::post('/hives', [AdminHiveController::class, 'store'])->name('hives.store');
+    Route::patch('/hives/{hive}', [AdminHiveController::class, 'update'])->name('hives.update');
+    Route::delete('/hives/{hive}', [AdminHiveController::class, 'destroy'])->name('hives.destroy');
+    Route::patch('/hives/{hive}/toggle-status', [AdminHiveController::class, 'toggleStatus'])->name('hives.toggle-status');
 
     Route::get('/harvests', [AdminHarvestController::class, 'index'])->name('harvests.index');
 

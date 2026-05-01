@@ -1,17 +1,11 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Leaf, MoreVertical, Plus, Edit2, Trash2, Power } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
+import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Leaf } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
-import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
-import { DatePickerField } from '@/components/core/date-picker';
-import { Dropdown } from '@/components/core/dropdown';
 import { Alert, Progress } from '@/components/core/feedback';
-import { Input } from '@/components/core/input';
-import { Modal } from '@/components/core/modal';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
-import { SelectField } from '@/components/core/select-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { cn } from '@/lib/utils';
 
@@ -19,9 +13,7 @@ type HiveCard = {
     id: number;
     name: string;
     species: string | null;
-    species_id: number | null;
     location: string | null;
-    site_id: number | null;
     status: 'active' | 'inactive';
     age_months: number;
     harvest_count: number;
@@ -32,20 +24,9 @@ type HiveCard = {
     avg_mq2: number | null;
 };
 
-type MasterItem = { id: number; name: string };
-
 type Props = {
     hives: HiveCard[];
-    species_list: MasterItem[];
-    sites_list: MasterItem[];
 };
-
-type ActiveModal =
-    | { type: 'create' }
-    | { type: 'edit'; hive: HiveCard }
-    | { type: 'delete'; hive: HiveCard }
-    | { type: 'toggle'; hive: HiveCard }
-    | null;
 
 function ReadinessBadge({ level }: { level: string | null }) {
     if (!level) return <span className="text-amber-900/40 text-sm">No data yet</span>;
@@ -62,65 +43,11 @@ function ReadinessBadge({ level }: { level: string | null }) {
     );
 }
 
-export default function Dashboard({ hives, species_list, sites_list }: Props) {
+export default function Dashboard({ hives }: Props) {
     const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
     const flash = props.flash;
 
     const [selectedHive, setSelectedHive] = useState<HiveCard | null>(null);
-    const [activeModal, setActiveModal]   = useState<ActiveModal>(null);
-    const [deleting, setDeleting]         = useState(false);
-    const close = () => setActiveModal(null);
-
-    const speciesOptions = [
-        { value: '', label: '— None —' },
-        ...species_list.map(s => ({ value: String(s.id), label: s.name })),
-    ];
-    const siteOptions = [
-        { value: '', label: '— None —' },
-        ...sites_list.map(s => ({ value: String(s.id), label: s.name })),
-    ];
-    const statusOptions = [
-        { value: 'active',   label: 'Active'   },
-        { value: 'inactive', label: 'Inactive' },
-    ];
-
-    const createForm = useForm({ name: '', species_id: '', site_id: '' });
-
-    const editForm = useForm({ name: '', species_id: '', site_id: '', status: 'active' });
-
-    const openEdit = (hive: HiveCard) => {
-        editForm.setData({
-            name:       hive.name,
-            species_id: hive.species_id ? String(hive.species_id) : '',
-            site_id:    hive.site_id    ? String(hive.site_id)    : '',
-            status:     hive.status,
-        });
-        setActiveModal({ type: 'edit', hive });
-    };
-
-    const submitCreate = (e: React.FormEvent) => {
-        e.preventDefault();
-        createForm.post(route('hives.store'), { onSuccess: () => { createForm.reset(); close(); } });
-    };
-
-    const submitEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (activeModal?.type !== 'edit') return;
-        editForm.patch(route('hives.update', { hive: activeModal.hive.id }), { onSuccess: () => close() });
-    };
-
-    const confirmToggle = () => {
-        if (activeModal?.type !== 'toggle') return;
-        router.patch(route('hives.toggle-status', { hive: activeModal.hive.id }), {}, { onSuccess: () => close() });
-    };
-
-    const confirmDelete = () => {
-        if (activeModal?.type !== 'delete') return;
-        setDeleting(true);
-        router.delete(route('hives.destroy', { hive: activeModal.hive.id }), {
-            onFinish: () => { setDeleting(false); close(); setSelectedHive(null); },
-        });
-    };
 
     return (
         <AuthenticatedLayout>
@@ -142,9 +69,6 @@ export default function Dashboard({ hives, species_list, sites_list }: Props) {
                     <div className="lg:col-span-5 space-y-6">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-bold text-amber-900">Your Hives</h3>
-                            <Button variant="outline" size="sm" onClick={() => setActiveModal({ type: 'create' })}>
-                                <Plus className="w-4 h-4 mr-1" /> New Hive
-                            </Button>
                         </div>
 
                         {hives.length === 0 ? (
@@ -152,8 +76,8 @@ export default function Dashboard({ hives, species_list, sites_list }: Props) {
                                 <div className="bg-yellow-100 p-6 rounded-full mb-4 inline-block">
                                     <Bee className="w-10 h-10 text-yellow-600" />
                                 </div>
-                                <p className="text-amber-900 font-semibold">No hives yet.</p>
-                                <p className="text-amber-700/60 text-sm mt-1">Create your first hive to get started.</p>
+                                <p className="text-amber-900 font-semibold">No hives assigned yet.</p>
+                                <p className="text-amber-700/60 text-sm mt-1">Contact your admin to register a hive.</p>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -173,45 +97,11 @@ export default function Dashboard({ hives, species_list, sites_list }: Props) {
                                                     <h3 className="font-bold text-lg text-amber-900">{hive.name}</h3>
                                                     <p className="text-sm text-amber-700 italic">{hive.species ?? 'Unknown species'}</p>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    {hive.location && (
-                                                        <div className="bg-yellow-50 p-1.5 rounded-lg flex items-center gap-1 text-xs text-amber-700">
-                                                            <MapPin className="w-3 h-3" /> {hive.location}
-                                                        </div>
-                                                    )}
-                                                    <Dropdown
-                                                        align="right"
-                                                        trigger={
-                                                            <button
-                                                                onClick={e => e.stopPropagation()}
-                                                                className="p-1.5 hover:bg-yellow-100 rounded-xl transition-colors"
-                                                            >
-                                                                <MoreVertical className="w-4 h-4 text-amber-900/50" />
-                                                            </button>
-                                                        }
-                                                        items={[
-                                                            {
-                                                                id: 'edit',
-                                                                label: 'Edit Hive',
-                                                                icon: <Edit2 className="w-4 h-4" />,
-                                                                onClick: () => openEdit(hive),
-                                                            },
-                                                            {
-                                                                id: 'toggle',
-                                                                label: hive.status === 'active' ? 'Set Inactive' : 'Set Active',
-                                                                icon: <Power className="w-4 h-4" />,
-                                                                onClick: () => setActiveModal({ type: 'toggle', hive }),
-                                                            },
-                                                            {
-                                                                id: 'delete',
-                                                                label: 'Delete Hive',
-                                                                icon: <Trash2 className="w-4 h-4" />,
-                                                                variant: 'danger' as const,
-                                                                onClick: () => setActiveModal({ type: 'delete', hive }),
-                                                            },
-                                                        ]}
-                                                    />
-                                                </div>
+                                                {hive.location && (
+                                                    <div className="bg-yellow-50 p-1.5 rounded-lg flex items-center gap-1 text-xs text-amber-700">
+                                                        <MapPin className="w-3 h-3" /> {hive.location}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="grid grid-cols-3 gap-4 text-sm mb-4">
@@ -349,123 +239,6 @@ export default function Dashboard({ hives, species_list, sites_list }: Props) {
                     </div>
                 </div>
             </div>
-
-            {/* ── Create Hive Modal ── */}
-            <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="New Hive" maxWidth="sm">
-                <form onSubmit={submitCreate} className="space-y-4">
-                    <Input
-                        label="Hive Name"
-                        value={createForm.data.name}
-                        onChange={e => createForm.setData('name', e.target.value)}
-                        placeholder="e.g. Hive Alpha"
-                        autoFocus
-                        error={createForm.errors.name}
-                    />
-                    <SelectField
-                        label="Species (optional)"
-                        value={createForm.data.species_id}
-                        onChange={v => createForm.setData('species_id', v)}
-                        options={speciesOptions}
-                        error={createForm.errors.species_id}
-                    />
-                    <SelectField
-                        label="Site (optional)"
-                        value={createForm.data.site_id}
-                        onChange={v => createForm.setData('site_id', v)}
-                        options={siteOptions}
-                        error={createForm.errors.site_id}
-                    />
-                    <div className="flex gap-3 pt-2">
-                        <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                        <Button type="submit" variant="primary" disabled={createForm.processing} className="flex-1">
-                            {createForm.processing ? 'Creating...' : 'Create Hive'}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* ── Edit Hive Modal ── */}
-            {activeModal?.type === 'edit' && (
-                <Modal isOpen onClose={close} title="Edit Hive" maxWidth="sm">
-                    <form onSubmit={submitEdit} className="space-y-4">
-                        <Input
-                            label="Hive Name"
-                            value={editForm.data.name}
-                            onChange={e => editForm.setData('name', e.target.value)}
-                            autoFocus
-                            error={editForm.errors.name}
-                        />
-                        <SelectField
-                            label="Species (optional)"
-                            value={editForm.data.species_id}
-                            onChange={v => editForm.setData('species_id', v)}
-                            options={speciesOptions}
-                            error={editForm.errors.species_id}
-                        />
-                        <SelectField
-                            label="Site (optional)"
-                            value={editForm.data.site_id}
-                            onChange={v => editForm.setData('site_id', v)}
-                            options={siteOptions}
-                            error={editForm.errors.site_id}
-                        />
-                        <SelectField
-                            label="Status"
-                            value={editForm.data.status}
-                            onChange={v => editForm.setData('status', v as 'active' | 'inactive')}
-                            options={statusOptions}
-                            error={editForm.errors.status}
-                        />
-                        <div className="flex gap-3 pt-2">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                            <Button type="submit" variant="primary" disabled={editForm.processing} className="flex-1">
-                                {editForm.processing ? 'Saving...' : 'Save Changes'}
-                            </Button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
-
-            {/* ── Toggle Status Confirmation ── */}
-            {activeModal?.type === 'toggle' && (
-                <Modal isOpen onClose={close} title={activeModal.hive.status === 'active' ? 'Set Hive Inactive' : 'Set Hive Active'} maxWidth="sm">
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            {activeModal.hive.status === 'active'
-                                ? `Setting "${activeModal.hive.name}" to inactive will stop it from receiving sensor data.`
-                                : `Setting "${activeModal.hive.name}" to active will allow it to receive sensor data again.`}
-                        </p>
-                        <div className="flex gap-3">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                            <Button
-                                type="button"
-                                variant={activeModal.hive.status === 'active' ? 'destructive' : 'primary'}
-                                onClick={confirmToggle}
-                                className="flex-1"
-                            >
-                                {activeModal.hive.status === 'active' ? 'Set Inactive' : 'Set Active'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
-            )}
-
-            {/* ── Delete Confirmation ── */}
-            {activeModal?.type === 'delete' && (
-                <Modal isOpen onClose={close} title="Delete Hive" maxWidth="sm">
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            Delete <span className="font-semibold text-amber-950">"{activeModal.hive.name}"</span>? This will permanently remove the hive and all its sensor logs. This cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <Button type="button" variant="ghost" onClick={close} disabled={deleting} className="flex-1">Cancel</Button>
-                            <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleting} className="flex-1">
-                                {deleting ? 'Deleting...' : 'Delete Hive'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
-            )}
         </AuthenticatedLayout>
     );
 }
