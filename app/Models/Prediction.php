@@ -26,8 +26,5 @@ class Prediction extends Model
         return $this->belongsTo(SensorLog::class);
     }
 
-    public function hive(): BelongsTo
-    {
-        return $this->belongsTo(Hive::class);
-    }
+
 }
