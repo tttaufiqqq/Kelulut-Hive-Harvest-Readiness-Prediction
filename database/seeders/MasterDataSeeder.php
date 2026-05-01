@@ -38,6 +38,24 @@ class MasterDataSeeder extends Seeder
             ['sensor_type' => 'mq2', 'min_value' => 501, 'max_value' => 9999, 'level' => 'critical', 'meaning' => 'High smoke/gas, possible threat','recommended_action' => 'Inspect hive urgently',   'created_at' => now(), 'updated_at' => now()],
         ]);
 
+        // MQ3 / MQ5 / MQ135 thresholds — updateOrInsert so safe to re-run
+        foreach ([
+            ['sensor_type' => 'mq3',   'min_value' => 0,   'max_value' => 300,  'level' => 'normal',   'meaning' => 'Normal alcohol/gas levels',    'recommended_action' => 'No action needed'],
+            ['sensor_type' => 'mq3',   'min_value' => 301, 'max_value' => 500,  'level' => 'warning',  'meaning' => 'Elevated alcohol/gas detected', 'recommended_action' => 'Check surrounding area'],
+            ['sensor_type' => 'mq3',   'min_value' => 501, 'max_value' => 9999, 'level' => 'critical', 'meaning' => 'High alcohol/gas, possible threat','recommended_action' => 'Inspect hive urgently'],
+            ['sensor_type' => 'mq5',   'min_value' => 0,   'max_value' => 300,  'level' => 'normal',   'meaning' => 'Normal LPG/gas levels',         'recommended_action' => 'No action needed'],
+            ['sensor_type' => 'mq5',   'min_value' => 301, 'max_value' => 500,  'level' => 'warning',  'meaning' => 'Elevated LPG/gas detected',     'recommended_action' => 'Check surrounding area'],
+            ['sensor_type' => 'mq5',   'min_value' => 501, 'max_value' => 9999, 'level' => 'critical', 'meaning' => 'High LPG/gas, possible threat', 'recommended_action' => 'Inspect hive urgently'],
+            ['sensor_type' => 'mq135', 'min_value' => 0,   'max_value' => 300,  'level' => 'normal',   'meaning' => 'Normal air quality',            'recommended_action' => 'No action needed'],
+            ['sensor_type' => 'mq135', 'min_value' => 301, 'max_value' => 500,  'level' => 'warning',  'meaning' => 'Degraded air quality detected',  'recommended_action' => 'Check surrounding area'],
+            ['sensor_type' => 'mq135', 'min_value' => 501, 'max_value' => 9999, 'level' => 'critical', 'meaning' => 'Poor air quality, possible threat','recommended_action' => 'Inspect hive urgently'],
+        ] as $row) {
+            DB::table('master_sensor_thresholds')->updateOrInsert(
+                ['sensor_type' => $row['sensor_type'], 'level' => $row['level']],
+                array_merge($row, ['created_at' => now(), 'updated_at' => now()]),
+            );
+        }
+
         DB::table('master_honey_colors')->insert([
             ['name' => 'Cream White',   'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Light Yellow',  'created_at' => now(), 'updated_at' => now()],

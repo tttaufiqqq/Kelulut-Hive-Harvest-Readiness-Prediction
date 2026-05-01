@@ -23,6 +23,7 @@ class HriSummarySeeder extends Seeder
 
             DB::table('hri_summary')->insert([
                 'hive_id'                => $hive->id,
+                'summary_date'           => now()->toDateString(),
                 'avg_temperature'        => $avgTemp,
                 'avg_humidity'           => $avgHumidity,
                 'avg_mq2'                => $avgMq2,

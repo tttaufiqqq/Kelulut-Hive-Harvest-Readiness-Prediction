@@ -33,6 +33,9 @@ class SensorLogSeeder extends Seeder
                         'temp'             => round($tempBase + (rand(-15, 15) / 10), 1),
                         'humidity'         => round($humidityBase + (rand(-10, 10) / 10), 1),
                         'mq2_value'        => rand(180, 480),
+                        'mq3_value'        => rand(180, 480),
+                        'mq5_value'        => rand(180, 480),
+                        'mq135_value'      => rand(180, 480),
                         'record_timestamp' => $ts,
                         'created_at'       => $ts,
                     ];
