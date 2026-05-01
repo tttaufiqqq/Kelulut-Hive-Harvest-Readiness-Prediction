@@ -13,6 +13,6 @@ class MasterFloraType extends Model
 
     public function inspections(): BelongsToMany
     {
-        return $this->belongsToMany(Inspection::class, 'inspection_flora');
+        return $this->belongsToMany(Inspection::class, 'inspection_flora', 'flora_id', 'inspection_id');
     }
 }

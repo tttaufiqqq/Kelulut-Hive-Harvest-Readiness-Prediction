@@ -13,6 +13,6 @@ class MasterWeatherCondition extends Model
 
     public function inspections(): BelongsToMany
     {
-        return $this->belongsToMany(Inspection::class, 'inspection_weather');
+        return $this->belongsToMany(Inspection::class, 'inspection_weather', 'weather_id', 'inspection_id');
     }
 }

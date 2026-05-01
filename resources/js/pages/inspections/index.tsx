@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { MoreVertical, Plus, Eye, Edit2, Trash2 } from 'lucide-react';
 import { DatePickerField } from '@/components/core/date-picker';
+import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { MultiSelectField } from '@/components/core/multi-select-field';
 import { SelectField } from '@/components/core/select-field';
@@ -32,30 +33,26 @@ type ActiveModal =
     | null;
 
 const BLOOMING_OPTIONS = [
-    { value: '',           label: '— None —'    },
-    { value: 'pre_bloom',  label: 'Pre-Bloom'   },
+    { value: 'pre_bloom',   label: 'Pre-Bloom'   },
     { value: 'early_bloom', label: 'Early Bloom' },
-    { value: 'peak_bloom', label: 'Peak Bloom'  },
-    { value: 'post_bloom', label: 'Post-Bloom'  },
-    { value: 'dormant',    label: 'Dormant'     },
+    { value: 'peak_bloom',  label: 'Peak Bloom'  },
+    { value: 'post_bloom',  label: 'Post-Bloom'  },
+    { value: 'dormant',     label: 'Dormant'     },
 ];
 
 const VEGETATION_OPTIONS = [
-    { value: '',         label: '— None —' },
     { value: 'sparse',   label: 'Sparse'   },
     { value: 'moderate', label: 'Moderate' },
     { value: 'dense',    label: 'Dense'    },
 ];
 
 const NECTAR_OPTIONS = [
-    { value: '',          label: '— None —'  },
-    { value: 'scarce',    label: 'Scarce'    },
-    { value: 'moderate',  label: 'Moderate'  },
-    { value: 'abundant',  label: 'Abundant'  },
+    { value: 'scarce',   label: 'Scarce'   },
+    { value: 'moderate', label: 'Moderate' },
+    { value: 'abundant', label: 'Abundant' },
 ];
 
 const DAMAGE_OPTIONS = [
-    { value: '',         label: '— None —' },
     { value: 'none',     label: 'None'     },
     { value: 'minor',    label: 'Minor'    },
     { value: 'moderate', label: 'Moderate' },
@@ -217,17 +214,7 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Inspections' }]} />
 
-                    <nav className="flex gap-1 bg-yellow-100/50 rounded-2xl p-1.5">
-                        <Link href="/dashboard" className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap text-amber-900/60 hover:bg-yellow-200/50">
-                            My Hives
-                        </Link>
-                        <Link href="/harvests" className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap text-amber-900/60 hover:bg-yellow-200/50">
-                            Harvests
-                        </Link>
-                        <Link href="/inspections" className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap bg-white shadow-sm font-semibold text-amber-900">
-                            Inspections
-                        </Link>
-                    </nav>
+                    <BeekeeperTabs active="inspections" />
                 </div>
 
                 {flash?.success && <Alert variant="success">{flash.success}</Alert>}
@@ -353,42 +340,42 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
             </div>
 
             {/* ── Create Modal ── */}
-            <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="Add Inspection Record" maxWidth="md">
+            <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="Add Inspection Record" maxWidth="2xl">
                 <form onSubmit={submitCreate} className="space-y-4">
-                    <SelectField
-                        label="Hive"
-                        value={createForm.data.hive_id}
-                        onChange={(v) => createForm.setData('hive_id', v)}
-                        options={hiveFormOptions(hives)}
-                        error={createForm.errors.hive_id}
-                    />
-
-                    <DatePickerField
-                        label="Inspection Date"
-                        value={createForm.data.inspection_date || null}
-                        onChange={(v) => createForm.setData('inspection_date', v ?? '')}
-                        maxDate="today"
-                        error={createForm.errors.inspection_date}
-                    />
-
-                    <SelectField
-                        label="Blooming Status (optional)"
-                        value={createForm.data.blooming_status}
-                        onChange={(v) => createForm.setData('blooming_status', v)}
-                        options={BLOOMING_OPTIONS}
-                        error={createForm.errors.blooming_status}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <SelectField
-                            label="Vegetation Density (optional)"
+                            label="Hive"
+                            value={createForm.data.hive_id}
+                            onChange={(v) => createForm.setData('hive_id', v)}
+                            options={hiveFormOptions(hives)}
+                            error={createForm.errors.hive_id}
+                        />
+                        <DatePickerField
+                            label="Inspection Date"
+                            value={createForm.data.inspection_date || null}
+                            onChange={(v) => createForm.setData('inspection_date', v ?? '')}
+                            maxDate="today"
+                            error={createForm.errors.inspection_date}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <SelectField
+                            label="Blooming Status"
+                            value={createForm.data.blooming_status}
+                            onChange={(v) => createForm.setData('blooming_status', v)}
+                            options={BLOOMING_OPTIONS}
+                            error={createForm.errors.blooming_status}
+                        />
+                        <SelectField
+                            label="Vegetation Density"
                             value={createForm.data.vegetation_density}
                             onChange={(v) => createForm.setData('vegetation_density', v)}
                             options={VEGETATION_OPTIONS}
                             error={createForm.errors.vegetation_density}
                         />
                         <SelectField
-                            label="Nectar Availability (optional)"
+                            label="Nectar Availability"
                             value={createForm.data.nectar_source_availability}
                             onChange={(v) => createForm.setData('nectar_source_availability', v)}
                             options={NECTAR_OPTIONS}
@@ -396,60 +383,63 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                         />
                     </div>
 
-                    <SelectField
-                        label="Structural Damage (optional)"
-                        value={createForm.data.structural_damage}
-                        onChange={(v) => createForm.setData('structural_damage', v)}
-                        options={DAMAGE_OPTIONS}
-                        error={createForm.errors.structural_damage}
-                    />
-
-                    <MultiSelectField
-                        label="Weather Conditions (optional)"
-                        value={createWeatherIds}
-                        onChange={setCreateWeatherIds}
-                        options={masterToOptions(weatherConditions)}
-                        placeholder="Select weather conditions..."
-                    />
-
-                    <MultiSelectField
-                        label="Flora Types (optional)"
-                        value={createFloraIds}
-                        onChange={setCreateFloraIds}
-                        options={masterToOptions(floraTypes)}
-                        placeholder="Select flora types..."
-                    />
-
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-amber-900 ml-1">Food Source Observation (optional)</label>
-                        <textarea
-                            value={createForm.data.food_source_observation}
-                            onChange={(e) => createForm.setData('food_source_observation', e.target.value)}
-                            placeholder="Describe food source observations..."
-                            rows={2}
-                            className={cn(
-                                'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
-                                'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
-                                createForm.errors.food_source_observation && 'border-red-400 focus:ring-red-400/50',
-                            )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <SelectField
+                            label="Structural Damage"
+                            value={createForm.data.structural_damage}
+                            onChange={(v) => createForm.setData('structural_damage', v)}
+                            options={DAMAGE_OPTIONS}
+                            error={createForm.errors.structural_damage}
                         />
-                        {createForm.errors.food_source_observation && <p className="text-xs text-red-500 ml-1">{createForm.errors.food_source_observation}</p>}
+                        <MultiSelectField
+                            label="Weather Conditions"
+                            value={createWeatherIds}
+                            onChange={setCreateWeatherIds}
+                            options={masterToOptions(weatherConditions)}
+                            placeholder="Select..."
+                            error={createForm.errors.weather_ids}
+                        />
+                        <MultiSelectField
+                            label="Flora Types"
+                            value={createFloraIds}
+                            onChange={setCreateFloraIds}
+                            options={masterToOptions(floraTypes)}
+                            placeholder="Select..."
+                            error={createForm.errors.flora_ids}
+                        />
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-amber-900 ml-1">Notes (optional)</label>
-                        <textarea
-                            value={createForm.data.notes}
-                            onChange={(e) => createForm.setData('notes', e.target.value)}
-                            placeholder="Any additional observations..."
-                            rows={2}
-                            className={cn(
-                                'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
-                                'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
-                                createForm.errors.notes && 'border-red-400 focus:ring-red-400/50',
-                            )}
-                        />
-                        {createForm.errors.notes && <p className="text-xs text-red-500 ml-1">{createForm.errors.notes}</p>}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-amber-900 ml-1">Food Source Observation</label>
+                            <textarea
+                                value={createForm.data.food_source_observation}
+                                onChange={(e) => createForm.setData('food_source_observation', e.target.value)}
+                                placeholder="Describe food source observations..."
+                                rows={3}
+                                className={cn(
+                                    'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
+                                    'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
+                                    createForm.errors.food_source_observation && 'border-red-400 focus:ring-red-400/50',
+                                )}
+                            />
+                            {createForm.errors.food_source_observation && <p className="text-xs text-red-500 ml-1">{createForm.errors.food_source_observation}</p>}
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-amber-900 ml-1">Notes</label>
+                            <textarea
+                                value={createForm.data.notes}
+                                onChange={(e) => createForm.setData('notes', e.target.value)}
+                                placeholder="Any additional observations..."
+                                rows={3}
+                                className={cn(
+                                    'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
+                                    'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
+                                    createForm.errors.notes && 'border-red-400 focus:ring-red-400/50',
+                                )}
+                            />
+                            {createForm.errors.notes && <p className="text-xs text-red-500 ml-1">{createForm.errors.notes}</p>}
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-2">
@@ -531,41 +521,41 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
 
             {/* ── Edit Modal ── */}
             {activeModal?.type === 'edit' && (
-                <Modal isOpen onClose={close} title="Edit Inspection Record" maxWidth="md">
+                <Modal isOpen onClose={close} title="Edit Inspection Record" maxWidth="2xl">
                     <form onSubmit={submitEdit} className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-amber-900 ml-1">Hive</label>
-                            <p className="px-4 py-2.5 bg-yellow-50/30 border border-yellow-100 rounded-2xl text-amber-950/60 text-sm">
-                                {activeModal.inspection.hive?.name}
-                            </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-amber-900 ml-1">Hive</label>
+                                <p className="px-4 py-2.5 bg-yellow-50/30 border border-yellow-100 rounded-2xl text-amber-950/60 text-sm">
+                                    {activeModal.inspection.hive?.name}
+                                </p>
+                            </div>
+                            <DatePickerField
+                                label="Inspection Date"
+                                value={editForm.data.inspection_date || null}
+                                onChange={(v) => editForm.setData('inspection_date', v ?? '')}
+                                maxDate="today"
+                                error={editForm.errors.inspection_date}
+                            />
                         </div>
 
-                        <DatePickerField
-                            label="Inspection Date"
-                            value={editForm.data.inspection_date || null}
-                            onChange={(v) => editForm.setData('inspection_date', v ?? '')}
-                            maxDate="today"
-                            error={editForm.errors.inspection_date}
-                        />
-
-                        <SelectField
-                            label="Blooming Status (optional)"
-                            value={editForm.data.blooming_status}
-                            onChange={(v) => editForm.setData('blooming_status', v)}
-                            options={BLOOMING_OPTIONS}
-                            error={editForm.errors.blooming_status}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <SelectField
-                                label="Vegetation Density (optional)"
+                                label="Blooming Status"
+                                value={editForm.data.blooming_status}
+                                onChange={(v) => editForm.setData('blooming_status', v)}
+                                options={BLOOMING_OPTIONS}
+                                error={editForm.errors.blooming_status}
+                            />
+                            <SelectField
+                                label="Vegetation Density"
                                 value={editForm.data.vegetation_density}
                                 onChange={(v) => editForm.setData('vegetation_density', v)}
                                 options={VEGETATION_OPTIONS}
                                 error={editForm.errors.vegetation_density}
                             />
                             <SelectField
-                                label="Nectar Availability (optional)"
+                                label="Nectar Availability"
                                 value={editForm.data.nectar_source_availability}
                                 onChange={(v) => editForm.setData('nectar_source_availability', v)}
                                 options={NECTAR_OPTIONS}
@@ -573,58 +563,61 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                             />
                         </div>
 
-                        <SelectField
-                            label="Structural Damage (optional)"
-                            value={editForm.data.structural_damage}
-                            onChange={(v) => editForm.setData('structural_damage', v)}
-                            options={DAMAGE_OPTIONS}
-                            error={editForm.errors.structural_damage}
-                        />
-
-                        <MultiSelectField
-                            label="Weather Conditions (optional)"
-                            value={editWeatherIds}
-                            onChange={setEditWeatherIds}
-                            options={masterToOptions(weatherConditions)}
-                            placeholder="Select weather conditions..."
-                        />
-
-                        <MultiSelectField
-                            label="Flora Types (optional)"
-                            value={editFloraIds}
-                            onChange={setEditFloraIds}
-                            options={masterToOptions(floraTypes)}
-                            placeholder="Select flora types..."
-                        />
-
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-amber-900 ml-1">Food Source Observation (optional)</label>
-                            <textarea
-                                value={editForm.data.food_source_observation}
-                                onChange={(e) => editForm.setData('food_source_observation', e.target.value)}
-                                rows={2}
-                                className={cn(
-                                    'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
-                                    'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
-                                    editForm.errors.food_source_observation && 'border-red-400 focus:ring-red-400/50',
-                                )}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <SelectField
+                                label="Structural Damage"
+                                value={editForm.data.structural_damage}
+                                onChange={(v) => editForm.setData('structural_damage', v)}
+                                options={DAMAGE_OPTIONS}
+                                error={editForm.errors.structural_damage}
                             />
-                            {editForm.errors.food_source_observation && <p className="text-xs text-red-500 ml-1">{editForm.errors.food_source_observation}</p>}
+                            <MultiSelectField
+                                label="Weather Conditions"
+                                value={editWeatherIds}
+                                onChange={setEditWeatherIds}
+                                options={masterToOptions(weatherConditions)}
+                                placeholder="Select..."
+                                error={editForm.errors.weather_ids}
+                            />
+                            <MultiSelectField
+                                label="Flora Types"
+                                value={editFloraIds}
+                                onChange={setEditFloraIds}
+                                options={masterToOptions(floraTypes)}
+                                placeholder="Select..."
+                                error={editForm.errors.flora_ids}
+                            />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-amber-900 ml-1">Notes (optional)</label>
-                            <textarea
-                                value={editForm.data.notes}
-                                onChange={(e) => editForm.setData('notes', e.target.value)}
-                                rows={2}
-                                className={cn(
-                                    'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
-                                    'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
-                                    editForm.errors.notes && 'border-red-400 focus:ring-red-400/50',
-                                )}
-                            />
-                            {editForm.errors.notes && <p className="text-xs text-red-500 ml-1">{editForm.errors.notes}</p>}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-amber-900 ml-1">Food Source Observation</label>
+                                <textarea
+                                    value={editForm.data.food_source_observation}
+                                    onChange={(e) => editForm.setData('food_source_observation', e.target.value)}
+                                    rows={3}
+                                    className={cn(
+                                        'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
+                                        'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
+                                        editForm.errors.food_source_observation && 'border-red-400 focus:ring-red-400/50',
+                                    )}
+                                />
+                                {editForm.errors.food_source_observation && <p className="text-xs text-red-500 ml-1">{editForm.errors.food_source_observation}</p>}
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-amber-900 ml-1">Notes</label>
+                                <textarea
+                                    value={editForm.data.notes}
+                                    onChange={(e) => editForm.setData('notes', e.target.value)}
+                                    rows={3}
+                                    className={cn(
+                                        'w-full px-4 py-2.5 bg-yellow-50/50 border border-yellow-200 rounded-2xl text-sm',
+                                        'text-amber-950 placeholder:text-amber-900/30 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none',
+                                        editForm.errors.notes && 'border-red-400 focus:ring-red-400/50',
+                                    )}
+                                />
+                                {editForm.errors.notes && <p className="text-xs text-red-500 ml-1">{editForm.errors.notes}</p>}
+                            </div>
                         </div>
 
                         <div className="flex gap-3 pt-2">

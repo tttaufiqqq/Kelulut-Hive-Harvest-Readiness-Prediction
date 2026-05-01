@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Leaf, MoreVertical, Plus, Edit2, Trash2, Power } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { Dropdown } from '@/components/core/dropdown';
 import { Alert, Progress } from '@/components/core/feedback';
 import { Input } from '@/components/core/input';
 import { Modal } from '@/components/core/modal';
+import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { SelectField } from '@/components/core/select-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
@@ -129,14 +130,7 @@ export default function Dashboard({ hives, species_list, sites_list }: Props) {
                 {/* Breadcrumb + page nav */}
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'My Hives' }]} />
-                    <nav className="flex gap-1 bg-yellow-100/50 rounded-2xl p-1.5">
-                        <Link href="/dashboard" className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap bg-white shadow-sm font-semibold text-amber-900">
-                            My Hives
-                        </Link>
-                        <Link href="/harvests" className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap text-amber-900/60 hover:bg-yellow-200/50">
-                            Harvests
-                        </Link>
-                    </nav>
+                    <BeekeeperTabs active="dashboard" />
                 </div>
 
                 {flash?.success && <Alert variant="success">{flash.success}</Alert>}

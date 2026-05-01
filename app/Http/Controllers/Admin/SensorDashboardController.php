@@ -24,8 +24,8 @@ class SensorDashboardController extends Controller
         $date = $request->input('date'); // nullable Y-m-d — overrides window when set
 
         $query = SensorLog::where('hive_id', $hiveId)
-            ->orderBy('recorded_at')
-            ->select('temp', 'humidity', 'smoke_adc', 'recorded_at');
+            ->orderBy('record_timestamp')
+            ->select('temp', 'humidity', 'mq2_value', 'record_timestamp');
 
         if ($date && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             $day = Carbon::parse($date);
@@ -34,7 +34,7 @@ class SensorDashboardController extends Controller
                 '24h' => 24,
                 default => 1,
             };
-            $query->whereBetween('recorded_at', [
+            $query->whereBetween('record_timestamp', [
                 $day->copy()->endOfDay()->subHours($hours),
                 $day->copy()->endOfDay(),
             ]);
@@ -44,7 +44,7 @@ class SensorDashboardController extends Controller
                 '24h' => now()->subHours(24),
                 default => now()->subHour(),
             };
-            $query->where('recorded_at', '>=', $since);
+            $query->where('record_timestamp', '>=', $since);
         }
 
         $logs = $query->limit(500)->get();
@@ -52,10 +52,10 @@ class SensorDashboardController extends Controller
         $latest = $logs->last();
 
         $history = $logs->map(fn ($log) => [
-            'time'        => $log->recorded_at->format('H:i'),
+            'time'        => $log->record_timestamp->format('H:i'),
             'temperature' => round($log->temp, 1),
             'humidity'    => round($log->humidity, 1),
-            'mq2'         => $log->smoke_adc,
+            'mq2'         => $log->mq2_value,
         ])->values();
 
         return Inertia::render('admin/sensors', [
@@ -66,8 +66,8 @@ class SensorDashboardController extends Controller
             'latest'   => $latest ? [
                 'temperature' => round($latest->temp, 1),
                 'humidity'    => round($latest->humidity, 1),
-                'mq2'         => $latest->smoke_adc,
-                'recorded_at' => $latest->recorded_at->diffForHumans(),
+                'mq2'         => $latest->mq2_value,
+                'recorded_at' => $latest->record_timestamp->diffForHumans(),
             ] : null,
             'history'  => $history,
         ]);

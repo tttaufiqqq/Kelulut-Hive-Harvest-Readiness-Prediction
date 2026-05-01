@@ -8,14 +8,15 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
-    maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
+    maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 const maxWidthMap = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
+    sm:  'max-w-sm',
+    md:  'max-w-md',
+    lg:  'max-w-lg',
+    xl:  'max-w-xl',
+    '2xl': 'max-w-2xl',
 };
 
 export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps) {
@@ -44,13 +45,13 @@ return null;
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className={`relative bg-white w-full ${maxWidthMap[maxWidth]} rounded-[2.5rem] p-8 shadow-2xl overflow-hidden`}
+                        className={`relative bg-white w-full ${maxWidthMap[maxWidth]} rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}
                     >
                         {/* Top accent bar */}
-                        <div className="absolute top-0 left-0 w-full h-2 bg-yellow-400" />
+                        <div className="absolute top-0 left-0 w-full h-2 bg-yellow-400 flex-shrink-0" />
 
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-6">
+                        {/* Header — pinned */}
+                        <div className="flex items-center justify-between px-8 pt-8 pb-0 flex-shrink-0">
                             <h2 className="text-2xl font-bold text-amber-900">{title}</h2>
                             <button
                                 onClick={onClose}
@@ -60,8 +61,10 @@ return null;
                             </button>
                         </div>
 
-                        {/* Content */}
-                        {children}
+                        {/* Content — scrollable */}
+                        <div className="overflow-y-auto px-8 pt-6 pb-8 flex-1">
+                            {children}
+                        </div>
                     </motion.div>
                 </div>
             )}

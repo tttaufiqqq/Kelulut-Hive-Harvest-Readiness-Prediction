@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { MoreVertical, Plus, Eye, Edit2, Trash2 } from 'lucide-react';
 import { DatePickerField } from '@/components/core/date-picker';
+import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { NumberInput } from '@/components/core/number-input';
 import { SelectField } from '@/components/core/select-field';
@@ -128,26 +129,7 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors }: Prop
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Harvests' }]} />
 
-                    <nav className="flex gap-1 bg-yellow-100/50 rounded-2xl p-1.5">
-                        <Link
-                            href="/dashboard"
-                            className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap text-amber-900/60 hover:bg-yellow-200/50"
-                        >
-                            My Hives
-                        </Link>
-                        <Link
-                            href="/harvests"
-                            className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap bg-white shadow-sm font-semibold text-amber-900"
-                        >
-                            Harvests
-                        </Link>
-                        <Link
-                            href="/inspections"
-                            className="px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap text-amber-900/60 hover:bg-yellow-200/50"
-                        >
-                            Inspections
-                        </Link>
-                    </nav>
+                    <BeekeeperTabs active="harvests" />
                 </div>
 
                 {flash?.success && <Alert variant="success">{flash.success}</Alert>}
