@@ -6,6 +6,8 @@ use App\Models\IotNode;
 use App\Models\SensorLog;
 use App\Services\MlPredictionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SensorController extends Controller
 {
@@ -31,9 +33,9 @@ class SensorController extends Controller
         ]);
 
         // ── Resolve IoT Node ──────────────────────────────────────
-        $node = IotNode::where('device_id', $data['device_id'])
-                       ->where('hive_id',   $data['hive_id'])
-                       ->where('status',    'active')
+        $node = IotNode::where('device_id',     $data['device_id'])
+                       ->where('hive_id',        $data['hive_id'])
+                       ->where('device_status', 'active')
                        ->first();
 
         if (!$node) {
@@ -42,18 +44,51 @@ class SensorController extends Controller
 
         // ── Store sensor log ──────────────────────────────────────
         $log = SensorLog::create([
-            'hive_id'      => $data['hive_id'],
-            'iot_node_id'  => $node->id,
-            'temp'         => $data['temp'],
-            'humidity'     => $data['humidity'],
-            'mq2_value'    => $data['mq2_value'],
-            'mq3_value'    => $data['mq3_value'],
-            'mq5_value'    => $data['mq5_value'],
-            'mq135_value'  => $data['mq135_value'],
-            'recorded_at'  => now(),
+            'hive_id'          => $data['hive_id'],
+            'device_id'        => $node->id,
+            'temp'             => $data['temp'],
+            'humidity'         => $data['humidity'],
+            'mq2_value'        => $data['mq2_value'],
+            'mq3_value'        => $data['mq3_value'],
+            'mq5_value'        => $data['mq5_value'],
+            'mq135_value'      => $data['mq135_value'],
+            'record_timestamp' => now(),
         ]);
 
-        // ── ML Prediction (non-blocking — skipped silently if Flask down)
+        // ── Threshold matching (non-blocking) ────────────────────
+        try {
+            $thresholds = DB::table('master_sensor_thresholds')->get();
+
+            $sensorMap = [
+                'temp'     => $data['temp'],
+                'humidity' => $data['humidity'],
+                'mq2'      => $data['mq2_value'],
+                'mq3'      => $data['mq3_value'],
+                'mq5'      => $data['mq5_value'],
+                'mq135'    => $data['mq135_value'],
+            ];
+
+            $matched = $thresholds->filter(function ($t) use ($sensorMap) {
+                $reading = $sensorMap[$t->sensor_type] ?? null;
+                return $reading !== null
+                    && $reading >= $t->min_value
+                    && $reading <= $t->max_value;
+            })->map(fn ($t) => [
+                'sensor_log_id' => $log->id,
+                'threshold_id'  => $t->id,
+            ])->values()->all();
+
+            if (!empty($matched)) {
+                DB::table('sensor_log_thresholds')->insert($matched);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Threshold matching failed', [
+                'error'         => $e->getMessage(),
+                'sensor_log_id' => $log->id,
+            ]);
+        }
+
+        // ── ML Prediction (non-blocking — skipped silently if Flask down) ──
         $this->mlService->predict($log);
 
         return response()->json(['status' => 'ok'], 201);
