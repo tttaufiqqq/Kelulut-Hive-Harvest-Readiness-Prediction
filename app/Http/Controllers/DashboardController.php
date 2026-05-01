@@ -11,6 +11,8 @@ class DashboardController extends Controller
     {
         $hives = Hive::where('beekeeper_id', auth()->id())
             ->with(['species', 'site', 'summary'])
+            ->withCount('harvests')
+            ->withMax('harvests', 'harvest_date')
             ->get()
             ->map(fn($hive) => [
                 'id'              => $hive->id,
