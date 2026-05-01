@@ -16,29 +16,25 @@ class AnalyticsController extends Controller
     {
         abort_if($hive->beekeeper_id !== auth()->id(), 403);
 
-        // ── HRI trend: last 30 days, one reading per day (latest per day) ──────
-        $hriTrend = HriRecord::where('hive_id', $hive->id)
-            ->where('computed_at', '>=', now()->subDays(30))
-            ->selectRaw('DATE(computed_at) as date, AVG(hri_score) as hri_score')
-            ->groupByRaw('DATE(computed_at)')
+        // ── Q1: HRI trend — last 30 days, grouped by date ─────────────────────
+        $avg7d = Prediction::join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
+            ->where('sensor_logs.hive_id', $hive->id)
+            ->where('predictions.prediction_timestamp', '>=', now()->subDays(7))
+            ->avg('predictions.hri_value');
+        $avg7dPct = round(($avg7d ?? 0) * 100);
+
+        $hriTrend = Prediction::join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
+            ->where('sensor_logs.hive_id', $hive->id)
+            ->where('predictions.prediction_timestamp', '>=', now()->subDays(30))
+            ->selectRaw('DATE(predictions.prediction_timestamp) as date, AVG(predictions.hri_value * 100) as hri_score')
+            ->groupByRaw('DATE(predictions.prediction_timestamp)')
             ->orderBy('date')
             ->get()
-            ->map(function ($row) {
-                return [
-                    'date'      => \Carbon\Carbon::parse($row->date)->format('M d'),
-                    'hri_score' => round($row->hri_score),
-                    'avg_7d'    => 0, // filled below
-                ];
-            });
-
-        // 7-day rolling avg overlay
-        $avg7d = HriRecord::where('hive_id', $hive->id)
-            ->where('computed_at', '>=', now()->subDays(7))
-            ->avg('hri_score');
-
-        $hriTrend = $hriTrend->map(fn($row) => array_merge($row, [
-            'avg_7d' => round($avg7d ?? 0),
-        ]));
+            ->map(fn($row) => [
+                'date'      => Carbon::parse($row->date)->format('M d'),
+                'hri_score' => round($row->hri_score),
+                'avg_7d'    => $avg7dPct,
+            ]);
 
         // ── Sensor readings: today, one row per hour ──────────────────────────
         $sensorReadings = SensorLog::where('hive_id', $hive->id)
