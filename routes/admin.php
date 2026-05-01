@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\HarvestController as AdminHarvestController;
 use App\Http\Controllers\Admin\HiveController as AdminHiveController;
 use App\Http\Controllers\Admin\InspectionController as AdminInspectionController;
 use App\Http\Controllers\Admin\SensorDashboardController;
+use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\ThesisController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/thesis', [ThesisController::class, 'index'])->name('thesis');
     Route::post('/thesis', [ThesisController::class, 'upload'])->name('thesis.upload');
     Route::delete('/thesis', [ThesisController::class, 'destroy'])->name('thesis.destroy');
+
+    Route::get('/sites', [SiteController::class, 'index'])->name('sites.index');
+    Route::post('/sites', [SiteController::class, 'store'])->name('sites.store');
+    Route::patch('/sites/{site}', [SiteController::class, 'update'])->name('sites.update');
+    Route::delete('/sites/{site}', [SiteController::class, 'destroy'])->name('sites.destroy');
 
     Route::get('/hives', [AdminHiveController::class, 'index'])->name('hives.index');
     Route::post('/hives', [AdminHiveController::class, 'store'])->name('hives.store');
