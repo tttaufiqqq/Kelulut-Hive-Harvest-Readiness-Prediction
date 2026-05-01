@@ -36,29 +36,29 @@ class AnalyticsController extends Controller
                 'avg_7d'    => $avg7dPct,
             ]);
 
-        // ── Sensor readings: today, one row per hour ──────────────────────────
+        // ── Q2: Sensor readings — today, grouped by hour ──────────────────────
         $sensorReadings = SensorLog::where('hive_id', $hive->id)
-            ->where('recorded_at', '>=', now()->startOfDay())
+            ->whereDate('record_timestamp', today())
             ->selectRaw('
-                DATE_FORMAT(recorded_at, "%H:00") as time,
-                AVG(temp)     as temp,
-                AVG(humidity) as humidity,
-                AVG(co2_adc)  as co2,
-                AVG(etoh_adc) as etoh,
-                AVG(ch4_adc)  as ch4,
-                AVG(smoke_adc) as smoke
+                DATE_FORMAT(record_timestamp, "%H:00") as time,
+                AVG(temp)         as temp,
+                AVG(humidity)     as humidity,
+                AVG(mq2_value)    as mq2,
+                AVG(mq3_value)    as mq3,
+                AVG(mq5_value)    as mq5,
+                AVG(mq135_value)  as mq135
             ')
-            ->groupByRaw('DATE_FORMAT(recorded_at, "%H:00")')
+            ->groupByRaw('DATE_FORMAT(record_timestamp, "%H:00")')
             ->orderBy('time')
             ->get()
             ->map(fn($r) => [
                 'time'     => $r->time,
                 'temp'     => round($r->temp, 1),
                 'humidity' => round($r->humidity, 1),
-                'co2'      => round($r->co2),
-                'etoh'     => round($r->etoh),
-                'ch4'      => round($r->ch4),
-                'smoke'    => round($r->smoke),
+                'mq2'      => round($r->mq2),
+                'mq3'      => round($r->mq3),
+                'mq5'      => round($r->mq5),
+                'mq135'    => round($r->mq135),
             ]);
 
         // ── Score components: latest HRI record ───────────────────────────────
