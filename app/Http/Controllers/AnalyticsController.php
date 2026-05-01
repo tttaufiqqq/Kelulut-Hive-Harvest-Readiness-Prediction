@@ -61,19 +61,19 @@ class AnalyticsController extends Controller
                 'mq135'    => round($r->mq135),
             ]);
 
-        // ── Score components: latest HRI record ───────────────────────────────
-        $latest = HriRecord::where('hive_id', $hive->id)
-            ->latest('computed_at')
+        // ── Q3: Latest prediction ─────────────────────────────────────────────
+        $latestPredictionRow = Prediction::join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
+            ->where('sensor_logs.hive_id', $hive->id)
+            ->orderByDesc('predictions.prediction_timestamp')
+            ->select('predictions.*')
             ->first();
 
-        $scoreComponents = $latest ? [
-            ['sensor' => 'Humidity', 'score' => $latest->s_hum,  'max' => 20],
-            ['sensor' => 'Temp',     'score' => $latest->s_temp, 'max' => 20],
-            ['sensor' => 'EtOH',     'score' => $latest->s_etoh, 'max' => 20],
-            ['sensor' => 'CO₂',      'score' => $latest->s_co2,  'max' => 20],
-            ['sensor' => 'CH₄',      'score' => $latest->s_ch4,  'max' => 10],
-            ['sensor' => 'Smoke',    'score' => $latest->s_mq2,  'max' => 10],
-        ] : [];
+        $latestPrediction = $latestPredictionRow ? [
+            'readiness_level'      => $latestPredictionRow->readiness_level,
+            'hri_value'            => (float) $latestPredictionRow->hri_value,
+            'confidence_score'     => (float) $latestPredictionRow->confidence_score,
+            'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->format('d M Y, H:i'),
+        ] : null;
 
         // ── Harvest history ───────────────────────────────────────────────────
         $harvestHistory = $hive->harvests()
