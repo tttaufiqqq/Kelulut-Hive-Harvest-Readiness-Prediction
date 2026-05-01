@@ -10,6 +10,11 @@ return new class extends Migration
     {
         Schema::dropIfExists('hive_summary');
 
+        // Guard: create_hri_summary_table already creates this on a fresh schema.
+        if (Schema::hasTable('hri_summary')) {
+            return;
+        }
+
         Schema::create('hri_summary', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hive_id')->constrained('hives')->cascadeOnDelete();

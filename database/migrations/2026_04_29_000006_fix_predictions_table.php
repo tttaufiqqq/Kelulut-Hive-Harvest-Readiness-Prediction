@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Guard: create_predictions_table already omits hive_id on a fresh schema.
+        if (!Schema::hasColumn('predictions', 'hive_id')) {
+            return;
+        }
+
         Schema::table('predictions', function (Blueprint $table) {
             $table->dropForeign(['hive_id']);
             $table->dropIndex(['hive_id', 'prediction_timestamp']);
