@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Harvest;
 use App\Models\Hive;
-use App\Models\HriRecord;
+use App\Models\Prediction;
 use App\Models\SensorLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
