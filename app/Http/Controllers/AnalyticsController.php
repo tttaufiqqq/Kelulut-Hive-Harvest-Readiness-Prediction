@@ -14,7 +14,7 @@ class AnalyticsController extends Controller
 {
     public function show(Request $request, Hive $hive)
     {
-        $this->authorize('view', $hive);
+        abort_if($hive->beekeeper_id !== auth()->id(), 403);
 
         // ── HRI trend: last 30 days, one reading per day (latest per day) ──────
         $hriTrend = HriRecord::where('hive_id', $hive->id)
