@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { Thermometer, Droplets, Flame, ChevronDown, Check } from 'lucide-react';
 import { DatePicker } from '@/components/core/date-picker';
+import { ScrollArea } from '@/components/core/scroll-area';
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
@@ -14,6 +15,9 @@ type LatestReading = {
     temperature: number;
     humidity:    number;
     mq2:         number;
+    mq3:         number;
+    mq5:         number;
+    mq135:       number;
     recorded_at: string;
 } | null;
 
@@ -22,6 +26,9 @@ type HistoryPoint = {
     temperature: number;
     humidity:    number;
     mq2:         number;
+    mq3:         number;
+    mq5:         number;
+    mq135:       number;
 };
 
 type Props = {
@@ -133,11 +140,10 @@ function humidColor(h: number): string {
     return '#10B981';
 }
 
-// MQ2 display max is 500 — practical sensor range in a hive environment.
-// Raw ADC 0-4095 but clean air reads 10-100, dangerous smoke reads 300-500+.
-const MQ2_GAUGE_MAX = 500;
+// Gas sensor display max — clean air ~10-100, warning zone 300-500+.
+const MQ_GAUGE_MAX = 500;
 
-function mq2Color(v: number): string {
+function mqColor(v: number): string {
     if (v > 300) return '#EF4444';
     if (v > 150) return '#F59E0B';
     return '#10B981';
@@ -383,26 +389,57 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
 
                         </div>
 
-                        {/* ── Bottom row: MQ2 full width ── */}
-                        <Card>
-                            <SensorHeader
-                                icon={<Flame className="w-4 h-4" />}
-                                label="Smoke & Gas"
-                                iconBg="bg-red-50"
-                                iconColor="#EF4444"
-                            />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mt-2">
-                                <div className="flex flex-col items-center">
-                                    <ArcGauge
-                                        value={latest?.mq2 ?? 0}
-                                        max={MQ2_GAUGE_MAX}
-                                        color={latest ? mq2Color(latest.mq2) : '#FEF3C7'}
-                                    />
-                                    {latest && <StatusBadge color={mq2Color(latest.mq2)} />}
-                                </div>
-                                <SensorLine data={history} dataKey="mq2" />
+                        {/* ── Bottom row: Gas sensors (horizontal scroll) ── */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <motion.div
+                                    initial={{ scale: 0.6, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+                                    className="bg-red-50 p-2 rounded-xl text-red-500"
+                                >
+                                    <Flame className="w-4 h-4" />
+                                </motion.div>
+                                <span className="text-xs font-black uppercase tracking-widest text-amber-900/60">Gas Sensors</span>
                             </div>
-                        </Card>
+                            <ScrollArea direction="horizontal" className="-mx-1 px-1 pb-3">
+                                <div className="flex gap-4 min-w-max">
+                                    {([
+                                        { key: 'mq2'   as const, label: 'MQ-2',   desc: 'Smoke / LPG' },
+                                        { key: 'mq3'   as const, label: 'MQ-3',   desc: 'Alcohol / Benzene' },
+                                        { key: 'mq5'   as const, label: 'MQ-5',   desc: 'LPG / Natural Gas' },
+                                        { key: 'mq135' as const, label: 'MQ-135', desc: 'Air Quality / CO₂' },
+                                    ] as const).map(({ key, label, desc }) => (
+                                        <Card key={key} className="w-64 flex-shrink-0 flex flex-col">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div>
+                                                    <span className="text-xs font-black uppercase tracking-widest text-amber-900/60">{label}</span>
+                                                    <p className="text-[10px] text-amber-900/40 font-medium mt-0.5">{desc}</p>
+                                                </div>
+                                                {latest && (
+                                                    <motion.span
+                                                        key={latest[key]}
+                                                        initial={{ opacity: 0, y: -4 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ duration: 0.3 }}
+                                                        className="text-2xl font-black text-amber-950"
+                                                    >
+                                                        {latest[key]}
+                                                    </motion.span>
+                                                )}
+                                            </div>
+                                            <ArcGauge
+                                                value={latest?.[key] ?? 0}
+                                                max={MQ_GAUGE_MAX}
+                                                color={latest ? mqColor(latest[key]) : '#FEF3C7'}
+                                            />
+                                            {latest && <StatusBadge color={mqColor(latest[key])} />}
+                                            <SensorLine data={history} dataKey={key} />
+                                        </Card>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </div>
 
                     </div>
                 )}
