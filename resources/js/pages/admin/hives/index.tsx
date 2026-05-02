@@ -97,10 +97,11 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
     const submitEdit = (e: React.FormEvent) => {
         e.preventDefault();
         if (activeModal?.type !== 'edit') return;
-        editForm.patch(route('admin.hives.update', { hive: activeModal.hive.id }), {
-            forceFormData: true,
-            onSuccess: () => close(),
-        });
+        editForm.transform(data => ({ ...data, _method: 'patch' }))
+            .post(route('admin.hives.update', { hive: activeModal.hive.id }), {
+                forceFormData: true,
+                onSuccess: () => close(),
+            });
     };
 
     const confirmToggle = () => {
