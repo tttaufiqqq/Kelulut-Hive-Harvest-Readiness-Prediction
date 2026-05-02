@@ -84,7 +84,7 @@ export default function Dashboard({ hives }: Props) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     {/* Left: Hive list */}
-                    <div className="lg:col-span-5 space-y-6">
+                    <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-6 lg:self-start">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-bold text-amber-900">Your Hives</h3>
                         </div>
@@ -209,12 +209,12 @@ export default function Dashboard({ hives }: Props) {
                                     {(selectedHive.avg_temperature !== null || selectedHive.avg_humidity !== null || selectedHive.avg_mq2 !== null) && (
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                             {[
-                                                { icon: Thermometer, color: 'text-orange-400', label: 'Avg Temp',     value: selectedHive.avg_temperature !== null ? `${selectedHive.avg_temperature}°C` : '—' },
-                                                { icon: Droplets,    color: 'text-blue-400',   label: 'Avg Humidity', value: selectedHive.avg_humidity    !== null ? `${selectedHive.avg_humidity}%`    : '—' },
-                                                { icon: BarChart3,   color: 'text-purple-400', label: 'Avg MQ2',      value: selectedHive.avg_mq2         !== null ? `${selectedHive.avg_mq2} ADC`      : '—' },
-                                                { icon: Wind,        color: 'text-teal-400',   label: 'Avg MQ3',      value: selectedHive.avg_mq3         !== null ? `${selectedHive.avg_mq3} ADC`      : '—' },
-                                                { icon: Wind,        color: 'text-cyan-400',   label: 'Avg MQ5',      value: selectedHive.avg_mq5         !== null ? `${selectedHive.avg_mq5} ADC`      : '—' },
-                                                { icon: Wind,        color: 'text-indigo-400', label: 'Avg MQ135',    value: selectedHive.avg_mq135       !== null ? `${selectedHive.avg_mq135} ADC`    : '—' },
+                                                { icon: Thermometer, color: 'text-orange-400', label: 'Avg Temp',     value: selectedHive.avg_temperature != null ? `${selectedHive.avg_temperature}°C` : '—' },
+                                                { icon: Droplets,    color: 'text-blue-400',   label: 'Avg Humidity', value: selectedHive.avg_humidity    != null ? `${selectedHive.avg_humidity}%`    : '—' },
+                                                { icon: BarChart3,   color: 'text-purple-400', label: 'Avg MQ2',      value: selectedHive.avg_mq2   != null ? `${selectedHive.avg_mq2} ADC`   : '—' },
+                                                { icon: Wind,        color: 'text-teal-400',   label: 'Avg MQ3',      value: selectedHive.avg_mq3   != null ? `${selectedHive.avg_mq3} ADC`   : '—' },
+                                                { icon: Wind,        color: 'text-cyan-400',   label: 'Avg MQ5',      value: selectedHive.avg_mq5   != null ? `${selectedHive.avg_mq5} ADC`   : '—' },
+                                                { icon: Wind,        color: 'text-indigo-400', label: 'Avg MQ135',    value: selectedHive.avg_mq135 != null ? `${selectedHive.avg_mq135} ADC` : '—' },
                                             ].map((s) => (
                                                 <Card key={s.label} className="flex flex-col justify-between">
                                                     <div className="flex items-center gap-2 mb-2">
