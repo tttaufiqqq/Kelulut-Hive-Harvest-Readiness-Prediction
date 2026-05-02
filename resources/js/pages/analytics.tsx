@@ -116,7 +116,10 @@ function HriScoreCard({ hive }: { hive: HiveData }) {
 
 function HriTrendChart({ data }: { data: HriTrend[] }) {
     const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
 
     return (
         <Card className="h-full flex flex-col">
@@ -151,7 +154,10 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
 
 function SensorChart({ data }: { data: SensorReading[] }) {
     const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
 
     return (
         <Card>
@@ -229,7 +235,10 @@ function LatestPredictionCard({ prediction }: { prediction: LatestPrediction | n
 
 function HarvestBar({ data }: { data: HarvestRecord[] }) {
     const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
 
     if (data.length === 0) {
         return (

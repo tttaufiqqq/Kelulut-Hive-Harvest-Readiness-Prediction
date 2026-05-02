@@ -74,7 +74,10 @@ export default function AdminDashboard({ stats, hives, productivityRanking, cros
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
 
     const sortedHives  = [...hives].sort((a, b) => b.readiness - a.readiness);
     const selectedHive = selectedIndex !== null ? sortedHives[selectedIndex] : null;

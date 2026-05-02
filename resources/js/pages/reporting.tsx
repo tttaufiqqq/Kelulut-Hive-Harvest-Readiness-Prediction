@@ -157,7 +157,10 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
 // ── Reporting ─────────────────────────────────────────────────────────
 export default function Reporting({ hriGauges, readinessTrends }: Props) {
     const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
 
     return (
         <AuthenticatedLayout>
