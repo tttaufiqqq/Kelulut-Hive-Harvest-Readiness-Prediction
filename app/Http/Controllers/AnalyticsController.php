@@ -75,34 +75,37 @@ class AnalyticsController extends Controller
             'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->format('d M Y, H:i'),
         ] : null;
 
-        // ── Harvest history ───────────────────────────────────────────────────
-        $harvestHistory = $hive->harvests()
-            ->orderBy('harvest_dt')
-            ->get(['harvest_dt', 'qty_ml', 'hri_at_hvst'])
+        // ── Q4: Harvest history ───────────────────────────────────────────────
+        $harvestHistory = Harvest::where('hive_id', $hive->id)
+            ->with(['color', 'flavor'])
+            ->orderByDesc('harvest_date')
+            ->get()
             ->map(fn($h) => [
-                'date'           => \Carbon\Carbon::parse($h->harvest_dt)->format('M d'),
-                'qty_ml'         => $h->qty_ml,
-                'hri_at_harvest' => $h->hri_at_hvst,
+                'date'   => Carbon::parse($h->harvest_date)->format('M d'),
+                'weight' => (float) $h->weight,
+                'color'  => $h->color?->name,
+                'flavor' => $h->flavor?->name,
             ]);
 
-        // ── Hive summary ──────────────────────────────────────────────────────
-        $summary = $hive->hiveSummary;
+        // ── Q5: Hive summary ──────────────────────────────────────────────────
+        $summary        = $hive->summary;
+        $totalHarvests  = Harvest::where('hive_id', $hive->id)->count();
+        $lastHarvestDate= Harvest::where('hive_id', $hive->id)->max('harvest_date');
 
         return Inertia::render('analytics', [
             'hive' => [
-                'id'               => $hive->id,
-                'name'             => $hive->name,
-                'latest_hri_score' => $summary?->latest_hri_score ?? 0,
-                'latest_category'  => $summary?->latest_category  ?? 'Poor',
-                'avg_hri_7d'       => $summary ? round($avg7d ?? 0) : 0,
-                'avg_hri_30d'      => $summary?->avg_hri_30d ?? 0,
-                'total_harvests'   => $summary?->total_harvests ?? 0,
-                'last_harvest_dt'  => $summary?->last_harvest_dt,
+                'id'                     => $hive->id,
+                'name'                   => $hive->name,
+                'latest_readiness_level' => $summary?->latest_readiness_level,
+                'avg_hri_pct'            => round(($summary?->avg_hri_value ?? 0) * 100),
+                'avg_hri_7d_pct'         => $avg7dPct,
+                'total_harvests'         => $totalHarvests,
+                'last_harvest_date'      => $lastHarvestDate,
             ],
-            'hriTrend'       => $hriTrend,
-            'sensorReadings' => $sensorReadings,
-            'scoreComponents' => $scoreComponents,
-            'harvestHistory' => $harvestHistory,
+            'hriTrend'         => $hriTrend,
+            'sensorReadings'   => $sensorReadings,
+            'latestPrediction' => $latestPrediction,
+            'harvestHistory'   => $harvestHistory,
         ]);
     }
 }
