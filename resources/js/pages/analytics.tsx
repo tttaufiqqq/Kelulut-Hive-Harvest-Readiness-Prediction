@@ -3,7 +3,6 @@ import {
     ResponsiveContainer,
     AreaChart, Area,
     BarChart, Bar,
-    RadarChart, Radar, PolarGrid, PolarAngleAxis,
     LineChart, Line,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
@@ -250,7 +249,7 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Analytics({ hive, hriTrend, sensorReadings, scoreComponents, harvestHistory }: Props) {
+export default function Analytics({ hive, hriTrend, sensorReadings, latestPrediction, harvestHistory }: Props) {
     return (
         <AuthenticatedLayout>
             <Head title={`Analytics — ${hive.name}`} />
@@ -271,14 +270,14 @@ export default function Analytics({ hive, hriTrend, sensorReadings, scoreCompone
                     </div>
                 </div>
 
-                {/* Middle row: sensor readings + radar */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <SensorChart data={sensorReadings} />
-                    <ScoreRadar data={scoreComponents} />
-                </div>
+                {/* Sensor readings — full width */}
+                <SensorChart data={sensorReadings} />
 
-                {/* Bottom row: harvest history */}
-                <HarvestBar data={harvestHistory} />
+                {/* Prediction + harvest */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <LatestPredictionCard prediction={latestPrediction} />
+                    <HarvestBar data={harvestHistory} />
+                </div>
 
             </div>
         </AuthenticatedLayout>
