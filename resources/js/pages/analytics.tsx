@@ -60,13 +60,20 @@ interface Props {
     harvestHistory: HarvestRecord[];
 }
 
-// ─── Color map ────────────────────────────────────────────────────────────────
+// ─── Readiness maps ───────────────────────────────────────────────────────────
 
-const CATEGORY_COLORS: Record<string, string> = {
-    Excellent: '#16a34a',
-    Good:      '#ca8a04',
-    Fair:      '#d97706',
-    Poor:      '#dc2626',
+const READINESS_LABELS: Record<string, string> = {
+    not_ready:    'Not Ready',
+    approaching:  'Approaching',
+    nearly_ready: 'Nearly Ready',
+    ready:        'Ready to Harvest',
+};
+
+const READINESS_COLORS: Record<string, string> = {
+    not_ready:    '#dc2626',
+    approaching:  '#d97706',
+    nearly_ready: '#ca8a04',
+    ready:        '#16a34a',
 };
 
 const TOOLTIP_STYLE = {
