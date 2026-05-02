@@ -129,6 +129,7 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
                         <XAxis dataKey="date" axisLine={false} tickLine={false}
                             tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} dy={8} />
                         <YAxis domain={[0, 100]} axisLine={false} tickLine={false}
+                            tickFormatter={(v) => `${v}%`}
                             tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} />
                         <Tooltip contentStyle={TOOLTIP_STYLE} />
                         <Legend wrapperStyle={{ fontSize: 11 }} />
