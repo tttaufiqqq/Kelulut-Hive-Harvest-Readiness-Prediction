@@ -12,45 +12,52 @@ import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface HiveSummary {
+interface HiveData {
     id: number;
     name: string;
-    latest_hri_score: number;
-    latest_category: 'Poor' | 'Fair' | 'Good' | 'Excellent';
-    avg_hri_7d: number;
-    avg_hri_30d: number;
+    latest_readiness_level: string | null;
+    avg_hri_pct: number;
+    avg_hri_7d_pct: number;
     total_harvests: number;
-    last_harvest_dt: string | null;
+    last_harvest_date: string | null;
 }
 
 interface HriTrend {
-    date: string;         // e.g. "Apr 01"
+    date: string;
     hri_score: number;
     avg_7d: number;
 }
 
 interface SensorReading {
-    time: string;         // e.g. "10:00"
+    time: string;
     temp: number;
     humidity: number;
-    co2: number;
-    etoh: number;
-    ch4: number;
-    smoke: number;
+    mq2: number;
+    mq3: number;
+    mq5: number;
+    mq135: number;
 }
 
-interface ScoreComponents {
-    sensor: string;
-    score: number;
-    max: number;
+interface LatestPrediction {
+    readiness_level: string;
+    hri_value: number;
+    confidence_score: number;
+    prediction_timestamp: string;
+}
+
+interface HarvestRecord {
+    date: string;
+    weight: number;
+    color: string | null;
+    flavor: string | null;
 }
 
 interface Props {
-    hive: HiveSummary;
+    hive: HiveData;
     hriTrend: HriTrend[];
     sensorReadings: SensorReading[];
-    scoreComponents: ScoreComponents[];
-    harvestHistory: { date: string; qty_ml: number; hri_at_harvest: number }[];
+    latestPrediction: LatestPrediction | null;
+    harvestHistory: HarvestRecord[];
 }
 
 // ─── Color map ────────────────────────────────────────────────────────────────
