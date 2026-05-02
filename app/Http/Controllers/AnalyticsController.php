@@ -8,6 +8,7 @@ use App\Models\Prediction;
 use App\Models\SensorLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AnalyticsController extends Controller
@@ -37,18 +38,23 @@ class AnalyticsController extends Controller
             ]);
 
         // ── Q2: Sensor readings — today, grouped by hour ──────────────────────
+        $isSqlite   = DB::connection()->getDriverName() === 'sqlite';
+        $hourExpr   = $isSqlite
+            ? "strftime('%H:00', record_timestamp)"
+            : 'DATE_FORMAT(record_timestamp, "%H:00")';
+
         $sensorReadings = SensorLog::where('hive_id', $hive->id)
             ->whereDate('record_timestamp', today())
-            ->selectRaw('
-                DATE_FORMAT(record_timestamp, "%H:00") as time,
+            ->selectRaw("
+                {$hourExpr} as time,
                 AVG(temp)         as temp,
                 AVG(humidity)     as humidity,
                 AVG(mq2_value)    as mq2,
                 AVG(mq3_value)    as mq3,
                 AVG(mq5_value)    as mq5,
                 AVG(mq135_value)  as mq135
-            ')
-            ->groupByRaw('DATE_FORMAT(record_timestamp, "%H:00")')
+            ")
+            ->groupByRaw($hourExpr)
             ->orderBy('time')
             ->get()
             ->map(fn($r) => [

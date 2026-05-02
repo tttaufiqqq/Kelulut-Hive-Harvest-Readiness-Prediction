@@ -59,10 +59,10 @@ test('beekeeper cannot store harvest for another beekeepers hive', function () {
     $other     = makeBeekeeper();
     $hive      = makeHiveFor($other);
 
-    $response = $this->actingAs($beekeeper)
-        ->post(route('harvests.store'), harvestPayload($hive->id));
+    $this->actingAs($beekeeper)
+        ->post(route('harvests.store'), harvestPayload($hive->id))
+        ->assertSessionHasErrors('hive_id');
 
-    $response->assertStatus(422);
     $this->assertDatabaseMissing('harvests', ['hive_id' => $hive->id]);
 });
 
