@@ -5,9 +5,10 @@ const TABS = [
     { label: 'My Hives',    href: '/dashboard'    },
     { label: 'Harvests',    href: '/harvests'     },
     { label: 'Inspections', href: '/inspections'  },
+    { label: 'Reporting',   href: '/reporting'    },
 ];
 
-export function BeekeeperTabs({ active }: { active: 'dashboard' | 'harvests' | 'inspections' }) {
+export function BeekeeperTabs({ active }: { active: 'dashboard' | 'harvests' | 'inspections' | 'reporting' }) {
     return (
         <nav className="flex gap-1 bg-yellow-100/50 rounded-2xl p-1.5">
             {TABS.map(tab => (

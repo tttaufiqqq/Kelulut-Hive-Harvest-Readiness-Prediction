@@ -6,6 +6,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import { Card } from '@/components/core/card';
+import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
@@ -157,9 +158,12 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
 
             <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
 
-                <div>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Breadcrumbs items={[{ label: 'Reporting' }]} />
-                    <h1 className="text-2xl font-black text-amber-950 mt-2">Reporting</h1>
+                    <BeekeeperTabs active="reporting" />
+                </div>
+                <div>
+                    <h1 className="text-2xl font-black text-amber-950">Reporting</h1>
                     <p className="text-sm text-amber-900/50 mt-1">Harvest readiness overview for your hives.</p>
                 </div>
 
