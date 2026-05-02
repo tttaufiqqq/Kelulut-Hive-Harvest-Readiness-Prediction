@@ -106,7 +106,7 @@ export default function Dashboard({ hives }: Props) {
                                                 'cursor-pointer transition-all border-2',
                                                 selectedHive?.id === hive.id
                                                     ? 'border-yellow-400 ring-4 ring-yellow-400/10'
-                                                    : 'border-transparent'
+                                                    : 'border-gray-200'
                                             )}
                                             onClick={() => setSelectedHive(hive)}
                                         >
@@ -164,27 +164,67 @@ export default function Dashboard({ hives }: Props) {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="space-y-6"
                                 >
-                                    <Card className="bg-gradient-to-br from-yellow-400 to-amber-500 text-white border-none p-8 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 p-8 opacity-10">
-                                            <Leaf className="w-32 h-32" />
-                                        </div>
-                                        <div className="relative z-10">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Leaf className="w-5 h-5" />
-                                                <span className="text-sm font-bold uppercase tracking-widest opacity-80">Readiness Score</span>
+                                    <div>
+                                        <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-2">
+                                            Viewing: <span className="text-amber-900">{selectedHive.name}</span>
+                                        </p>
+                                        <Card className="bg-gradient-to-br from-yellow-400 to-amber-500 text-white border-none p-8 relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 p-8 opacity-10">
+                                                <Leaf className="w-32 h-32" />
                                             </div>
-                                            <div className="flex items-baseline gap-4">
-                                                <span className="text-7xl font-black tracking-tighter">
-                                                    {Math.round(selectedHive.hri_value * 100)}%
-                                                </span>
-                                                <div className="bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold">
-                                                    {selectedHive.readiness_level
-                                                        ? (READINESS_LABELS[selectedHive.readiness_level] ?? selectedHive.readiness_level)
-                                                        : 'No prediction yet'}
+                                            <div className="relative z-10">
+                                                {/* Header row */}
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Leaf className="w-5 h-5" />
+                                                        <span className="text-sm font-bold uppercase tracking-widest opacity-80">Readiness Score</span>
+                                                    </div>
+                                                    <Link
+                                                        href={route('analytics.show', { hive: selectedHive.id })}
+                                                        className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold transition-colors"
+                                                    >
+                                                        <LineChart className="w-4 h-4" />
+                                                        Analytics
+                                                    </Link>
                                                 </div>
-                                            </div>
-                                            <div className="mt-6 flex items-center justify-between">
-                                                <div className="flex items-center gap-6">
+
+                                                {/* Score + badge */}
+                                                <div className="flex items-baseline gap-4">
+                                                    <span className="text-7xl font-black tracking-tighter">
+                                                        {Math.round(selectedHive.hri_value * 100)}%
+                                                    </span>
+                                                    <div className="bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold">
+                                                        {selectedHive.readiness_level
+                                                            ? (READINESS_LABELS[selectedHive.readiness_level] ?? selectedHive.readiness_level)
+                                                            : 'No prediction yet'}
+                                                    </div>
+                                                </div>
+
+                                                {/* Helper text + target progress */}
+                                                {selectedHive.readiness_level && selectedHive.readiness_level !== 'ready' && (
+                                                    <div className="mt-3 mb-1">
+                                                        <p className="text-xs opacity-70 mb-2">Hive needs more time to mature. Target: 80% readiness for harvest.</p>
+                                                        <div className="relative w-full h-2 bg-white/20 rounded-full overflow-visible">
+                                                            <div
+                                                                className="h-full bg-white/70 rounded-full"
+                                                                style={{ width: `${Math.min(Math.round(selectedHive.hri_value * 100), 100)}%` }}
+                                                            />
+                                                            <div
+                                                                className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-white rounded-full"
+                                                                style={{ left: '80%' }}
+                                                                title="80% harvest target"
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between text-[10px] opacity-60 mt-1">
+                                                            <span>0%</span>
+                                                            <span>Target 80%</span>
+                                                            <span>100%</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Stats row */}
+                                                <div className="mt-4 flex items-center gap-6">
                                                     <div>
                                                         <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Total Harvests</p>
                                                         <p className="text-xl font-bold">{selectedHive.harvest_count}</p>
@@ -195,33 +235,32 @@ export default function Dashboard({ hives }: Props) {
                                                         <p className="text-xl font-bold">{selectedHive.age_months} months</p>
                                                     </div>
                                                 </div>
-                                                <Link
-                                                    href={route('analytics.show', { hive: selectedHive.id })}
-                                                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold transition-colors"
-                                                >
-                                                    <LineChart className="w-4 h-4" />
-                                                    Analytics
-                                                </Link>
                                             </div>
-                                        </div>
-                                    </Card>
+                                        </Card>
+                                    </div>
 
                                     {(selectedHive.avg_temperature !== null || selectedHive.avg_humidity !== null || selectedHive.avg_mq2 !== null) && (
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                             {[
-                                                { icon: Thermometer, color: 'text-orange-400', label: 'Avg Temp',     value: selectedHive.avg_temperature != null ? `${selectedHive.avg_temperature}°C` : '—' },
-                                                { icon: Droplets,    color: 'text-blue-400',   label: 'Avg Humidity', value: selectedHive.avg_humidity    != null ? `${selectedHive.avg_humidity}%`    : '—' },
-                                                { icon: BarChart3,   color: 'text-purple-400', label: 'Avg MQ2',      value: selectedHive.avg_mq2   != null ? `${selectedHive.avg_mq2} ADC`   : '—' },
-                                                { icon: Wind,        color: 'text-teal-400',   label: 'Avg MQ3',      value: selectedHive.avg_mq3   != null ? `${selectedHive.avg_mq3} ADC`   : '—' },
-                                                { icon: Wind,        color: 'text-cyan-400',   label: 'Avg MQ5',      value: selectedHive.avg_mq5   != null ? `${selectedHive.avg_mq5} ADC`   : '—' },
-                                                { icon: Wind,        color: 'text-indigo-400', label: 'Avg MQ135',    value: selectedHive.avg_mq135 != null ? `${selectedHive.avg_mq135} ADC` : '—' },
+                                                { icon: Thermometer, color: 'text-orange-400', label: 'Avg Temp',     subtitle: 'DHT11',       adcTooltip: undefined,                                              value: selectedHive.avg_temperature != null ? `${selectedHive.avg_temperature}°C` : '—' },
+                                                { icon: Droplets,    color: 'text-blue-400',   label: 'Avg Humidity', subtitle: 'DHT11',       adcTooltip: undefined,                                              value: selectedHive.avg_humidity    != null ? `${selectedHive.avg_humidity}%`    : '—' },
+                                                { icon: BarChart3,   color: 'text-purple-400', label: 'Avg MQ2',      subtitle: 'Air Quality', adcTooltip: 'Raw sensor reading (Analog-to-Digital Converter)',     value: selectedHive.avg_mq2   != null ? `${selectedHive.avg_mq2} ADC`   : '—' },
+                                                { icon: Wind,        color: 'text-teal-400',   label: 'Avg MQ3',      subtitle: 'Gas Sensor',  adcTooltip: 'Raw sensor reading (Analog-to-Digital Converter)',     value: selectedHive.avg_mq3   != null ? `${selectedHive.avg_mq3} ADC`   : '—' },
+                                                { icon: Wind,        color: 'text-cyan-400',   label: 'Avg MQ5',      subtitle: 'LPG/Smoke',   adcTooltip: 'Raw sensor reading (Analog-to-Digital Converter)',     value: selectedHive.avg_mq5   != null ? `${selectedHive.avg_mq5} ADC`   : '—' },
+                                                { icon: Wind,        color: 'text-indigo-400', label: 'Avg MQ135',    subtitle: 'CO2/Air',     adcTooltip: 'Raw sensor reading (Analog-to-Digital Converter)',     value: selectedHive.avg_mq135 != null ? `${selectedHive.avg_mq135} ADC` : '—' },
                                             ].map((s) => (
-                                                <Card key={s.label} className="flex flex-col justify-between">
-                                                    <div className="flex items-center gap-2 mb-2">
+                                                <Card key={s.label} className="p-5 flex flex-col justify-between">
+                                                    <div className="flex items-center gap-2 mb-1">
                                                         <s.icon className={`w-4 h-4 ${s.color}`} />
                                                         <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">{s.label}</span>
                                                     </div>
-                                                    <p className="text-2xl font-black text-amber-900">{s.value}</p>
+                                                    <p className="text-[10px] text-amber-900/35 font-medium mb-2">{s.subtitle}</p>
+                                                    <p
+                                                        className="text-2xl font-black text-amber-900"
+                                                        title={s.adcTooltip}
+                                                    >
+                                                        {s.value}
+                                                    </p>
                                                 </Card>
                                             ))}
                                         </div>
