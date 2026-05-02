@@ -28,17 +28,25 @@ type Props = {
     hives: HiveCard[];
 };
 
+const READINESS_LABELS: Record<string, string> = {
+    not_ready:    'Not Ready',
+    approaching:  'Approaching',
+    nearly_ready: 'Nearly Ready',
+    ready:        'Ready to Harvest',
+};
+
+const READINESS_STYLES: Record<string, string> = {
+    not_ready:    'bg-rose-100 text-rose-700',
+    approaching:  'bg-amber-100 text-amber-700',
+    nearly_ready: 'bg-yellow-100 text-yellow-700',
+    ready:        'bg-emerald-100 text-emerald-700',
+};
+
 function ReadinessBadge({ level }: { level: string | null }) {
     if (!level) return <span className="text-amber-900/40 text-sm">No data yet</span>;
-    const styles: Record<string, string> = {
-        'Not Ready':        'bg-rose-100 text-rose-700',
-        'Approaching':      'bg-amber-100 text-amber-700',
-        'Nearly Ready':     'bg-yellow-100 text-yellow-700',
-        'Ready to Harvest': 'bg-emerald-100 text-emerald-700',
-    };
     return (
-        <span className={cn('inline-flex items-center px-3 py-1 rounded-full text-sm font-bold', styles[level] ?? 'bg-gray-100 text-gray-500')}>
-            {level}
+        <span className={cn('inline-flex items-center px-3 py-1 rounded-full text-sm font-bold', READINESS_STYLES[level] ?? 'bg-gray-100 text-gray-500')}>
+            {READINESS_LABELS[level] ?? level}
         </span>
     );
 }
@@ -47,7 +55,7 @@ export default function Dashboard({ hives }: Props) {
     const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
     const flash = props.flash;
 
-    const [selectedHive, setSelectedHive] = useState<HiveCard | null>(null);
+    const [selectedHive, setSelectedHive] = useState<HiveCard | null>(() => hives[0] ?? null);
 
     return (
         <AuthenticatedLayout>
@@ -160,7 +168,9 @@ export default function Dashboard({ hives }: Props) {
                                                     {Math.round(selectedHive.hri_value * 100)}%
                                                 </span>
                                                 <div className="bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-bold">
-                                                    {selectedHive.readiness_level ?? 'No prediction yet'}
+                                                    {selectedHive.readiness_level
+                                                        ? (READINESS_LABELS[selectedHive.readiness_level] ?? selectedHive.readiness_level)
+                                                        : 'No prediction yet'}
                                                 </div>
                                             </div>
                                             <div className="mt-6 flex items-center justify-between">
@@ -212,20 +222,29 @@ export default function Dashboard({ hives }: Props) {
                                                     <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">Avg MQ2</span>
                                                 </div>
                                                 <p className="text-2xl font-black text-amber-900">
-                                                    {selectedHive.avg_mq2 !== null ? selectedHive.avg_mq2 : '—'}
+                                                    {selectedHive.avg_mq2 !== null ? `${selectedHive.avg_mq2} ADC` : '—'}
                                                 </p>
                                             </Card>
                                         </div>
                                     )}
 
-                                    <Card>
-                                        <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-3">Latest Prediction</p>
-                                        <ReadinessBadge level={selectedHive.readiness_level} />
-                                        {!selectedHive.readiness_level && (
-                                            <p className="text-xs text-amber-900/40 mt-2">
-                                                Predictions appear once sensor data has been collected and processed by the ML model.
-                                            </p>
-                                        )}
+                                    <Card className="flex items-center justify-between gap-4">
+                                        <div>
+                                            <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Latest Prediction</p>
+                                            <ReadinessBadge level={selectedHive.readiness_level} />
+                                            {!selectedHive.readiness_level && (
+                                                <p className="text-xs text-amber-900/40 mt-2">
+                                                    Predictions appear once sensor data has been collected and processed by the ML model.
+                                                </p>
+                                            )}
+                                        </div>
+                                        <Link
+                                            href={route('analytics.show', { hive: selectedHive.id })}
+                                            className="shrink-0 flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 rounded-full text-sm font-bold transition-colors"
+                                        >
+                                            <LineChart className="w-4 h-4" />
+                                            Full Analytics
+                                        </Link>
                                     </Card>
                                 </motion.div>
                             ) : (

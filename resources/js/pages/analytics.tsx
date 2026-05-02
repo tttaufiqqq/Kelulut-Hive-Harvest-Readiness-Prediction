@@ -1,4 +1,6 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import {
     ResponsiveContainer,
     AreaChart, Area,
@@ -7,6 +9,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { Card } from '@/components/core/card';
+import { Breadcrumbs } from '@/components/core/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -112,11 +115,14 @@ function HriScoreCard({ hive }: { hive: HiveData }) {
 }
 
 function HriTrendChart({ data }: { data: HriTrend[] }) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
     return (
         <Card>
             <p className="font-bold text-amber-900 mb-4">HRI Score — 30 Day Trend</p>
             <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
+                {mounted && <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>
                         <defs>
                             <linearGradient id="hriGrad" x1="0" y1="0" x2="0" y2="1">
@@ -137,18 +143,21 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
                         <Line type="monotone" dataKey="avg_7d" name="7d Avg"
                             stroke="#92400E" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
                     </AreaChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer>}
             </div>
         </Card>
     );
 }
 
 function SensorChart({ data }: { data: SensorReading[] }) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
     return (
         <Card>
             <p className="font-bold text-amber-900 mb-4">Sensor Readings — Today</p>
             <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
+                {mounted && <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
                         <XAxis dataKey="time" axisLine={false} tickLine={false}
@@ -164,7 +173,7 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                         <Line type="monotone" dataKey="mq5"      name="MQ5 ADC"       stroke="#10b981" strokeWidth={2} dot={false} />
                         <Line type="monotone" dataKey="mq135"    name="MQ135 ADC"     stroke="#f59e0b" strokeWidth={2} dot={false} />
                     </LineChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer>}
             </div>
         </Card>
     );
@@ -219,6 +228,9 @@ function LatestPredictionCard({ prediction }: { prediction: LatestPrediction | n
 }
 
 function HarvestBar({ data }: { data: HarvestRecord[] }) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
     if (data.length === 0) {
         return (
             <Card className="flex items-center justify-center py-10">
@@ -231,7 +243,7 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
         <Card>
             <p className="font-bold text-amber-900 mb-4">Harvest History — Weight (kg)</p>
             <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
+                {mounted && <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
                         <XAxis dataKey="date" axisLine={false} tickLine={false}
@@ -241,7 +253,7 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
                         <Tooltip contentStyle={TOOLTIP_STYLE} />
                         <Bar dataKey="weight" name="Weight (kg)" fill="#F59E0B" radius={[6, 6, 0, 0]} />
                     </BarChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer>}
             </div>
         </Card>
     );
@@ -255,9 +267,25 @@ export default function Analytics({ hive, hriTrend, sensorReadings, latestPredic
             <Head title={`Analytics — ${hive.name}`} />
             <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
 
-                <div>
-                    <h1 className="text-2xl font-black text-amber-900">Analytics</h1>
-                    <p className="text-amber-700 text-sm mt-1">{hive.name} — Harvest Readiness Intelligence</p>
+                <div className="flex flex-col gap-2">
+                    <Breadcrumbs items={[
+                        { label: 'Home', href: '/' },
+                        { label: 'My Hives', href: '/dashboard' },
+                        { label: String(hive.id) },
+                        { label: 'Analytics' },
+                    ]} />
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/dashboard"
+                            className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                        </Link>
+                        <div>
+                            <h1 className="text-2xl font-black text-amber-900">Analytics</h1>
+                            <p className="text-amber-700 text-sm mt-1">{hive.name} — Harvest Readiness Intelligence</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Top row: score card + HRI trend */}

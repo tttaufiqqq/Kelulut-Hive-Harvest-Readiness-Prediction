@@ -13,7 +13,7 @@ class SensorLogSeeder extends Seeder
         $iotNodes = DB::table('iot_nodes')->get()->keyBy('hive_id');
 
         $rows = [];
-        $start = now()->subDays(30);
+        $start = now()->subDays(29);
 
         foreach ($hives as $hive) {
             $node = $iotNodes[$hive->id] ?? null;
