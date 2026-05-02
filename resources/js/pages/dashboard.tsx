@@ -1,5 +1,5 @@
-import { Head, usePage } from '@inertiajs/react';
-import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Leaf } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Leaf, LineChart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { Card } from '@/components/core/card';
@@ -163,16 +163,25 @@ export default function Dashboard({ hives }: Props) {
                                                     {selectedHive.readiness_level ?? 'No prediction yet'}
                                                 </div>
                                             </div>
-                                            <div className="mt-6 flex items-center gap-6">
-                                                <div>
-                                                    <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Total Harvests</p>
-                                                    <p className="text-xl font-bold">{selectedHive.harvest_count}</p>
+                                            <div className="mt-6 flex items-center justify-between">
+                                                <div className="flex items-center gap-6">
+                                                    <div>
+                                                        <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Total Harvests</p>
+                                                        <p className="text-xl font-bold">{selectedHive.harvest_count}</p>
+                                                    </div>
+                                                    <div className="w-px h-10 bg-white/20" />
+                                                    <div>
+                                                        <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Hive Age</p>
+                                                        <p className="text-xl font-bold">{selectedHive.age_months} months</p>
+                                                    </div>
                                                 </div>
-                                                <div className="w-px h-10 bg-white/20" />
-                                                <div>
-                                                    <p className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Hive Age</p>
-                                                    <p className="text-xl font-bold">{selectedHive.age_months} months</p>
-                                                </div>
+                                                <Link
+                                                    href={route('analytics.show', { hive: selectedHive.id })}
+                                                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold transition-colors"
+                                                >
+                                                    <LineChart className="w-4 h-4" />
+                                                    Analytics
+                                                </Link>
                                             </div>
                                         </div>
                                     </Card>
