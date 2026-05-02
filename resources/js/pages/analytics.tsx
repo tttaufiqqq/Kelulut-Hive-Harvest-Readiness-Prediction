@@ -171,21 +171,49 @@ function SensorChart({ data }: { data: SensorReading[] }) {
     );
 }
 
-function ScoreRadar({ data }: { data: ScoreComponents[] }) {
+function LatestPredictionCard({ prediction }: { prediction: LatestPrediction | null }) {
+    if (!prediction) {
+        return (
+            <Card className="flex flex-col items-center justify-center py-8 gap-2">
+                <p className="font-bold text-amber-900 mb-2">Latest Prediction</p>
+                <p className="text-amber-700/60 text-sm">No predictions yet</p>
+            </Card>
+        );
+    }
+
+    const color = READINESS_COLORS[prediction.readiness_level] ?? '#d97706';
+    const label = READINESS_LABELS[prediction.readiness_level] ?? prediction.readiness_level;
+    const confidencePct = Math.round(prediction.confidence_score * 100);
+
     return (
-        <Card>
-            <p className="font-bold text-amber-900 mb-4">HRI Component Scores</p>
-            <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={data}>
-                        <PolarGrid stroke="#FEF3C7" />
-                        <PolarAngleAxis dataKey="sensor"
-                            tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }} />
-                        <Radar name="Score" dataKey="score" stroke="#F59E0B"
-                            fill="#FACC15" fillOpacity={0.4} strokeWidth={2} />
-                        <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    </RadarChart>
-                </ResponsiveContainer>
+        <Card className="flex flex-col gap-4 py-6">
+            <p className="font-bold text-amber-900">Latest Prediction</p>
+            <span
+                className="self-start px-4 py-1 rounded-full text-sm font-bold text-white"
+                style={{ backgroundColor: color }}
+            >
+                {label}
+            </span>
+            <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40 mb-1">
+                    Confidence — {confidencePct}%
+                </p>
+                <div className="w-full h-3 bg-amber-100 rounded-full overflow-hidden">
+                    <div
+                        className="h-full rounded-full"
+                        style={{ width: `${confidencePct}%`, backgroundColor: color }}
+                    />
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">HRI Value</p>
+                    <p className="text-xl font-bold text-amber-900">{Math.round(prediction.hri_value * 100)}%</p>
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">Timestamp</p>
+                    <p className="text-sm font-semibold text-amber-900">{prediction.prediction_timestamp}</p>
+                </div>
             </div>
         </Card>
     );
