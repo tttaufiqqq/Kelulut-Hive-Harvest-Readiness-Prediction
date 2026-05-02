@@ -159,7 +159,7 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
             <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
 
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <Breadcrumbs items={[{ label: 'Reporting' }]} />
+                    <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Reporting' }]} />
                     <BeekeeperTabs active="reporting" />
                 </div>
                 <div>

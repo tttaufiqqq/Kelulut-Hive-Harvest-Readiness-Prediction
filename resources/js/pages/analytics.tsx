@@ -271,7 +271,7 @@ export default function Analytics({ hive, hriTrend, sensorReadings, latestPredic
                     <Breadcrumbs items={[
                         { label: 'Home', href: '/' },
                         { label: 'My Hives', href: '/dashboard' },
-                        { label: String(hive.id) },
+                        { label: hive.name, href: '/dashboard' },
                         { label: 'Analytics' },
                     ]} />
                     <div className="flex items-center gap-3">
