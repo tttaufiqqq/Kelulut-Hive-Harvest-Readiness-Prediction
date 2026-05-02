@@ -83,3 +83,37 @@ test('correct password must be provided to delete account', function () {
 
     expect($user->fresh())->not->toBeNull();
 });
+
+test('telegram id can be updated', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name'        => $user->name,
+            'email'       => $user->email,
+            'telegram_id' => '123456789',
+        ]);
+
+    $response->assertSessionHasNoErrors()->assertRedirect(route('profile.edit'));
+    expect($user->refresh()->telegram_id)->toBe('123456789');
+});
+
+test('telegram id can be cleared', function () {
+    $user = User::factory()->create(['telegram_id' => '123456789']);
+
+    $response = $this
+        ->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name'        => $user->name,
+            'email'       => $user->email,
+            'telegram_id' => null,
+        ]);
+
+    $response->assertSessionHasNoErrors()->assertRedirect(route('profile.edit'));
+    expect($user->refresh()->telegram_id)->toBeNull();
+});
+
+test('unauthenticated user cannot view profile', function () {
+    $this->get(route('profile.edit'))->assertRedirect(route('login'));
+});

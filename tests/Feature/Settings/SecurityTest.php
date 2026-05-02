@@ -112,3 +112,11 @@ test('correct password must be provided to update password', function () {
         ->assertSessionHasErrors('current_password')
         ->assertRedirect(route('security.edit'));
 });
+
+test('unauthenticated user cannot change password', function () {
+    $this->put(route('user-password.update'), [
+        'current_password'      => 'password',
+        'password'              => 'new-password',
+        'password_confirmation' => 'new-password',
+    ])->assertRedirect(route('login'));
+});
