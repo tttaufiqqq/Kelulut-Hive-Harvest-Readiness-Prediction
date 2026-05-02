@@ -87,30 +87,26 @@ const TOOLTIP_STYLE = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function HriScoreCard({ hive }: { hive: HiveSummary }) {
-    const color = CATEGORY_COLORS[hive.latest_category] ?? '#d97706';
+function HriScoreCard({ hive }: { hive: HiveData }) {
+    const level = hive.latest_readiness_level ?? 'not_ready';
+    const color = READINESS_COLORS[level] ?? '#d97706';
+    const label = READINESS_LABELS[level] ?? level;
 
     return (
         <Card className="flex flex-col items-center justify-center py-8 gap-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/50">HRI Score</p>
             <p className="text-7xl font-black tracking-tighter" style={{ color }}>
-                {hive.latest_hri_score}
+                {hive.avg_hri_pct}%
             </p>
             <span
                 className="px-4 py-1 rounded-full text-sm font-bold text-white"
                 style={{ backgroundColor: color }}
             >
-                {hive.latest_category}
+                {label}
             </span>
-            <div className="grid grid-cols-2 gap-6 mt-4 text-center">
-                <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">7-day avg</p>
-                    <p className="text-xl font-bold text-amber-900">{hive.avg_hri_7d}</p>
-                </div>
-                <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">30-day avg</p>
-                    <p className="text-xl font-bold text-amber-900">{hive.avg_hri_30d}</p>
-                </div>
+            <div className="mt-4 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">7-day avg</p>
+                <p className="text-xl font-bold text-amber-900">{hive.avg_hri_7d_pct}%</p>
             </div>
         </Card>
     );
