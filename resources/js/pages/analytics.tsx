@@ -158,10 +158,12 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                             tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} />
                         <Tooltip contentStyle={TOOLTIP_STYLE} />
                         <Legend wrapperStyle={{ fontSize: 11 }} />
-                        <Line type="monotone" dataKey="temp"     name="Temp (°C)"    stroke="#ef4444" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="temp"     name="Temp (°C)"     stroke="#ef4444" strokeWidth={2} dot={false} />
                         <Line type="monotone" dataKey="humidity" name="Humidity (%)"  stroke="#3b82f6" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="co2"      name="CO₂ (ADC)"    stroke="#8b5cf6" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="etoh"     name="EtOH (ADC)"   stroke="#f97316" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="mq2"      name="MQ2 ADC"       stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="mq3"      name="MQ3 ADC"       stroke="#f97316" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="mq5"      name="MQ5 ADC"       stroke="#10b981" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="mq135"    name="MQ135 ADC"     stroke="#f59e0b" strokeWidth={2} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
