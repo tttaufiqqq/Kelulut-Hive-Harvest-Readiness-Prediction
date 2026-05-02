@@ -219,10 +219,18 @@ function LatestPredictionCard({ prediction }: { prediction: LatestPrediction | n
     );
 }
 
-function HarvestBar({ data }: { data: Props['harvestHistory'] }) {
+function HarvestBar({ data }: { data: HarvestRecord[] }) {
+    if (data.length === 0) {
+        return (
+            <Card className="flex items-center justify-center py-10">
+                <p className="text-amber-700/60 text-sm">No harvest records yet</p>
+            </Card>
+        );
+    }
+
     return (
         <Card>
-            <p className="font-bold text-amber-900 mb-4">Harvest History — Volume (ml)</p>
+            <p className="font-bold text-amber-900 mb-4">Harvest History — Weight (kg)</p>
             <div className="h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data}>
@@ -232,7 +240,7 @@ function HarvestBar({ data }: { data: Props['harvestHistory'] }) {
                         <YAxis axisLine={false} tickLine={false}
                             tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} />
                         <Tooltip contentStyle={TOOLTIP_STYLE} />
-                        <Bar dataKey="qty_ml" name="Volume (ml)" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="weight" name="Weight (kg)" fill="#F59E0B" radius={[6, 6, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
