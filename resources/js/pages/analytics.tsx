@@ -95,7 +95,7 @@ function HriScoreCard({ hive }: { hive: HiveData }) {
     const label = READINESS_LABELS[level] ?? level;
 
     return (
-        <Card className="flex flex-col items-center justify-center py-8 gap-2">
+        <Card className="h-full flex flex-col items-center justify-center py-8 gap-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/50">HRI Score</p>
             <p className="text-7xl font-black tracking-tighter" style={{ color }}>
                 {hive.avg_hri_pct}%
@@ -119,9 +119,9 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
     useEffect(() => { setMounted(true); }, []);
 
     return (
-        <Card>
+        <Card className="h-full flex flex-col">
             <p className="font-bold text-amber-900 mb-4">HRI Score — 30 Day Trend</p>
-            <div className="h-[220px]">
+            <div className="flex-1 min-h-[220px]">
                 {mounted && <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>
                         <defs>
@@ -289,11 +289,11 @@ export default function Analytics({ hive, hriTrend, sensorReadings, latestPredic
                 </div>
 
                 {/* Top row: score card + HRI trend */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                    <div className="lg:col-span-1 h-full">
                         <HriScoreCard hive={hive} />
                     </div>
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-2 h-full">
                         <HriTrendChart data={hriTrend} />
                     </div>
                 </div>
