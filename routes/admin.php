@@ -1,31 +1,18 @@
 <?php
 
 use App\Http\Controllers\Admin\BeekeeperController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HarvestController as AdminHarvestController;
 use App\Http\Controllers\Admin\HiveController as AdminHiveController;
 use App\Http\Controllers\Admin\InspectionController as AdminInspectionController;
 use App\Http\Controllers\Admin\SensorDashboardController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\ThesisController;
-use App\Models\User;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::get('/', function () {
-        $stats = User::role('beekeeper')
-            ->selectRaw("COUNT(*) as total, SUM(status = 'pending') as pending, SUM(status = 'active') as active")
-            ->first();
-
-        return Inertia::render('admin/dashboard', [
-            'stats' => [
-                'total'   => (int) $stats->total,
-                'pending' => (int) $stats->pending,
-                'active'  => (int) $stats->active,
-            ],
-        ]);
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/beekeepers', [BeekeeperController::class, 'index'])->name('beekeepers.index');
     Route::post('/beekeepers', [BeekeeperController::class, 'store'])->name('beekeepers.store');
