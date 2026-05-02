@@ -109,7 +109,7 @@ export default function AdminDashboard({ stats, hives, productivityRanking, cros
             <div className="space-y-6">
 
                 {/* ── Action Cards ───────────────────────────────────────── */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Card
                         className="flex items-center gap-4 border-l-4 border-l-red-400 cursor-pointer hover:bg-yellow-50/50 transition-colors"
                         onClick={() => router.visit(route('admin.sensors.index'))}
