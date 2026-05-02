@@ -32,18 +32,25 @@ interface Props {
     readinessTrends: ReadinessTrend[];
 }
 
-// ── Badge colors per readiness level ──────────────────────────────────
+// ── Readiness level display maps ───────────────────────────────────────
+const READINESS_LABEL: Record<string, string> = {
+    not_ready:    'Not Ready',
+    approaching:  'Approaching',
+    nearly_ready: 'Nearly Ready',
+    ready:        'Ready to Harvest',
+};
+
 const BADGE_CLASS: Record<string, string> = {
-    'Not Ready':        'bg-red-100 text-red-800',
-    'Approaching':      'bg-yellow-100 text-yellow-800',
-    'Nearly Ready':     'bg-amber-100 text-amber-800',
-    'Ready to Harvest': 'bg-green-100 text-green-800',
+    not_ready:    'bg-red-100 text-red-800',
+    approaching:  'bg-yellow-100 text-yellow-800',
+    nearly_ready: 'bg-amber-100 text-amber-800',
+    ready:        'bg-green-100 text-green-800',
 };
 
 // ── HriGaugeCard ──────────────────────────────────────────────────────
 function HriGaugeCard({ gauge }: { gauge: HriGauge }) {
     const badge  = gauge.readiness_level ? (BADGE_CLASS[gauge.readiness_level] ?? 'bg-gray-100 text-gray-500') : 'bg-gray-100 text-gray-500';
-    const label  = gauge.readiness_level ?? 'No Data';
+    const label  = gauge.readiness_level ? (READINESS_LABEL[gauge.readiness_level] ?? gauge.readiness_level) : 'No Data';
     const pct    = gauge.confidence_pct ?? 0;
 
     return (
