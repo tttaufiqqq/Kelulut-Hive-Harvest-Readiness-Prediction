@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Settings, User, LogOut, Home, Leaf, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Settings, User, LogOut, Home, Leaf, ClipboardList, BarChart2 } from 'lucide-react';
 import React from 'react';
 import { BeeIcon } from '@/components/core/bee-icon';
 import { Dropdown } from '@/components/core/dropdown';
@@ -36,6 +36,7 @@ export function AuthenticatedLayout({ header = null, children }: AuthenticatedLa
             { icon: LayoutDashboard, label: 'My Hives',  routeName: 'dashboard' },
             { icon: Leaf,          label: 'Harvests',    routeName: 'harvests.index' },
             { icon: ClipboardList, label: 'Inspections', routeName: 'inspections.index' },
+            { icon: BarChart2,     label: 'Reporting',   routeName: 'reporting.index' },
             { icon: Settings,      label: 'Settings',    routeName: 'profile.edit' },
         ];
 
