@@ -59,7 +59,7 @@ export const Alert = ({ variant = 'info', title, children, onClose, className }:
   );
 };
 
-export const Progress = ({ value, max = 100, className }: { value: number; max?: number; className?: string }) => {
+export const Progress = ({ value, max = 100, className, barColor = 'bg-yellow-400' }: { value: number; max?: number; className?: string; barColor?: string }) => {
   const percentage = Math.min(100, Math.max(0, (value / max) * 100));
 
   return (
@@ -67,7 +67,7 @@ export const Progress = ({ value, max = 100, className }: { value: number; max?:
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${percentage}%` }}
-        className="h-full bg-yellow-400"
+        className={cn('h-full', barColor)}
         transition={{ duration: 1, ease: 'easeOut' }}
       />
     </div>

@@ -11,7 +11,7 @@ class HriSummary extends Model
 
     protected $fillable = [
         'hive_id', 'summary_date',
-        'avg_temperature', 'avg_humidity', 'avg_mq2',
+        'avg_temperature', 'avg_humidity', 'avg_mq2', 'avg_mq3', 'avg_mq5', 'avg_mq135',
         'harvest_count', 'latest_readiness_level', 'avg_hri_value',
     ];
 

@@ -30,6 +30,9 @@ class DashboardController extends Controller
                 'avg_temperature' => $hive->summary?->avg_temperature,
                 'avg_humidity'    => $hive->summary?->avg_humidity,
                 'avg_mq2'         => $hive->summary?->avg_mq2,
+                'avg_mq3'         => $hive->summary?->avg_mq3,
+                'avg_mq5'         => $hive->summary?->avg_mq5,
+                'avg_mq135'       => $hive->summary?->avg_mq135,
             ]);
 
         return Inertia::render('dashboard', [

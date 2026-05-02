@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Leaf, LineChart } from 'lucide-react';
+import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Wind, Leaf, LineChart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { Card } from '@/components/core/card';
@@ -22,6 +22,9 @@ type HiveCard = {
     avg_temperature: number | null;
     avg_humidity: number | null;
     avg_mq2: number | null;
+    avg_mq3: number | null;
+    avg_mq5: number | null;
+    avg_mq135: number | null;
 };
 
 type Props = {
@@ -40,6 +43,13 @@ const READINESS_STYLES: Record<string, string> = {
     approaching:  'bg-amber-100 text-amber-700',
     nearly_ready: 'bg-yellow-100 text-yellow-700',
     ready:        'bg-emerald-100 text-emerald-700',
+};
+
+const READINESS_BAR_COLOR: Record<string, string> = {
+    not_ready:    'bg-rose-400',
+    approaching:  'bg-amber-400',
+    nearly_ready: 'bg-yellow-400',
+    ready:        'bg-emerald-400',
 };
 
 function ReadinessBadge({ level }: { level: string | null }) {
@@ -134,7 +144,7 @@ export default function Dashboard({ hives }: Props) {
                                                     <span>Readiness</span>
                                                     <span>{Math.round(hive.hri_value * 100)}%</span>
                                                 </div>
-                                                <Progress value={hive.hri_value * 100} />
+                                                <Progress value={hive.hri_value * 100} barColor={READINESS_BAR_COLOR[hive.readiness_level ?? ''] ?? 'bg-yellow-400'} />
                                             </div>
                                         </Card>
                                     </motion.div>
@@ -197,34 +207,23 @@ export default function Dashboard({ hives }: Props) {
                                     </Card>
 
                                     {(selectedHive.avg_temperature !== null || selectedHive.avg_humidity !== null || selectedHive.avg_mq2 !== null) && (
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <Card>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Thermometer className="w-4 h-4 text-orange-400" />
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">Avg Temp</span>
-                                                </div>
-                                                <p className="text-2xl font-black text-amber-900">
-                                                    {selectedHive.avg_temperature !== null ? `${selectedHive.avg_temperature}°C` : '—'}
-                                                </p>
-                                            </Card>
-                                            <Card>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Droplets className="w-4 h-4 text-blue-400" />
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">Avg Humidity</span>
-                                                </div>
-                                                <p className="text-2xl font-black text-amber-900">
-                                                    {selectedHive.avg_humidity !== null ? `${selectedHive.avg_humidity}%` : '—'}
-                                                </p>
-                                            </Card>
-                                            <Card>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <BarChart3 className="w-4 h-4 text-purple-400" />
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">Avg MQ2</span>
-                                                </div>
-                                                <p className="text-2xl font-black text-amber-900">
-                                                    {selectedHive.avg_mq2 !== null ? `${selectedHive.avg_mq2} ADC` : '—'}
-                                                </p>
-                                            </Card>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            {[
+                                                { icon: Thermometer, color: 'text-orange-400', label: 'Avg Temp',     value: selectedHive.avg_temperature !== null ? `${selectedHive.avg_temperature}°C` : '—' },
+                                                { icon: Droplets,    color: 'text-blue-400',   label: 'Avg Humidity', value: selectedHive.avg_humidity    !== null ? `${selectedHive.avg_humidity}%`    : '—' },
+                                                { icon: BarChart3,   color: 'text-purple-400', label: 'Avg MQ2',      value: selectedHive.avg_mq2         !== null ? `${selectedHive.avg_mq2} ADC`      : '—' },
+                                                { icon: Wind,        color: 'text-teal-400',   label: 'Avg MQ3',      value: selectedHive.avg_mq3         !== null ? `${selectedHive.avg_mq3} ADC`      : '—' },
+                                                { icon: Wind,        color: 'text-cyan-400',   label: 'Avg MQ5',      value: selectedHive.avg_mq5         !== null ? `${selectedHive.avg_mq5} ADC`      : '—' },
+                                                { icon: Wind,        color: 'text-indigo-400', label: 'Avg MQ135',    value: selectedHive.avg_mq135       !== null ? `${selectedHive.avg_mq135} ADC`    : '—' },
+                                            ].map((s) => (
+                                                <Card key={s.label} className="flex flex-col justify-between">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <s.icon className={`w-4 h-4 ${s.color}`} />
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-amber-900/50">{s.label}</span>
+                                                    </div>
+                                                    <p className="text-2xl font-black text-amber-900">{s.value}</p>
+                                                </Card>
+                                            ))}
                                         </div>
                                     )}
 
