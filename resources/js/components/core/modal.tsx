@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import React from "react";
 import { createPortal } from 'react-dom';
+import { ScrollArea } from '@/components/core/scroll-area';
 
 interface ModalProps {
     isOpen: boolean;
@@ -62,9 +63,9 @@ return null;
                         </div>
 
                         {/* Content — scrollable */}
-                        <div className="overflow-y-auto px-8 pt-6 pb-8 flex-1">
+                        <ScrollArea className="px-8 pt-6 pb-8 flex-1">
                             {children}
-                        </div>
+                        </ScrollArea>
                     </motion.div>
                 </div>
             )}
