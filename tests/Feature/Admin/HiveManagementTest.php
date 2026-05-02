@@ -5,6 +5,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    $this->withoutVite();
     Role::firstOrCreate(['name' => 'admin',     'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'beekeeper', 'guard_name' => 'web']);
 });
