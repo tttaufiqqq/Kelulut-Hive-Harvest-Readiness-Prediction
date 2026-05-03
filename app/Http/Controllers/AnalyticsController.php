@@ -37,14 +37,16 @@ class AnalyticsController extends Controller
                 'avg_7d'    => $avg7dPct,
             ]);
 
-        // ── Q2: Sensor readings — today, grouped by hour ──────────────────────
+        // ── Q2: Sensor readings — selected date (default today), grouped by hour
+        $sensorDate = $request->date('sensor_date') ?? today();
+
         $isSqlite   = DB::connection()->getDriverName() === 'sqlite';
         $hourExpr   = $isSqlite
             ? "strftime('%H:00', record_timestamp)"
             : 'DATE_FORMAT(record_timestamp, "%H:00")';
 
         $sensorReadings = SensorLog::where('hive_id', $hive->id)
-            ->whereDate('record_timestamp', today())
+            ->whereDate('record_timestamp', $sensorDate)
             ->selectRaw("
                 {$hourExpr} as time,
                 AVG(temp)         as temp,
