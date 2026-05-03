@@ -32,6 +32,7 @@ $app = require dirname(__DIR__) . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
 $commands = [
+    ['optimize:clear', []],
     ['migrate', ['--force' => true]],
     ['db:seed', ['--class' => 'MasterDataSeeder', '--force' => true]],
     ['config:cache', []],
