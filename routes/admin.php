@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BeekeeperController;
+use App\Http\Controllers\Admin\IotNodeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HarvestController as AdminHarvestController;
 use App\Http\Controllers\Admin\HiveController as AdminHiveController;
@@ -22,6 +23,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::delete('/beekeepers/{user}', [BeekeeperController::class, 'destroy'])->name('beekeepers.destroy');
 
     Route::get('/sensors', [SensorDashboardController::class, 'index'])->name('sensors.index');
+
+    Route::get('/devices', [IotNodeController::class, 'index'])->name('devices.index');
+    Route::post('/devices', [IotNodeController::class, 'store'])->name('devices.store');
+    Route::patch('/devices/{device}', [IotNodeController::class, 'update'])->name('devices.update');
+    Route::delete('/devices/{device}', [IotNodeController::class, 'destroy'])->name('devices.destroy');
 
     Route::get('/thesis', [ThesisController::class, 'index'])->name('thesis');
     Route::post('/thesis', [ThesisController::class, 'upload'])->name('thesis.upload');

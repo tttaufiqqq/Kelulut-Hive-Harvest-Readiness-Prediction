@@ -12,6 +12,7 @@ import type { NavItem } from '@/types';
 const NAV_ITEMS: NavItem[] = [
     { title: 'Dashboard',  href: '/admin',            icon: null, exact: true },
     { title: 'Sensors',    href: '/admin/sensors',    icon: null },
+    { title: 'Devices',    href: '/admin/devices',    icon: null },
     { title: 'Beekeepers', href: '/admin/beekeepers', icon: null },
     { title: 'Hives',      href: '/admin/hives',      icon: null },
     { title: 'Sites',      href: '/admin/sites',      icon: null },

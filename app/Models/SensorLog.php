@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 class SensorLog extends Model
 {
     const UPDATED_AT = null;
@@ -27,5 +28,10 @@ class SensorLog extends Model
     public function iotNode(): BelongsTo
     {
         return $this->belongsTo(IotNode::class, 'device_id');
+    }
+
+    public function prediction(): HasOne
+    {
+        return $this->hasOne(Prediction::class);
     }
 }
