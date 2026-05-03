@@ -32,6 +32,7 @@ type PageProps = {
 
 type ActiveModal =
     | { type: 'create' }
+    | { type: 'view'; device: DeviceRow }
     | { type: 'edit'; device: DeviceRow }
     | { type: 'delete'; device: DeviceRow }
     | null;
@@ -168,7 +169,7 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                                     </tr>
                                 )}
                                 {devices.map((device) => (
-                                    <tr key={device.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={device.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', device })}>
                                         <td className="px-6 py-4 font-mono font-semibold text-amber-950">{device.device_id}</td>
                                         <td className="px-6 py-4 text-amber-800">{device.hive_name ?? '—'}</td>
                                         <td className="px-6 py-4"><StatusBadge status={device.device_status} /></td>
@@ -179,7 +180,7 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                                                 {device.sensor_log_count}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                                             <Dropdown
                                                 align="right"
                                                 trigger={
@@ -211,6 +212,46 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                     </div>
                 </Card>
             </div>
+
+            {/* ── View Modal ── */}
+            {activeModal?.type === 'view' && (
+                <Modal isOpen onClose={close} title="Device Details" maxWidth="sm">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Device ID</p>
+                                <p className="font-mono font-semibold text-amber-950">{activeModal.device.device_id}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Status</p>
+                                <StatusBadge status={activeModal.device.device_status} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Hive</p>
+                                <p className="font-medium text-amber-950">{activeModal.device.hive_name ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Sensor Logs</p>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                                    {activeModal.device.sensor_log_count}
+                                </span>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Installed</p>
+                                <p className="font-medium text-amber-950">{activeModal.device.installation_date ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Last Maintenance</p>
+                                <p className="font-medium text-amber-950">{activeModal.device.last_maintenance_date ?? '—'}</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Close</Button>
+                            <Button type="button" variant="outline" onClick={() => { close(); openEdit(activeModal.device); }} className="flex-1">Edit</Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
 
             {/* ── Create Modal ── */}
             <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="Register Device" maxWidth="sm">

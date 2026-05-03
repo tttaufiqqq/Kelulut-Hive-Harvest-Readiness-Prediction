@@ -36,6 +36,7 @@ type PageProps = {
 
 type ActiveModal =
     | { type: 'create' }
+    | { type: 'view'; hive: HiveRow }
     | { type: 'edit'; hive: HiveRow }
     | { type: 'delete'; hive: HiveRow }
     | { type: 'toggle'; hive: HiveRow }
@@ -161,14 +162,14 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
                                     </tr>
                                 )}
                                 {hives.map((hive) => (
-                                    <tr key={hive.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={hive.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', hive })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{hive.name}</td>
                                         <td className="px-6 py-4 text-amber-900/70">{hive.beekeeper_name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{hive.site ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{hive.species ?? '—'}</td>
                                         <td className="px-6 py-4"><StatusBadge status={hive.status} /></td>
                                         <td className="px-6 py-4 text-amber-900/50 hidden lg:table-cell">{hive.age_months}m</td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                                             <Dropdown
                                                 align="right"
                                                 trigger={
@@ -207,6 +208,44 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
                     </div>
                 </Card>
             </div>
+
+            {/* ── View Modal ── */}
+            {activeModal?.type === 'view' && (
+                <Modal isOpen onClose={close} title="Hive Details" maxWidth="md">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Name</p>
+                                <p className="font-medium text-amber-950">{activeModal.hive.name}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Status</p>
+                                <StatusBadge status={activeModal.hive.status} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Beekeeper</p>
+                                <p className="font-medium text-amber-950">{activeModal.hive.beekeeper_name ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Species</p>
+                                <p className="font-medium text-amber-950 italic">{activeModal.hive.species ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Site</p>
+                                <p className="font-medium text-amber-950">{activeModal.hive.site ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Age</p>
+                                <p className="font-medium text-amber-950">{activeModal.hive.age_months}m</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Close</Button>
+                            <Button type="button" variant="outline" onClick={() => { close(); openEdit(activeModal.hive); }} className="flex-1">Edit</Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
 
             {/* ── Create Modal ── */}
             <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="Register Hive" maxWidth="md">

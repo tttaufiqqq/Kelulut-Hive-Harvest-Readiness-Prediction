@@ -22,6 +22,7 @@ type PageProps = {
 
 type ActiveModal =
     | { type: 'create' }
+    | { type: 'view'; site: SiteRow }
     | { type: 'edit'; site: SiteRow }
     | { type: 'delete'; site: SiteRow }
     | null;
@@ -108,7 +109,7 @@ export default function SitesIndex({ sites }: PageProps) {
                                     </tr>
                                 )}
                                 {sites.map((site) => (
-                                    <tr key={site.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={site.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', site })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{site.name}</td>
                                         <td className="px-6 py-4 text-amber-900/60 hidden md:table-cell">{site.description ?? '—'}</td>
                                         <td className="px-6 py-4">
@@ -116,7 +117,7 @@ export default function SitesIndex({ sites }: PageProps) {
                                                 {site.hive_count}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                                             <Dropdown
                                                 align="right"
                                                 trigger={
@@ -148,6 +149,36 @@ export default function SitesIndex({ sites }: PageProps) {
                     </div>
                 </Card>
             </div>
+
+            {/* ── View Modal ── */}
+            {activeModal?.type === 'view' && (
+                <Modal isOpen onClose={close} title="Site Details" maxWidth="sm">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Name</p>
+                                <p className="font-medium text-amber-950">{activeModal.site.name}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Hives</p>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                                    {activeModal.site.hive_count}
+                                </span>
+                            </div>
+                        </div>
+                        {activeModal.site.description && (
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Description</p>
+                                <p className="text-sm text-amber-900/70">{activeModal.site.description}</p>
+                            </div>
+                        )}
+                        <div className="flex gap-3 pt-2">
+                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Close</Button>
+                            <Button type="button" variant="outline" onClick={() => { close(); openEdit(activeModal.site); }} className="flex-1">Edit</Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
 
             {/* ── Create Modal ── */}
             <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="Add Site" maxWidth="sm">
