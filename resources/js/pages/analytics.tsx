@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import {
@@ -11,6 +11,7 @@ import {
 import { Card } from '@/components/core/card';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { SelectField } from '@/components/core/select-field';
+import { DatePicker } from '@/components/core/date-picker';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -159,7 +160,11 @@ const SENSOR_GROUP_OPTIONS = [
     { value: 'gas',         label: 'Gas Sensors (MQ2 – MQ135)' },
 ];
 
-function SensorChart({ data }: { data: SensorReading[] }) {
+function SensorChart({ data, selectedDate, onDateChange }: {
+    data: SensorReading[];
+    selectedDate: string;
+    onDateChange: (date: string | null) => void;
+}) {
     const [mounted, setMounted] = useState(false);
     const [group, setGroup] = useState('all');
 
@@ -173,14 +178,17 @@ function SensorChart({ data }: { data: SensorReading[] }) {
 
     return (
         <Card>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <p className="font-bold text-amber-900">Sensor Readings — Today</p>
-                <div className="w-full sm:w-56">
-                    <SelectField
-                        value={group}
-                        onChange={setGroup}
-                        options={SENSOR_GROUP_OPTIONS}
-                    />
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <p className="font-bold text-amber-900">Sensor Readings</p>
+                <div className="flex items-center gap-2">
+                    <DatePicker value={selectedDate} onChange={onDateChange} />
+                    <div className="w-52">
+                        <SelectField
+                            value={group}
+                            onChange={setGroup}
+                            options={SENSOR_GROUP_OPTIONS}
+                        />
+                    </div>
                 </div>
             </div>
             <div className="w-full">
@@ -292,6 +300,19 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Analytics({ hive, hriTrend, sensorReadings, latestPrediction, harvestHistory }: Props) {
+    const todayString = () => new Date().toISOString().slice(0, 10);
+    const [sensorDate, setSensorDate] = useState(todayString);
+
+    function handleSensorDateChange(date: string | null) {
+        const resolved = date ?? todayString();
+        setSensorDate(resolved);
+        router.get(
+            route('analytics.show', { hive: hive.id }),
+            { sensor_date: resolved },
+            { preserveState: true, preserveScroll: true, only: ['sensorReadings'] },
+        );
+    }
+
     return (
         <AuthenticatedLayout>
             <Head title={`Analytics — ${hive.name}`} />
@@ -329,7 +350,11 @@ export default function Analytics({ hive, hriTrend, sensorReadings, latestPredic
                 </div>
 
                 {/* Sensor readings — full width */}
-                <SensorChart data={sensorReadings} />
+                <SensorChart
+                    data={sensorReadings}
+                    selectedDate={sensorDate}
+                    onDateChange={handleSensorDateChange}
+                />
 
                 {/* Prediction + harvest */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
