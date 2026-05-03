@@ -70,7 +70,7 @@ const WARN_HUMID_ABOVE = 85;   // %
 const WARN_CO2_ABOVE   = 800;  // ADC (MQ135)
 
 // ── AdminDashboard ─────────────────────────────────────────────────────
-export default function AdminDashboard({ stats, hives, productivityRanking, crossSiteComparison }: Props) {
+export default function AdminDashboard({ stats, hives = [], productivityRanking = [], crossSiteComparison = [] }: Props) {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
 

@@ -7,7 +7,6 @@ use App\Models\HriSummary;
 use App\Models\Prediction;
 use App\Models\SensorLog;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class MlPredictionService
@@ -15,24 +14,30 @@ class MlPredictionService
     public function predict(SensorLog $log): ?Prediction
     {
         try {
-            $response = Http::timeout(5)->post(config('services.ml.url') . '/predict', [
+            $pythonBin = config('services.ml.python_bin', 'python3');
+            $script    = base_path('ml/predict.py');
+            $payload   = escapeshellarg(json_encode([
                 'mq2_value'   => $log->mq2_value,
                 'mq3_value'   => $log->mq3_value,
                 'mq5_value'   => $log->mq5_value,
                 'mq135_value' => $log->mq135_value,
                 'temp'        => $log->temp,
                 'humidity'    => $log->humidity,
-            ]);
+            ]));
 
-            if (!$response->successful()) {
-                Log::warning('ML API returned non-2xx', [
-                    'status'        => $response->status(),
-                    'sensor_log_id' => $log->id,
-                ]);
+            $output = shell_exec("$pythonBin $script $payload 2>/dev/null");
+
+            if (!$output) {
+                Log::warning('ML script returned no output', ['sensor_log_id' => $log->id]);
                 return null;
             }
 
-            $data = $response->json();
+            $data = json_decode($output, true);
+
+            if (isset($data['error'])) {
+                Log::warning('ML script error', ['error' => $data['error'], 'sensor_log_id' => $log->id]);
+                return null;
+            }
 
             $prediction = Prediction::create([
                 'sensor_log_id'        => $log->id,

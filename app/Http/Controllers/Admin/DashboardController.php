@@ -8,6 +8,7 @@ use App\Models\Prediction;
 use App\Models\SensorLog;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -18,15 +19,36 @@ class DashboardController extends Controller
             ->selectRaw("COUNT(*) as total, SUM(status = 'pending') as pending, SUM(status = 'active') as active")
             ->first();
 
+        try {
+            $hives = $this->liveHiveMonitor();
+        } catch (\Throwable $e) {
+            Log::error('AdminDashboard liveHiveMonitor failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            $hives = [];
+        }
+
+        try {
+            $productivity = $this->productivityRanking();
+        } catch (\Throwable $e) {
+            Log::error('AdminDashboard productivityRanking failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            $productivity = [];
+        }
+
+        try {
+            $crossSite = $this->crossSiteComparison();
+        } catch (\Throwable $e) {
+            Log::error('AdminDashboard crossSiteComparison failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            $crossSite = [];
+        }
+
         return Inertia::render('admin/dashboard', [
             'stats' => [
                 'total'   => (int) $stats->total,
                 'pending' => (int) $stats->pending,
                 'active'  => (int) $stats->active,
             ],
-            'hives'               => $this->liveHiveMonitor(),
-            'productivityRanking' => $this->productivityRanking(),
-            'crossSiteComparison' => $this->crossSiteComparison(),
+            'hives'               => $hives,
+            'productivityRanking' => $productivity,
+            'crossSiteComparison' => $crossSite,
         ]);
     }
 
