@@ -1,7 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { Modal } from '@/components/core/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
 import type { Harvest, PaginatedHarvests } from '@/types';
+
+type ActiveModal = { type: 'view'; harvest: Harvest } | null;
 
 type Props = {
     harvests: PaginatedHarvests;
@@ -25,6 +30,9 @@ function ProductivityBadge({ level }: { level: Harvest['productivity_level'] }) 
 }
 
 export default function AdminHarvestsIndex({ harvests, stats }: Props) {
+    const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+    const close = () => setActiveModal(null);
+
     return (
         <AdminLayout>
             <Head title="Harvests — Admin" />
@@ -77,7 +85,7 @@ export default function AdminHarvestsIndex({ harvests, stats }: Props) {
                                     </tr>
                                 )}
                                 {harvests.data.map((harvest) => (
-                                    <tr key={harvest.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={harvest.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', harvest })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{harvest.hive?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{harvest.beekeeper?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70">
@@ -122,6 +130,54 @@ export default function AdminHarvestsIndex({ harvests, stats }: Props) {
                     </div>
                 )}
             </div>
+
+            {activeModal?.type === 'view' && (
+                <Modal isOpen onClose={close} title="Harvest Details" maxWidth="md">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Hive</p>
+                                <p className="font-medium text-amber-950">{activeModal.harvest.hive?.name ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Beekeeper</p>
+                                <p className="font-medium text-amber-950">{activeModal.harvest.beekeeper?.name ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Date</p>
+                                <p className="font-medium text-amber-950">
+                                    {new Date(activeModal.harvest.harvest_date).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Weight</p>
+                                <p className="font-medium text-amber-950">{activeModal.harvest.weight} kg</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Productivity</p>
+                                <ProductivityBadge level={activeModal.harvest.productivity_level} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Color</p>
+                                <p className="font-medium text-amber-950">{activeModal.harvest.color?.name ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Flavor</p>
+                                <p className="font-medium text-amber-950">{activeModal.harvest.flavor?.name ?? '—'}</p>
+                            </div>
+                        </div>
+                        {activeModal.harvest.notes && (
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Notes</p>
+                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{activeModal.harvest.notes}</p>
+                            </div>
+                        )}
+                        <div className="pt-2">
+                            <Button type="button" variant="ghost" onClick={close} className="w-full">Close</Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </AdminLayout>
     );
 }
