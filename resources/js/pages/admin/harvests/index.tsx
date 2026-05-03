@@ -1,8 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
+import { SelectField } from '@/components/core/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
 import type { Harvest, PaginatedHarvests } from '@/types';
 
@@ -10,7 +11,9 @@ type ActiveModal = { type: 'view'; harvest: Harvest } | null;
 
 type Props = {
     harvests: PaginatedHarvests;
-    stats: { total: number; total_weight: number; avg_weight: number };
+    stats:    { total: number; total_weight: number; avg_weight: number };
+    hives:    { id: number; name: string }[];
+    filters:  { hive_id?: string };
 };
 
 function ProductivityBadge({ level }: { level: Harvest['productivity_level'] }) {
@@ -29,9 +32,18 @@ function ProductivityBadge({ level }: { level: Harvest['productivity_level'] }) 
     );
 }
 
-export default function AdminHarvestsIndex({ harvests, stats }: Props) {
+export default function AdminHarvestsIndex({ harvests, stats, hives, filters }: Props) {
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const close = () => setActiveModal(null);
+
+    const hiveOptions = (items: { id: number; name: string }[]) => [
+        { value: '', label: 'All Hives' },
+        ...items.map(h => ({ value: String(h.id), label: h.name })),
+    ];
+
+    const onHiveFilter = (val: string) => {
+        router.get(route('admin.harvests.index'), val ? { hive_id: val } : {}, { preserveState: true, replace: true });
+    };
 
     return (
         <AdminLayout>
@@ -56,9 +68,18 @@ export default function AdminHarvestsIndex({ harvests, stats }: Props) {
                 </div>
 
                 {/* Header */}
-                <div>
-                    <h3 className="text-lg font-bold text-amber-900">All Harvest Records</h3>
-                    <p className="text-sm text-amber-900/50">{stats.total} record{stats.total !== 1 ? 's' : ''} across all beekeepers</p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-amber-900">All Harvest Records</h3>
+                        <p className="text-sm text-amber-900/50">{stats.total} record{stats.total !== 1 ? 's' : ''} across all beekeepers</p>
+                    </div>
+                    <div className="w-48">
+                        <SelectField
+                            value={filters.hive_id ?? ''}
+                            onChange={onHiveFilter}
+                            options={hiveOptions(hives)}
+                        />
+                    </div>
                 </div>
 
                 {/* Table */}
