@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import React from "react";
+import React, { useEffect } from "react";
 import { createPortal } from 'react-dom';
 import { ScrollArea } from '@/components/core/scroll-area';
 
@@ -21,6 +21,12 @@ const maxWidthMap = {
 };
 
 export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps) {
+    useEffect(() => {
+        if (isOpen) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = '';
+        return () => { document.body.style.overflow = ''; };
+    }, [isOpen]);
+
     // Portal to document.body bypasses any parent stacking context
     // (e.g. motion.div opacity animations) that would cause z-index to lose
     // against the sticky navbar.
@@ -56,7 +62,7 @@ return null;
                             <h2 className="text-2xl font-bold text-amber-900">{title}</h2>
                             <button
                                 onClick={onClose}
-                                className="p-2 hover:bg-yellow-50 rounded-full transition-colors text-amber-900/40 hover:text-amber-900"
+                                className="p-2 bg-yellow-50/50 hover:bg-yellow-100 rounded-full transition-colors text-amber-900/60 hover:text-amber-900 flex-shrink-0"
                             >
                                 <X className="w-5 h-5" />
                             </button>
