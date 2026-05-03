@@ -125,7 +125,7 @@ jobs:
           name: frontend-build
           path: public/build/
 
-      - name: Deploy via FTP
+      - name: Deploy app files (excluding build assets)
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -156,6 +156,17 @@ jobs:
             .phpunit.cache
             .phpunit.result.cache
             /CLAUDE.md
+            public/build/**
+
+      - name: Deploy frontend build assets (clean slate)
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./public/build/
+          server-dir: /public/build/
+          dangerous-clean-slate: true
 
       - name: Run post-deploy commands
         run: |
