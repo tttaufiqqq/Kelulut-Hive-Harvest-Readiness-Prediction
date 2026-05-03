@@ -36,8 +36,7 @@ return [
     ],
 
     'ml' => [
-        'url'        => env('ML_API_URL', 'http://localhost:5000'),
-        'python_bin' => env('ML_PYTHON_BIN', 'python3'),
+        'url' => env('ML_URL', 'http://localhost:5000'),
     ],
 
     'telegram' => [
