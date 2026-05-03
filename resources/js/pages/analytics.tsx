@@ -172,7 +172,7 @@ function SensorChart({ data }: { data: SensorReading[] }) {
     const showGas = group === 'all' || group === 'gas';
 
     return (
-        <Card>
+        <Card className="flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <p className="font-bold text-amber-900">Sensor Readings — Today</p>
                 <div className="w-64">
@@ -183,7 +183,7 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                     />
                 </div>
             </div>
-            <div className="h-[220px]">
+            <div className="flex-1 min-h-[250px]">
                 {mounted && <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
