@@ -5,6 +5,7 @@ import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { Dropdown } from '@/components/core/dropdown';
 import { Alert } from '@/components/core/feedback';
+import { DatePickerField } from '@/components/core/date-picker';
 import { Input } from '@/components/core/input';
 import { Modal } from '@/components/core/modal';
 import { SelectField } from '@/components/core/select-field';
@@ -243,11 +244,11 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                         onChange={e => createForm.setData('installation_date', e.target.value)}
                         error={createForm.errors.installation_date}
                     />
-                    <Input
+                    <DatePickerField
                         label="Last Maintenance Date (optional)"
-                        type="date"
-                        value={createForm.data.last_maintenance_date}
-                        onChange={e => createForm.setData('last_maintenance_date', e.target.value)}
+                        value={createForm.data.last_maintenance_date || null}
+                        onChange={v => createForm.setData('last_maintenance_date', v ?? '')}
+                        maxDate="today"
                         error={createForm.errors.last_maintenance_date}
                     />
                     <div className="flex gap-3 pt-2">
@@ -291,11 +292,11 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                             onChange={e => editForm.setData('installation_date', e.target.value)}
                             error={editForm.errors.installation_date}
                         />
-                        <Input
+                        <DatePickerField
                             label="Last Maintenance Date (optional)"
-                            type="date"
-                            value={editForm.data.last_maintenance_date}
-                            onChange={e => editForm.setData('last_maintenance_date', e.target.value)}
+                            value={editForm.data.last_maintenance_date || null}
+                            onChange={v => editForm.setData('last_maintenance_date', v ?? '')}
+                            maxDate="today"
                             error={editForm.errors.last_maintenance_date}
                         />
                         <div className="flex gap-3 pt-2">

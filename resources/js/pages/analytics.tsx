@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { Card } from '@/components/core/card';
 import { Breadcrumbs } from '@/components/core/navigation';
+import { SelectField } from '@/components/core/select-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -152,16 +153,36 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
     );
 }
 
+const SENSOR_GROUP_OPTIONS = [
+    { value: 'all',         label: 'All Sensors' },
+    { value: 'environment', label: 'Environmental (Temp + Humidity)' },
+    { value: 'gas',         label: 'Gas Sensors (MQ2 – MQ135)' },
+];
+
 function SensorChart({ data }: { data: SensorReading[] }) {
     const [mounted, setMounted] = useState(false);
+    const [group, setGroup] = useState('all');
+
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
+    const showEnv = group === 'all' || group === 'environment';
+    const showGas = group === 'all' || group === 'gas';
+
     return (
         <Card>
-            <p className="font-bold text-amber-900 mb-4">Sensor Readings — Today</p>
+            <div className="flex items-center justify-between mb-4">
+                <p className="font-bold text-amber-900">Sensor Readings — Today</p>
+                <div className="w-64">
+                    <SelectField
+                        value={group}
+                        onChange={setGroup}
+                        options={SENSOR_GROUP_OPTIONS}
+                    />
+                </div>
+            </div>
             <div className="h-[220px]">
                 {mounted && <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
@@ -172,12 +193,12 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                             tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} />
                         <Tooltip contentStyle={TOOLTIP_STYLE} />
                         <Legend wrapperStyle={{ fontSize: 11 }} />
-                        <Line type="monotone" dataKey="temp"     name="Temp (°C)"     stroke="#ef4444" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="humidity" name="Humidity (%)"  stroke="#3b82f6" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="mq2"      name="MQ2 ADC"       stroke="#8b5cf6" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="mq3"      name="MQ3 ADC"       stroke="#f97316" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="mq5"      name="MQ5 ADC"       stroke="#10b981" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="mq135"    name="MQ135 ADC"     stroke="#f59e0b" strokeWidth={2} dot={false} />
+                        {showEnv && <Line type="monotone" dataKey="temp"     name="Temp (°C)"    stroke="#ef4444" strokeWidth={2} dot={false} />}
+                        {showEnv && <Line type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={2} dot={false} />}
+                        {showGas && <Line type="monotone" dataKey="mq2"      name="MQ2 ADC"      stroke="#8b5cf6" strokeWidth={2} dot={false} />}
+                        {showGas && <Line type="monotone" dataKey="mq3"      name="MQ3 ADC"      stroke="#f97316" strokeWidth={2} dot={false} />}
+                        {showGas && <Line type="monotone" dataKey="mq5"      name="MQ5 ADC"      stroke="#10b981" strokeWidth={2} dot={false} />}
+                        {showGas && <Line type="monotone" dataKey="mq135"    name="MQ135 ADC"    stroke="#f59e0b" strokeWidth={2} dot={false} />}
                     </LineChart>
                 </ResponsiveContainer>}
             </div>

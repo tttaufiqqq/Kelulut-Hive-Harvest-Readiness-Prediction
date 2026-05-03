@@ -6,6 +6,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import { Card } from '@/components/core/card';
+import { SelectField } from '@/components/core/select-field';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
@@ -106,6 +107,7 @@ function HriGaugeGrid({ gauges }: { gauges: HriGauge[] }) {
 // ── ReadinessTrendChart ────────────────────────────────────────────────
 function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
     const hiveNames = [...new Set(trends.map(t => t.hive_name))];
+    const hiveOptions = hiveNames.map(n => ({ value: n, label: n }));
     const [selectedHive, setSelectedHive] = useState(hiveNames[0] ?? '');
 
     const filtered = trends.filter(t => t.hive_name === selectedHive);
@@ -123,13 +125,11 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-amber-900/60">Readiness Trend (30 days)</h3>
                 {hiveNames.length > 1 && (
-                    <select
+                    <SelectField
                         value={selectedHive}
-                        onChange={e => setSelectedHive(e.target.value)}
-                        className="text-xs font-bold text-amber-900 bg-yellow-50 border border-yellow-200 rounded-lg px-2 py-1 focus:outline-none"
-                    >
-                        {hiveNames.map(n => <option key={n} value={n}>{n}</option>)}
-                    </select>
+                        onChange={setSelectedHive}
+                        options={hiveOptions}
+                    />
                 )}
             </div>
             <ResponsiveContainer width="100%" height={200}>
