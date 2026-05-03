@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ExternalLink } from 'lucide-react';
 import { BeeIcon as Bee } from '@/components/core/bee-icon';
 import { InputError } from '@/components/core/input-error';
 import { PasswordInput } from '@/components/settings/password-input';
@@ -15,6 +15,7 @@ export default function AcceptInvite({ email, userId, expires, signature }: Prop
     const { data, setData, post, processing, errors } = useForm({
         password: '',
         password_confirmation: '',
+        telegram_id: '',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -95,6 +96,33 @@ export default function AcceptInvite({ email, userId, expires, signature }: Prop
                                 placeholder="Confirm your password"
                             />
                             <InputError message={errors.password_confirmation} />
+                        </div>
+
+                        {/* Telegram Chat ID */}
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                                Telegram Chat ID <span className="text-amber-900/40 normal-case font-normal">(optional)</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={data.telegram_id}
+                                onChange={(e) => setData('telegram_id', e.target.value)}
+                                placeholder="e.g. 123456789"
+                                className="w-full px-4 py-3.5 rounded-2xl border-2 border-amber-200 bg-amber-50/50 text-amber-900 font-medium focus:outline-none focus:border-yellow-400"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => window.open('https://t.me/raw_info_bot', '_blank')}
+                                className="flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors mt-1"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Get My Telegram ID
+                            </button>
+                            <div className="text-xs text-amber-900/40 space-y-0.5 mt-1">
+                                <p>1. Open the bot link above</p>
+                                <p>2. Send any message to the bot</p>
+                                <p>3. Copy the number shown and paste it here</p>
+                            </div>
                         </div>
 
                         <button

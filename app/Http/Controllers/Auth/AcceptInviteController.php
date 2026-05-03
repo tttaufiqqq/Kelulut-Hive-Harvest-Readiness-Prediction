@@ -34,13 +34,15 @@ class AcceptInviteController extends Controller
         }
 
         $request->validate([
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password'    => ['required', 'confirmed', Password::defaults()],
+            'telegram_id' => ['nullable', 'string', 'max:100'],
         ]);
 
         $user->update([
-            'password' => Hash::make($request->password),
-            'status' => 'active',
+            'password'          => Hash::make($request->password),
+            'status'            => 'active',
             'email_verified_at' => now(),
+            'telegram_id'       => $request->telegram_id,
         ]);
 
         auth()->login($user);
