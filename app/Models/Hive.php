@@ -16,6 +16,10 @@ class Hive extends Model
         'image_path', 'status',
     ];
 
+    protected $casts = [
+        'beekeeper_id' => 'integer',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'beekeeper_id');

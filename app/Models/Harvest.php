@@ -13,6 +13,7 @@ class Harvest extends Model
     ];
 
     protected $casts = [
+        'beekeeper_id' => 'integer',
         'harvest_date' => 'date',
         'weight'       => 'float',
     ];
