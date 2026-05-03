@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { MoreVertical, Plus, Eye, Edit2, Trash2 } from 'lucide-react';
+import { MoreVertical, Plus, Edit2, Trash2 } from 'lucide-react';
 import { DatePickerField } from '@/components/core/date-picker';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
@@ -263,7 +263,7 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                                     </tr>
                                 )}
                                 {inspections.data.map((inspection) => (
-                                    <tr key={inspection.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={inspection.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', inspection })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{inspection.hive?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70">
                                             {new Date(inspection.inspection_date).toLocaleDateString()}
@@ -274,7 +274,7 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                                         <td className="px-6 py-4 hidden lg:table-cell">
                                             <WeatherPills conditions={inspection.weather_conditions} />
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                                             <Dropdown
                                                 align="right"
                                                 trigger={
@@ -283,12 +283,6 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                                                     </button>
                                                 }
                                                 items={[
-                                                    {
-                                                        id: 'view',
-                                                        label: 'View Details',
-                                                        icon: <Eye className="w-4 h-4" />,
-                                                        onClick: () => setActiveModal({ type: 'view', inspection }),
-                                                    },
                                                     {
                                                         id: 'edit',
                                                         label: 'Edit',
