@@ -123,10 +123,10 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
     }, []);
 
     return (
-        <Card className="h-full flex flex-col">
+        <Card className="h-full">
             <p className="font-bold text-amber-900 mb-4">HRI Score — 30 Day Trend</p>
-            <div className="flex-1 min-h-[220px]">
-                {mounted && <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full">
+                {mounted && <ResponsiveContainer width="100%" height={220}>
                     <AreaChart data={data}>
                         <defs>
                             <linearGradient id="hriGrad" x1="0" y1="0" x2="0" y2="1">
@@ -172,10 +172,10 @@ function SensorChart({ data }: { data: SensorReading[] }) {
     const showGas = group === 'all' || group === 'gas';
 
     return (
-        <Card className="flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+        <Card>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                 <p className="font-bold text-amber-900">Sensor Readings — Today</p>
-                <div className="w-64">
+                <div className="w-full sm:w-56">
                     <SelectField
                         value={group}
                         onChange={setGroup}
@@ -183,9 +183,8 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                     />
                 </div>
             </div>
-            <div className="relative flex-1 min-h-[250px]">
-                <div className="absolute inset-0">
-                {mounted && <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full">
+                {mounted && <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
                         <XAxis dataKey="time" axisLine={false} tickLine={false}
@@ -202,7 +201,6 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                         {showGas && <Line type="monotone" dataKey="mq135"    name="MQ135 ADC"    stroke="#f59e0b" strokeWidth={2} dot={false} />}
                     </LineChart>
                 </ResponsiveContainer>}
-                </div>
             </div>
         </Card>
     );
@@ -274,8 +272,8 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
     return (
         <Card>
             <p className="font-bold text-amber-900 mb-4">Harvest History — Weight (kg)</p>
-            <div className="h-[200px]">
-                {mounted && <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full">
+                {mounted && <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
                         <XAxis dataKey="date" axisLine={false} tickLine={false}
