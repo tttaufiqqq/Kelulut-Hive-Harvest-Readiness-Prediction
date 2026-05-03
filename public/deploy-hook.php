@@ -12,6 +12,10 @@ if (empty($expectedSecret) || !hash_equals($expectedSecret, $providedSecret)) {
     exit('Forbidden');
 }
 
+// Install composer dependencies
+$laravelRoot = dirname(__DIR__);
+shell_exec("cd $laravelRoot && /home/urbanale/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1");
+
 // Bootstrap Laravel and run artisan commands
 require dirname(__DIR__) . '/vendor/autoload.php';
 $app = require dirname(__DIR__) . '/bootstrap/app.php';

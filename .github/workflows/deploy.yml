@@ -66,9 +66,6 @@ jobs:
           extensions: mbstring, pdo_mysql, xml, curl, zip
           coverage: none
 
-      - name: Install Composer Dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -92,6 +89,7 @@ jobs:
             **/.git*
             **/.git*/**
             **/node_modules/**
+            **/vendor/**
             **/tests/**
             .env
             .env.*
