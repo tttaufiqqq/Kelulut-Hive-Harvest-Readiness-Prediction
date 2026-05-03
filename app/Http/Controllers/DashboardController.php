@@ -36,7 +36,7 @@ class DashboardController extends Controller
             ]);
 
         return Inertia::render('dashboard', [
-            'hives' => $hives,
+            'hives' => $hives->values()->all(),
         ]);
     }
 }
