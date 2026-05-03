@@ -13,6 +13,7 @@ import { AdminLayout } from '@/layouts/admin-layout';
 // ── Types ──────────────────────────────────────────────────────────────
 export type HiveData = {
     id: string;
+    hive_name: string;
     beekeeper: string;
     species: string;
     weight: number;
@@ -163,6 +164,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-yellow-100">
+                                        <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">#</th>
                                         <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">Hive</th>
                                         <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">Beekeeper</th>
                                         <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">Species</th>
@@ -186,6 +188,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                             onClick={() => setSelectedIndex(index)}
                                             className="border-b border-yellow-50 hover:bg-yellow-50/50 transition-colors cursor-pointer"
                                         >
+                                            <td className="py-3 px-3 text-xs font-bold text-amber-900/40 tabular-nums">{index + 1}</td>
                                             <td className="py-3 px-3 font-bold text-amber-900">{hive.hive_name}</td>
                                             <td className="py-3 px-3 text-amber-800">{hive.beekeeper}</td>
                                             <td className="py-3 px-3 text-amber-700 italic hidden md:table-cell text-xs">{hive.species}</td>

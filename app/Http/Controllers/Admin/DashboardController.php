@@ -73,6 +73,7 @@ class DashboardController extends Controller
 
             return [
                 'id'        => (string) $hive->id,
+                'hive_name' => $hive->name,
                 'beekeeper' => $hive->user?->name ?? '—',
                 'species'   => $hive->species?->name ?? '—',
                 'weight'    => round((float) ($hive->harvests_sum_weight ?? 0), 1),
