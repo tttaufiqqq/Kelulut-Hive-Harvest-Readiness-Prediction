@@ -7,6 +7,7 @@ use App\Models\Prediction;
 use App\Models\SensorLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Process;
 use Spatie\Permission\Models\Role;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -47,11 +48,11 @@ function sensorPayload(int $hiveId): array
 
 function fakeMlOk(): void
 {
-    Http::fake(['*' => Http::response([
+    Process::fake(['*' => Process::result(json_encode([
         'readiness_level'  => 'not_ready',
         'hri_value'        => 0.25,
         'confidence_score' => 0.80,
-    ], 200)]);
+    ]))]);
 }
 
 // ── Test 1: happy path — 201 + sensor_log stored ──────────────────────────
@@ -145,10 +146,8 @@ test('unknown device returns 404', function () {
 
 // ── Test 8: Flask down — sensor_log saved, no prediction, still 201 ───────
 
-test('flask down still returns 201 and saves sensor log without prediction', function () {
-    Http::fake(['*' => function () {
-        throw new \Illuminate\Http\Client\ConnectionException('Connection refused');
-    }]);
+test('ml script down still returns 201 and saves sensor log without prediction', function () {
+    Process::fake(['*' => Process::result('', 'error', 1)]);
 
     ['hive' => $hive] = sensorStack();
 

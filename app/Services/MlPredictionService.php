@@ -8,6 +8,7 @@ use App\Models\Prediction;
 use App\Models\SensorLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 
 class MlPredictionService
 {
@@ -16,23 +17,23 @@ class MlPredictionService
         try {
             $pythonBin = config('services.ml.python_bin', 'python3');
             $script    = base_path('ml/predict.py');
-            $payload   = escapeshellarg(json_encode([
+            $payload   = json_encode([
                 'mq2_value'   => $log->mq2_value,
                 'mq3_value'   => $log->mq3_value,
                 'mq5_value'   => $log->mq5_value,
                 'mq135_value' => $log->mq135_value,
                 'temp'        => $log->temp,
                 'humidity'    => $log->humidity,
-            ]));
+            ]);
 
-            $output = shell_exec("$pythonBin $script $payload 2>/dev/null");
+            $result = Process::run([$pythonBin, $script, $payload]);
 
-            if (!$output) {
+            if (!$result->successful() || !$result->output()) {
                 Log::warning('ML script returned no output', ['sensor_log_id' => $log->id]);
                 return null;
             }
 
-            $data = json_decode($output, true);
+            $data = json_decode($result->output(), true);
 
             if (isset($data['error'])) {
                 Log::warning('ML script error', ['error' => $data['error'], 'sensor_log_id' => $log->id]);
