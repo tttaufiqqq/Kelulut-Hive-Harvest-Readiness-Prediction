@@ -4,6 +4,7 @@ import { BeeIcon as Bee } from '@/components/core/bee-icon';
 import { motion } from 'motion/react';
 import React, { useState } from "react";
 import { Button } from '@/components/core/button';
+import { ScrollArea } from '@/components/core/scroll-area';
 import { ThesisModal } from '@/components/core/thesis-modal';
 import type {Auth} from '@/types';
 
@@ -15,7 +16,7 @@ export default function LandingPage({ thesisUrl }: Props) {
   const [showThesis, setShowThesis] = useState(false);
 
   return (
-    <div className="bg-[#FFFBEB] overflow-x-hidden">
+    <ScrollArea className="bg-[#FFFBEB] h-screen">
       {/* Section 1: Editorial Hero (Beekeeper Focus) */}
       <section className="relative min-h-screen flex flex-col justify-center px-6 md:px-20 py-20 overflow-hidden">
         <motion.div
@@ -319,6 +320,6 @@ export default function LandingPage({ thesisUrl }: Props) {
                 </div>
             </div>
         </footer>
-    </div>
+    </ScrollArea>
   );
 }
