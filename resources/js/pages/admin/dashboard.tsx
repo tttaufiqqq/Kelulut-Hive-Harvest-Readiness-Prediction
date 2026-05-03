@@ -128,7 +128,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
 
                     <Card
                         className="flex items-center gap-4 border-l-4 border-l-emerald-400 cursor-pointer hover:bg-yellow-50/50 transition-colors"
-                        onClick={() => router.visit(route('admin.harvests.index'))}
+                        onClick={() => router.visit(route('admin.sensors.index'))}
                     >
                         <div className="bg-emerald-100 p-3 rounded-2xl shrink-0">
                             <TrendingUp className="w-5 h-5 text-emerald-600" />
