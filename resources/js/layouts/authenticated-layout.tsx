@@ -81,6 +81,33 @@ export function AuthenticatedLayout({ header = null, children }: AuthenticatedLa
                 </div>
             </header>
 
+            {/* ── Desktop Tab Bar (beekeeper, md+ only) ────────────────────── */}
+            {!isAdmin && (
+                <div className="hidden md:block bg-white border-b border-yellow-100">
+                    <div className="max-w-6xl mx-auto px-6">
+                        <nav className="flex gap-1 py-2 overflow-x-auto">
+                            {navItems.map((item) => {
+                                const isActive = route().current(item.routeName);
+                                return (
+                                    <Link
+                                        key={item.routeName}
+                                        href={route(item.routeName)}
+                                        className={cn(
+                                            'px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap flex-shrink-0',
+                                            isActive
+                                                ? 'bg-white shadow-sm font-semibold text-amber-900'
+                                                : 'text-amber-900/60 hover:bg-yellow-200/50'
+                                        )}
+                                    >
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                </div>
+            )}
+
             {/* ── Optional page header ─────────────────────────────────────── */}
             {header && (
                 <div className="bg-white border-b border-yellow-100">
