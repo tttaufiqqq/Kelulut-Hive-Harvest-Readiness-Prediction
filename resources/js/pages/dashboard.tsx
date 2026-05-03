@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Wind, Leaf, LineChart } from 'lucide-react';
+import { Bug as Bee, MapPin, Thermometer, Droplets, BarChart3, Wind, Leaf, LineChart, Activity } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { Card } from '@/components/core/card';
@@ -405,11 +405,11 @@ export default function Dashboard({ hives }: Props) {
                                     )}
                                 </div>
                                 <Link
-                                    href={route('analytics.show', { hive: selectedHive.id })}
+                                    href={route('predictions.live', { hive: selectedHive.id })}
                                     className="shrink-0 flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 rounded-full text-sm font-bold transition-colors"
                                 >
-                                    <LineChart className="w-4 h-4" />
-                                    Full Analytics
+                                    <Activity className="w-4 h-4" />
+                                    View Live Predictions
                                 </Link>
                             </Card>
                         </motion.div>
