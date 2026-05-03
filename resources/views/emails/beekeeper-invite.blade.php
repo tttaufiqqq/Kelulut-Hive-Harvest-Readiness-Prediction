@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>You've been invited to BuzzyHive</title>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');</style>
 </head>
-<body style="margin:0;padding:0;background-color:#FFFBEB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<body style="margin:0;padding:0;background-color:#FFFBEB;font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFBEB;padding:40px 16px;">
         <tr>
@@ -22,7 +23,14 @@
                                         <table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;">
                                             <tr>
                                                 <td style="background-color:#facc15;border-radius:10px;padding:8px 10px;vertical-align:middle;">
-                                                    <span style="font-size:18px;line-height:1;">&#128029;</span>
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                                                        <ellipse cx="12" cy="15" rx="5.5" ry="6.5" fill="#1c0a00"/>
+                                                        <rect x="6.5" y="12.5" width="11" height="2" rx="1" fill="#facc15"/>
+                                                        <rect x="6.5" y="15.5" width="11" height="2" rx="1" fill="#facc15"/>
+                                                        <circle cx="12" cy="7.5" r="3.5" fill="#1c0a00"/>
+                                                        <path d="M8.5 6 C6 3.5 4 5 4.5 7.5" stroke="#1c0a00" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                                                        <path d="M15.5 6 C18 3.5 20 5 19.5 7.5" stroke="#1c0a00" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                                                    </svg>
                                                 </td>
                                                 <td style="padding-left:10px;vertical-align:middle;">
                                                     <span style="font-size:18px;font-weight:900;letter-spacing:-0.5px;color:#fff;text-transform:uppercase;">
