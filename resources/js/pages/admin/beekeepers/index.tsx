@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { MoreVertical, Plus, RefreshCw, Power, Eye, Edit2, Trash2 } from 'lucide-react';
+import { MoreVertical, Plus, RefreshCw, Power, Edit2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
@@ -212,7 +212,7 @@ return;
                                     </tr>
                                 )}
                                 {beekeepers.data.map((user) => (
-                                    <tr key={user.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={user.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', user })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{user.name}</td>
                                         <td className="px-6 py-4 text-amber-900/70">{user.email}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{user.phone ?? '—'}</td>
@@ -220,7 +220,7 @@ return;
                                         <td className="px-6 py-4 text-amber-900/50 hidden lg:table-cell">
                                             {new Date(user.created_at).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                                             <Dropdown
                                                 align="right"
                                                 trigger={
@@ -229,12 +229,6 @@ return;
                                                     </button>
                                                 }
                                                 items={[
-                                                    {
-                                                        id: 'view',
-                                                        label: 'View Details',
-                                                        icon: <Eye className="w-4 h-4" />,
-                                                        onClick: () => setActiveModal({ type: 'view', user }),
-                                                    },
                                                     {
                                                         id: 'edit',
                                                         label: 'Edit',
