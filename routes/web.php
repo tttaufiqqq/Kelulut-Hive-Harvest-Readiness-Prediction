@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\AcceptInviteController;
+use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\InspectionController;
@@ -20,6 +21,7 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified', 'beekeeper'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('hives/{hive}/analytics', [AnalyticsController::class, 'show'])->name('analytics.show');
+    Route::get('hives/{hive}/predictions/live', [PredictionController::class, 'show'])->name('predictions.live');
 
     Route::get('/harvests', [HarvestController::class, 'index'])->name('harvests.index');
     Route::post('/harvests', [HarvestController::class, 'store'])->name('harvests.store');
