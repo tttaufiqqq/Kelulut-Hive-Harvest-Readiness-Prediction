@@ -1,12 +1,20 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
+import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { Modal } from '@/components/core/modal';
+import { SelectField } from '@/components/core/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
 import type { Inspection, MasterWeatherCondition, PaginatedInspections } from '@/types';
 
 type Props = {
     inspections: PaginatedInspections;
     stats:       { total: number };
+    hives:       { id: number; name: string }[];
+    filters:     { hive_id?: string };
 };
+
+type ActiveModal = { type: 'view'; inspection: Inspection } | null;
 
 const BLOOMING_STYLES: Record<string, string> = {
     pre_bloom:   'bg-sky-100 text-sky-700',
@@ -46,7 +54,19 @@ function WeatherPills({ conditions }: { conditions?: MasterWeatherCondition[] })
     );
 }
 
-export default function AdminInspectionsIndex({ inspections, stats }: Props) {
+export default function AdminInspectionsIndex({ inspections, stats, hives, filters }: Props) {
+    const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+    const close = () => setActiveModal(null);
+
+    const hiveOptions = (items: { id: number; name: string }[]) => [
+        { value: '', label: 'All Hives' },
+        ...items.map(h => ({ value: String(h.id), label: h.name })),
+    ];
+
+    const onHiveFilter = (val: string) => {
+        router.get(route('admin.inspections.index'), val ? { hive_id: val } : {}, { preserveState: true, replace: true });
+    };
+
     return (
         <AdminLayout>
             <Head title="Inspections — Admin" />
@@ -62,9 +82,18 @@ export default function AdminInspectionsIndex({ inspections, stats }: Props) {
                 </div>
 
                 {/* Header */}
-                <div>
-                    <h3 className="text-lg font-bold text-amber-900">All Inspection Records</h3>
-                    <p className="text-sm text-amber-900/50">{stats.total} record{stats.total !== 1 ? 's' : ''} across all beekeepers</p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-amber-900">All Inspection Records</h3>
+                        <p className="text-sm text-amber-900/50">{stats.total} record{stats.total !== 1 ? 's' : ''} across all beekeepers</p>
+                    </div>
+                    <div className="w-48">
+                        <SelectField
+                            value={filters.hive_id ?? ''}
+                            onChange={onHiveFilter}
+                            options={hiveOptions(hives)}
+                        />
+                    </div>
                 </div>
 
                 {/* Table */}
@@ -89,7 +118,7 @@ export default function AdminInspectionsIndex({ inspections, stats }: Props) {
                                     </tr>
                                 )}
                                 {inspections.data.map((inspection) => (
-                                    <tr key={inspection.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={inspection.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', inspection })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{inspection.hive?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{inspection.beekeeper?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70">
@@ -134,6 +163,64 @@ export default function AdminInspectionsIndex({ inspections, stats }: Props) {
                     </div>
                 )}
             </div>
+
+            {activeModal?.type === 'view' && (
+                <Modal isOpen onClose={close} title="Inspection Details" maxWidth="md">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Hive</p>
+                                <p className="font-medium text-amber-950">{activeModal.inspection.hive?.name ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Beekeeper</p>
+                                <p className="font-medium text-amber-950">{activeModal.inspection.beekeeper?.name ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Date</p>
+                                <p className="font-medium text-amber-950">
+                                    {new Date(activeModal.inspection.inspection_date).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Blooming Status</p>
+                                <BloomingBadge status={activeModal.inspection.blooming_status} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Vegetation Density</p>
+                                <p className="font-medium text-amber-950 capitalize">{activeModal.inspection.vegetation_density ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Nectar Availability</p>
+                                <p className="font-medium text-amber-950 capitalize">{activeModal.inspection.nectar_source_availability ?? '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Structural Damage</p>
+                                <p className="font-medium text-amber-950 capitalize">{activeModal.inspection.structural_damage ?? '—'}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Weather Conditions</p>
+                            <WeatherPills conditions={activeModal.inspection.weather_conditions} />
+                        </div>
+                        {activeModal.inspection.food_source_observation && (
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Food Source Observation</p>
+                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{activeModal.inspection.food_source_observation}</p>
+                            </div>
+                        )}
+                        {activeModal.inspection.notes && (
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Notes</p>
+                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{activeModal.inspection.notes}</p>
+                            </div>
+                        )}
+                        <div className="pt-2">
+                            <Button type="button" variant="ghost" onClick={close} className="w-full">Close</Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </AdminLayout>
     );
 }
