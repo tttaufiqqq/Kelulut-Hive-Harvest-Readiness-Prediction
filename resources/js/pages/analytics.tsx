@@ -183,7 +183,8 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                     />
                 </div>
             </div>
-            <div className="flex-1 min-h-[250px]">
+            <div className="relative flex-1 min-h-[250px]">
+                <div className="absolute inset-0">
                 {mounted && <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
@@ -201,6 +202,7 @@ function SensorChart({ data }: { data: SensorReading[] }) {
                         {showGas && <Line type="monotone" dataKey="mq135"    name="MQ135 ADC"    stroke="#f59e0b" strokeWidth={2} dot={false} />}
                     </LineChart>
                 </ResponsiveContainer>}
+                </div>
             </div>
         </Card>
     );
