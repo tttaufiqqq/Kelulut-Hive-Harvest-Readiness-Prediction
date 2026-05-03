@@ -7,52 +7,85 @@ use Illuminate\Support\Facades\DB;
 
 class PredictionSeeder extends Seeder
 {
+    // Per-hive readiness progression over 90 days (daysAgo: high = older, low = recent)
+    // Hive 0: harvested at day 61 → approaching in cycle 2
+    // Hive 1: single long cycle → currently ready
+    // Hive 2: harvested at day 54 → nearly_ready in cycle 2
+    private array $progressions = [
+        0 => [
+            ['from' => 89, 'to' => 76, 'level' => 'not_ready'],
+            ['from' => 75, 'to' => 62, 'level' => 'approaching'],
+            ['from' => 61, 'to' => 42, 'level' => 'not_ready'],
+            ['from' => 41, 'to' => 0,  'level' => 'approaching'],
+        ],
+        1 => [
+            ['from' => 89, 'to' => 70, 'level' => 'not_ready'],
+            ['from' => 69, 'to' => 40, 'level' => 'approaching'],
+            ['from' => 39, 'to' => 10, 'level' => 'nearly_ready'],
+            ['from' => 9,  'to' => 0,  'level' => 'ready'],
+        ],
+        2 => [
+            ['from' => 89, 'to' => 70, 'level' => 'not_ready'],
+            ['from' => 69, 'to' => 55, 'level' => 'approaching'],
+            ['from' => 54, 'to' => 35, 'level' => 'not_ready'],
+            ['from' => 34, 'to' => 15, 'level' => 'approaching'],
+            ['from' => 14, 'to' => 0,  'level' => 'nearly_ready'],
+        ],
+    ];
+
+    private array $hriRanges = [
+        'not_ready'    => [0.10, 0.24],
+        'approaching'  => [0.25, 0.49],
+        'nearly_ready' => [0.50, 0.74],
+        'ready'        => [0.75, 0.99],
+    ];
+
     public function run(): void
     {
+        $hives    = DB::table('hives')->orderBy('id')->pluck('id');
+        $hiveIndexMap = $hives->flip()->toArray(); // hive_id => index
+
         $logs = DB::table('sensor_logs')->orderBy('record_timestamp')->get();
-        $start = now()->subDays(30);
         $rows = [];
 
         foreach ($logs as $log) {
-            $dayNumber = (int) $start->diffInDays($log->record_timestamp);
-            $dayNumber = max(0, min(29, $dayNumber));
+            $hiveIndex = $hiveIndexMap[$log->hive_id] ?? 0;
+            $daysAgo   = (int) now()->diffInDays($log->record_timestamp);
 
-            [$level, $hriValue] = $this->resolveLevel($dayNumber);
+            [$level, $hriValue, $confidence] = $this->resolveLevel($daysAgo, $hiveIndex);
 
             $rows[] = [
                 'sensor_log_id'        => $log->id,
-                'hive_id'              => $log->hive_id,
                 'readiness_level'      => $level,
                 'hri_value'            => $hriValue,
+                'confidence_score'     => $confidence,
                 'prediction_timestamp' => $log->record_timestamp,
             ];
         }
 
-        foreach (array_chunk($rows, 100) as $chunk) {
+        foreach (array_chunk($rows, 500) as $chunk) {
             DB::table('predictions')->insert($chunk);
         }
 
         $this->command->info('PredictionSeeder: ' . count($rows) . ' rows inserted.');
     }
 
-    private function resolveLevel(int $day): array
+    private function resolveLevel(int $daysAgo, int $hiveIndex): array
     {
-        // Progress: not_ready → approaching → nearly_ready → ready over 30 days
-        $hriBase = round(0.2 + ($day / 29) * 0.75 + (rand(-5, 5) / 100), 2);
-        $hriBase = max(0.1, min(0.99, $hriBase));
+        $segments = $this->progressions[$hiveIndex] ?? $this->progressions[0];
+        $level    = 'not_ready';
 
-        if ($day <= 7) {
-            $level = rand(1, 10) <= 8 ? 'not_ready' : 'approaching';
-        } elseif ($day <= 17) {
-            $r = rand(1, 10);
-            $level = $r <= 5 ? 'not_ready' : ($r <= 9 ? 'approaching' : 'nearly_ready');
-        } elseif ($day <= 24) {
-            $r = rand(1, 10);
-            $level = $r <= 2 ? 'approaching' : ($r <= 8 ? 'nearly_ready' : 'ready');
-        } else {
-            $level = rand(1, 10) <= 9 ? 'ready' : 'nearly_ready';
+        foreach ($segments as $segment) {
+            if ($daysAgo <= $segment['from'] && $daysAgo >= $segment['to']) {
+                $level = $segment['level'];
+                break;
+            }
         }
 
-        return [$level, $hriBase];
+        [$min, $max] = $this->hriRanges[$level];
+        $hriValue   = round($min + (rand(0, 100) / 100) * ($max - $min), 2);
+        $confidence = round(0.62 + (rand(0, 33) / 100), 2);
+
+        return [$level, $hriValue, $confidence];
     }
 }

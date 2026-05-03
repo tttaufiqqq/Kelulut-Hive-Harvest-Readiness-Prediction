@@ -152,6 +152,7 @@ jobs:
             ml/dataset.csv
             .env
             .env.*
+            .composer-lock-hash
             .phpunit.cache
             .phpunit.result.cache
             /CLAUDE.md

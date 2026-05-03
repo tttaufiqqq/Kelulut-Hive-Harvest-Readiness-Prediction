@@ -10,13 +10,14 @@ Sensors on the hive push environmental data to the platform, a machine learning 
 
 ## Features
 
-- **Real-time sensor ingestion** — ESP32 posts temperature, humidity, and gas (MQ2) readings via HTTP
-- **ML harvest readiness** — Flask API runs a scikit-learn classifier and returns one of four labels: Not Ready / Approaching / Nearly Ready / Ready to Harvest
+- **Real-time sensor ingestion** — ESP32 posts temperature, humidity, and gas (MQ2/MQ3/MQ5/MQ135) readings via HTTP
+- **ML harvest readiness** — Flask API runs a KNN scikit-learn classifier and returns one of four labels: Not Ready / Approaching / Nearly Ready / Ready to Harvest
 - **Telegram alerts** — notifies the beekeeper automatically when the hive hits "Ready to Harvest"
 - **Hive management** — add/edit hives, assign beekeepers, track species and site
 - **Harvest records** — log weight, honey color, flavor, and productivity per harvest
 - **Inspection logs** — record hive inspections with weather conditions and flora observations
-- **Analytics dashboard** — HRI summary table, sensor trend charts, harvest history
+- **Analytics dashboard** — HRI trend charts, sensor readings, harvest history, 30-day summaries
+- **Reporting** — per-hive HRI gauge and readiness trend across time
 - **Role-based access** — Admin manages users and master data; Beekeepers manage their own hives
 - **Admin invite-only** — no self-registration; admins issue invites
 
@@ -31,10 +32,10 @@ Sensors on the hive push environmental data to the platform, a machine learning 
 | Styling | Tailwind CSS v4 + Radix UI |
 | Auth & Roles | Laravel Fortify + Spatie Permission |
 | Database | MySQL (production) / SQLite (tests) |
-| ML API | Python + scikit-learn → Flask REST API |
-| Hardware | ESP32 + DHT11 (temperature/humidity) + MQ2 (gas) |
+| ML API | Python + scikit-learn (KNN) → Flask REST API |
+| Hardware | ESP32 + DHT11 + MQ2 + MQ3 + MQ5 + MQ135 |
 | Hosting | Exabytes shared hosting (LiteSpeed) |
-| CI/CD | GitHub Actions → FTP deploy → post-deploy hook |
+| CI/CD | GitHub Actions → artifact build → FTP deploy → post-deploy hook |
 
 ---
 
@@ -44,23 +45,34 @@ Sensors on the hive push environmental data to the platform, a machine learning 
 buzzyhive/
 ├── app/
 │   ├── Http/Controllers/
-│   │   ├── Admin/          # BeekeeperController, SensorDashboardController, ThesisController
-│   │   ├── SensorController.php   # IoT HTTP POST endpoint
-│   │   └── AnalyticsController.php
-│   └── Models/             # Hive, SensorLog, IotNode, HiveSummary, User ...
-├── resources/js/Pages/
-│   ├── LandingPage.tsx
-│   ├── dashboard.tsx
-│   ├── analytics.tsx
-│   └── admin/              # dashboard, sensors, thesis pages
-├── database/migrations/    # 22 migrations — master tables, core tables, junctions
-├── ml/                     # (pending) train.ipynb, model.pkl, app.py, requirements.txt
-├── diagrams/               # ERD (.drawio), DFD (.md)
+│   │   ├── Admin/              # BeekeeperController, SensorDashboardController
+│   │   ├── SensorController.php       # IoT HTTP POST endpoint
+│   │   ├── AnalyticsController.php
+│   │   └── ReportingController.php
+│   ├── Services/
+│   │   ├── MlPredictionService.php    # Calls Flask API, stores prediction, updates HriSummary
+│   │   └── TelegramService.php
+│   └── Models/                 # Hive, SensorLog, IotNode, Prediction, HriSummary, User ...
+├── resources/js/pages/
+│   ├── dashboard.tsx            # Beekeeper hive overview
+│   ├── analytics.tsx            # HRI trend + sensor charts
+│   ├── reporting.tsx            # HRI gauges + readiness trend
+│   └── admin/                  # Admin dashboard, sensor monitor, user management
+├── database/
+│   ├── migrations/             # Full schema — master tables, core tables, junctions
+│   └── seeders/                # MasterDataSeeder (auto) + demo data seeders (manual once)
+├── ml/
+│   ├── app.py                  # Flask REST API — POST /predict
+│   ├── model.pkl               # Trained KNN model
+│   ├── scaler.pkl              # Feature scaler
+│   ├── train.ipynb             # Training notebook (synthetic dataset, 200 samples)
+│   └── requirements.txt
+├── diagrams/                   # ERD + DFD (.drawio)
 ├── .github/workflows/
-│   ├── deploy.yml          # test → build → FTP upload → deploy hook
-│   └── lint.yml            # ESLint + Prettier + Pint
+│   ├── deploy.yml              # tests → build → FTP upload → deploy hook
+│   └── lint.yml                # ESLint + Prettier + Pint
 └── public/
-    └── deploy-hook.php     # Post-deploy artisan commands (migrate, cache)
+    └── deploy-hook.php         # Post-deploy: composer install (if changed), migrate, seed, cache
 ```
 
 ---
@@ -79,8 +91,8 @@ buzzyhive/
 
 ```bash
 # Clone
-git clone https://github.com/tttaufiqqq/BuzzyHive-2.0.git
-cd buzzyhive
+git clone https://github.com/tttaufiqqq/Kelulut-Hive-Harvest-Readiness-Prediction.git
+cd Kelulut-Hive-Harvest-Readiness-Prediction
 
 # PHP dependencies
 composer install
@@ -94,7 +106,7 @@ php artisan key:generate
 
 # Configure .env:
 # DB_DATABASE, DB_USERNAME, DB_PASSWORD
-# FLASK_API_URL=http://localhost:5000
+# ML_API_URL=http://localhost:5000
 # TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 # DEPLOY_SECRET (for post-deploy hook)
 
@@ -114,37 +126,48 @@ cd ml
 pip install -r requirements.txt
 python app.py
 # Runs on http://localhost:5000
-# POST /predict — accepts { temperature, humidity, mq2_value }
+# POST /predict — accepts { temp, humidity, mq2_value, mq3_value, mq5_value, mq135_value }
 ```
 
 ---
 
 ## Hardware
 
-The ESP32 firmware sends a JSON POST to `/api/sensor` after each reading:
+The ESP32 firmware reads sensors every interval and sends a JSON POST to `/api/sensor`:
 
 ```json
 {
-  "node_id": 1,
-  "temperature": 30.5,
-  "humidity": 72.0,
-  "mq2_value": 120
+  "device_id": "NODE-001",
+  "hive_id": 1,
+  "temp": 34.2,
+  "humidity": 71.5,
+  "mq2_value": 310,
+  "mq3_value": 275,
+  "mq5_value": 290,
+  "mq135_value": 320
 }
 ```
 
-The endpoint stores the reading in `sensor_logs`, calls the Flask API for a prediction, stores the result in `predictions`, and triggers a Telegram alert if readiness is "Ready to Harvest".
+The endpoint stores the reading in `sensor_logs`, calls the Flask ML API for a prediction, stores the result in `predictions`, updates `hri_summary`, and dispatches a Telegram alert if readiness is "Ready to Harvest".
+
+**Sensors:** DHT11 (temp/humidity), MQ2 (smoke/LPG), MQ3 (alcohol/VOC), MQ5 (LPG/natural gas), MQ135 (air quality/CO2)
+**ADC:** `analogReadResolution(10)` — 0–1023 range on all MQ sensors.
 
 ---
 
 ## ML Pipeline
 
-**Task:** Multi-class classification — harvest readiness from sensor readings.
+**Task:** Multi-class classification — kelulut honey harvest readiness from sensor readings.
 
-**Labels:** Not Ready / Approaching / Nearly Ready / Ready to Harvest
+**Labels:** `not_ready` / `approaching` / `nearly_ready` / `ready`
 
-**Stack:** scikit-learn → `.pkl` model file → Flask REST API
+**Model:** K-Nearest Neighbours (KNN) — 100% accuracy on synthetic test set.
 
-> Dataset is pending from the supervising lecturer. The `ml/` directory structure is scaffolded but training has not yet been run.
+**Dataset:** 200-sample synthetic dataset anchored on Aida 'Izwani's thesis baselines (same species, same sensor types).
+
+**Stack:** scikit-learn → `.pkl` model + scaler → Flask REST API on cPanel (Passenger WSGI)
+
+**Output per prediction:** `readiness_level`, `hri_value` (0.25/0.50/0.75/1.00), `confidence_score` (KNN vote ratio)
 
 ---
 
@@ -161,23 +184,28 @@ Roles are managed via Spatie Permission. Admins assign roles when inviting users
 
 ## CI/CD
 
-Push to `main` triggers:
+Push to `main` (app files only — docs and unrelated changes are ignored) triggers:
 
 1. **Lint** (`lint.yml`) — ESLint, Prettier, Laravel Pint — runs in parallel
-2. **Tests** (`deploy.yml`) — Pest on PHP 8.3 + 8.4, SQLite in-memory, RefreshDatabase
-3. **Deploy** (only if tests pass) — builds frontend assets, uploads via FTP to Exabytes, hits `deploy-hook.php`
+2. **Tests** (`deploy.yml`) — Pest on PHP 8.3 + 8.4 in parallel, SQLite in-memory, `Vite::fake()` (no frontend build needed)
+3. **Build** (after tests pass) — installs deps, runs `npm run build`, uploads `public/build/` as a GitHub Actions artifact
+4. **Deploy** (after build) — downloads artifact, FTPs changed files only to Exabytes, hits `deploy-hook.php`
 
-The deploy hook runs `migrate --force`, `config:cache`, `route:cache`, `view:cache` over HTTP (no SSH on shared hosting).
+**Deploy hook** (runs on server via HTTP):
+- `composer install` — skipped if `composer.lock` unchanged (hash check)
+- `php artisan migrate --force`
+- `php artisan db:seed --class=MasterDataSeeder`
+- `php artisan config:cache` + `route:cache` + `view:cache`
+
+**Estimated pipeline time:** ~3–4 min (warm cache, code-only change)
 
 ---
 
 ## Database Schema
 
-22 migrations across four groups:
-
 | Group | Tables |
 |---|---|
-| Master / lookup | species, sites, sensor_thresholds, honey_colors, honey_flavors, weather_conditions, flora_types |
+| Master / lookup | master_species, master_sites, master_sensor_thresholds, master_honey_colors, master_honey_flavors, master_weather_conditions, master_flora_types |
 | Core | hives, iot_nodes, sensor_logs, predictions, harvests, inspections, hri_summary |
 | Junction | inspection_weather, inspection_flora, sensor_log_thresholds |
 | Laravel system | users, cache, jobs, permissions (Spatie) |

@@ -9,33 +9,42 @@ class SensorLogSeeder extends Seeder
 {
     public function run(): void
     {
-        $hives    = DB::table('hives')->get();
+        $hives    = DB::table('hives')->orderBy('id')->get();
         $iotNodes = DB::table('iot_nodes')->get()->keyBy('hive_id');
 
-        $rows = [];
-        $start = now()->subDays(29);
+        // Per-hive sensor baseline profiles
+        $profiles = [
+            ['tempBase' => 34.0, 'humidityBase' => 73.0],
+            ['tempBase' => 33.5, 'humidityBase' => 71.5],
+            ['tempBase' => 34.5, 'humidityBase' => 69.0],
+        ];
 
-        foreach ($hives as $hive) {
-            $node = $iotNodes[$hive->id] ?? null;
+        $rows = [];
+
+        foreach ($hives as $index => $hive) {
+            $node    = $iotNodes[$hive->id] ?? null;
+            $profile = $profiles[$index] ?? $profiles[0];
+
             if (!$node) continue;
 
-            for ($day = 0; $day < 30; $day++) {
-                for ($slot = 0; $slot < 6; $slot++) {
-                    $ts = $start->copy()->addDays($day)->addHours($slot * 4);
+            for ($daysAgo = 89; $daysAgo >= 0; $daysAgo--) {
+                for ($slot = 0; $slot < 12; $slot++) {
+                    $hour = $slot * 2;
+                    $ts   = now()->subDays($daysAgo)->setTime($hour, rand(0, 59), 0);
 
-                    // Values drift slightly per hive for variety
-                    $tempBase     = 33.5 + ($hive->id * 0.3);
-                    $humidityBase = 72.0 - ($hive->id * 1.5);
+                    // Temp peaks at 2pm, lowest at 6am — sinusoidal day cycle
+                    $tempOffset     = round(sin(($hour - 6) * M_PI / 12) * 1.5 + (rand(-8, 8) / 10), 1);
+                    $humidityOffset = round(-sin(($hour - 6) * M_PI / 12) * 3.0 + (rand(-8, 8) / 10), 1);
 
                     $rows[] = [
                         'hive_id'          => $hive->id,
                         'device_id'        => $node->id,
-                        'temp'             => round($tempBase + (rand(-15, 15) / 10), 1),
-                        'humidity'         => round($humidityBase + (rand(-10, 10) / 10), 1),
-                        'mq2_value'        => rand(180, 480),
-                        'mq3_value'        => rand(180, 480),
-                        'mq5_value'        => rand(180, 480),
-                        'mq135_value'      => rand(180, 480),
+                        'temp'             => round($profile['tempBase'] + $tempOffset, 1),
+                        'humidity'         => round($profile['humidityBase'] + $humidityOffset, 1),
+                        'mq2_value'        => rand(160, 450),
+                        'mq3_value'        => rand(160, 450),
+                        'mq5_value'        => rand(160, 450),
+                        'mq135_value'      => rand(160, 450),
                         'record_timestamp' => $ts,
                         'created_at'       => $ts,
                     ];
@@ -43,7 +52,7 @@ class SensorLogSeeder extends Seeder
             }
         }
 
-        foreach (array_chunk($rows, 100) as $chunk) {
+        foreach (array_chunk($rows, 500) as $chunk) {
             DB::table('sensor_logs')->insert($chunk);
         }
 

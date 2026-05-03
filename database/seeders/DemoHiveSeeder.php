@@ -12,7 +12,7 @@ class DemoHiveSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::where('email', 'admin@buzzyhive.com')->first();
+        $admin = User::where('email', 'admin@buzzyhive.urban-alert.com')->first();
 
         if (!$admin) {
             $this->command->error('Admin user not found. Run DatabaseSeeder first.');
@@ -23,9 +23,9 @@ class DemoHiveSeeder extends Seeder
         $site2 = DB::table('master_sites')->where('name', 'Field A')->value('id');
         $site3 = DB::table('master_sites')->where('name', 'Field B')->value('id');
 
-        $sp1 = DB::table('master_species')->where('name', 'Trigona itama')->value('id');
-        $sp2 = DB::table('master_species')->where('name', 'Trigona thoracica')->value('id');
-        $sp3 = DB::table('master_species')->where('name', 'Apis mellifera')->value('id');
+        $sp1 = DB::table('master_species')->where('name', 'Heterotrigona itama')->value('id');
+        $sp2 = DB::table('master_species')->where('name', 'Geniotrigona thoracica')->value('id');
+        $sp3 = DB::table('master_species')->where('name', 'Tetragonula laeviceps')->value('id');
 
         $hivesData = [
             ['name' => 'Demo Hive 1', 'site_id' => $site1, 'species_id' => $sp1, 'node' => 'NODE-001'],
