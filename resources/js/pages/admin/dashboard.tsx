@@ -155,13 +155,15 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                 </div>
 
                 {/* ── Live Hive Monitor ──────────────────────────────────── */}
-                <Card>
-                    <h3 className="text-sm font-black uppercase tracking-widest text-amber-900/60 mb-4">Live Hive Monitor</h3>
+                <Card className="p-0 overflow-hidden">
+                    <div className="px-4 pt-4 pb-2">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-amber-900/60">Live Hive Monitor</h3>
+                    </div>
                     {hives.length === 0 ? (
-                        <p className="text-sm text-amber-900/40 text-center py-6">No hives registered yet.</p>
+                        <p className="text-sm text-amber-900/40 text-center py-6 px-4">No hives registered yet.</p>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table className="w-full min-w-[640px] text-sm">
                                 <thead>
                                     <tr className="border-b border-yellow-100">
                                         <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">#</th>
@@ -255,7 +257,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                 />
                                 <Tooltip
                                     contentStyle={{ borderRadius: 12, border: '1px solid #fef3c7', fontSize: 12 }}
-                                    formatter={(v: number) => [`${v} kg`, 'Harvest Weight']}
+                                    formatter={(v) => [`${v ?? 0} kg`, 'Harvest Weight']}
                                 />
                                 <Bar dataKey="total_weight" fill="#F59E0B" radius={[0, 6, 6, 0]} />
                             </BarChart>
@@ -347,7 +349,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                 <div className="w-full h-3 bg-yellow-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-yellow-400 rounded-full transition-all duration-300"
-                                        style={{ width: `${hive.readiness}%` }}
+                                        style={{ width: hive.readiness > 0 ? `${hive.readiness}%` : '0%', minWidth: 0 }}
                                     />
                                 </div>
                             </div>
@@ -367,7 +369,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                             {/* Sensor readings */}
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-3">Latest Sensor Readings</p>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 gap-3">
                                     {[
                                         { icon: Thermometer, label: 'Temperature', value: hive.temp > 0 ? `${hive.temp}°C` : '—',    warn: hive.temp > WARN_TEMP_ABOVE },
                                         { icon: Droplets,    label: 'Humidity',    value: hive.humidity > 0 ? `${hive.humidity}%` : '—', warn: hive.humidity > WARN_HUMID_ABOVE },

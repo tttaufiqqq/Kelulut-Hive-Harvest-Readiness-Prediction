@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TabProps {
@@ -10,11 +10,28 @@ interface TabProps {
 }
 
 export const Tabs = ({ tabs, activeTab, onChange, className }: TabProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const btn = buttonRefs.current.get(activeTab);
+    if (!container || !btn) return;
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    container.scrollTo({
+      left: container.scrollLeft + btnRect.left - containerRect.left - containerRect.width / 2 + btnRect.width / 2,
+      behavior: 'smooth',
+    });
+  }, [activeTab]);
+
   return (
-    <div className={cn('flex p-1 bg-yellow-100/50 rounded-2xl w-fit', className)}>
+    <div ref={containerRef} className={cn('overflow-x-auto', className)}>
+      <div className="flex p-1 bg-yellow-100/50 rounded-2xl w-fit">
       {tabs.map((tab) => (
         <button
           key={tab.id}
+          ref={(el) => { if (el) buttonRefs.current.set(tab.id, el); }}
           onClick={() => onChange(tab.id)}
           className={cn(
             'relative px-4 py-2 text-sm font-bold transition-all rounded-xl flex items-center gap-2',
@@ -34,6 +51,7 @@ export const Tabs = ({ tabs, activeTab, onChange, className }: TabProps) => {
           </span>
         </button>
       ))}
+      </div>
     </div>
   );
 };

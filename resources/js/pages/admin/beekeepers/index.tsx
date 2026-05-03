@@ -341,11 +341,11 @@ return;
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Status</p>
                                 <StatusBadge status={activeModal.user.status ?? 'active'} />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Email</p>
-                                <p className="font-medium text-amber-950">{activeModal.user.email}</p>
+                                <p className="font-medium text-amber-950 break-all">{activeModal.user.email}</p>
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Phone</p>
                                 <p className="font-medium text-amber-950">{activeModal.user.phone ?? '—'}</p>
                             </div>
