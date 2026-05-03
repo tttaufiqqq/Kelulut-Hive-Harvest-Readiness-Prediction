@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { MoreVertical, Plus, Eye, Edit2, Trash2 } from 'lucide-react';
+import { MoreVertical, Plus, Edit2, Trash2 } from 'lucide-react';
 import { DatePickerField } from '@/components/core/date-picker';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Breadcrumbs } from '@/components/core/navigation';
@@ -20,6 +20,7 @@ type Props = {
     hives: { id: number; name: string }[];
     colors: MasterHoneyColor[];
     flavors: MasterHoneyFlavor[];
+    filters: { hive_id?: string };
 };
 
 type ActiveModal =
@@ -62,17 +63,22 @@ const emptyCreate = {
     notes: '',
 };
 
-const hiveOptions    = (hives:   { id: number; name: string }[]) => [{ value: '', label: 'Select hive...' },  ...hives.map(h  => ({ value: String(h.id),  label: h.name  }))];
+const hiveOptions        = (hives: { id: number; name: string }[]) => [{ value: '', label: 'Select hive...' }, ...hives.map(h => ({ value: String(h.id), label: h.name }))];
+const hiveFilterOptions  = (hives: { id: number; name: string }[]) => [{ value: '', label: 'All Hives' },      ...hives.map(h => ({ value: String(h.id), label: h.name }))];
 const colorOptions   = (colors:  MasterHoneyColor[])             => [{ value: '', label: '— None —' },         ...colors.map(c => ({ value: String(c.id),  label: c.name  }))];
 const flavorOptions  = (flavors: MasterHoneyFlavor[])            => [{ value: '', label: '— None —' },         ...flavors.map(f => ({ value: String(f.id), label: f.name  }))];
 
-export default function HarvestsIndex({ harvests, hives, colors, flavors }: Props) {
+export default function HarvestsIndex({ harvests, hives, colors, flavors, filters }: Props) {
     const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
     const flash = props.flash;
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
     const close = () => setActiveModal(null);
+
+    const onHiveFilter = (val: string) => {
+        router.get(route('harvests.index'), val ? { hive_id: val } : {}, { preserveState: true, replace: true });
+    };
 
     const createForm = useForm({ ...emptyCreate });
 
@@ -136,15 +142,24 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors }: Prop
                 {flash?.error && <Alert variant="error">{flash.error}</Alert>}
 
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h3 className="text-lg font-bold text-amber-900">Harvest Records</h3>
                         <p className="text-sm text-amber-900/50">{harvests.total} record{harvests.total !== 1 ? 's' : ''} total</p>
                     </div>
-                    <Button variant="primary" size="sm" onClick={() => setActiveModal({ type: 'create' })}>
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Harvest
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <div className="w-48">
+                            <SelectField
+                                value={filters.hive_id ?? ''}
+                                onChange={onHiveFilter}
+                                options={hiveFilterOptions(hives)}
+                            />
+                        </div>
+                        <Button variant="primary" size="sm" onClick={() => setActiveModal({ type: 'create' })}>
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add Harvest
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Table */}
@@ -171,7 +186,7 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors }: Prop
                                     </tr>
                                 )}
                                 {harvests.data.map((harvest) => (
-                                    <tr key={harvest.id} className="hover:bg-yellow-50/30 transition-colors">
+                                    <tr key={harvest.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', harvest })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{harvest.hive?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70">
                                             {new Date(harvest.harvest_date).toLocaleDateString()}
@@ -186,7 +201,7 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors }: Prop
                                         <td className="px-6 py-4 text-amber-900/70 hidden lg:table-cell">
                                             {harvest.flavor?.name ?? '—'}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                                             <Dropdown
                                                 align="right"
                                                 trigger={
@@ -195,12 +210,6 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors }: Prop
                                                     </button>
                                                 }
                                                 items={[
-                                                    {
-                                                        id: 'view',
-                                                        label: 'View Details',
-                                                        icon: <Eye className="w-4 h-4" />,
-                                                        onClick: () => setActiveModal({ type: 'view', harvest }),
-                                                    },
                                                     {
                                                         id: 'edit',
                                                         label: 'Edit',

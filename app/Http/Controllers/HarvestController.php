@@ -8,13 +8,15 @@ use App\Models\Harvest;
 use App\Models\Hive;
 use App\Models\MasterHoneyColor;
 use App\Models\MasterHoneyFlavor;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class HarvestController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $harvests = Harvest::where('beekeeper_id', auth()->id())
+            ->when($request->hive_id, fn($q) => $q->where('hive_id', $request->hive_id))
             ->with(['hive', 'color', 'flavor'])
             ->latest('harvest_date')
             ->paginate(15);
@@ -29,6 +31,7 @@ class HarvestController extends Controller
             'hives'    => $hives,
             'colors'   => MasterHoneyColor::orderBy('name')->get(['id', 'name']),
             'flavors'  => MasterHoneyFlavor::orderBy('name')->get(['id', 'name']),
+            'filters'  => ['hive_id' => $request->hive_id],
         ]);
     }
 
