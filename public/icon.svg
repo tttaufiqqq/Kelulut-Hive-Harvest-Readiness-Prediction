@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Amber background -->
+  <rect width="512" height="512" rx="96" fill="#F59E0B"/>
+  <!-- Honeycomb hex -->
+  <g fill="#78350F" opacity="0.15">
+    <polygon points="256,80 296,103 296,149 256,172 216,149 216,103"/>
+    <polygon points="166,131 206,154 206,200 166,223 126,200 126,154"/>
+    <polygon points="346,131 386,154 386,200 346,223 306,200 306,154"/>
+    <polygon points="166,229 206,252 206,298 166,321 126,298 126,252"/>
+    <polygon points="346,229 386,252 386,298 346,321 306,298 306,252"/>
+    <polygon points="256,280 296,303 296,349 256,372 216,349 216,303"/>
+  </g>
+  <!-- Bee body -->
+  <ellipse cx="256" cy="280" rx="60" ry="80" fill="#1C0A00"/>
+  <!-- Bee stripes -->
+  <rect x="196" y="258" width="120" height="20" rx="10" fill="#F59E0B"/>
+  <rect x="196" y="292" width="120" height="20" rx="10" fill="#F59E0B"/>
+  <!-- Wings -->
+  <ellipse cx="196" cy="230" rx="52" ry="28" fill="white" opacity="0.85" transform="rotate(-20 196 230)"/>
+  <ellipse cx="316" cy="230" rx="52" ry="28" fill="white" opacity="0.85" transform="rotate(20 316 230)"/>
+  <!-- Head -->
+  <circle cx="256" cy="200" r="34" fill="#1C0A00"/>
+  <!-- Eyes -->
+  <circle cx="243" cy="195" r="7" fill="#F59E0B"/>
+  <circle cx="269" cy="195" r="7" fill="#F59E0B"/>
+  <!-- Antennae -->
+  <line x1="246" y1="167" x2="228" y2="148" stroke="#1C0A00" stroke-width="5" stroke-linecap="round"/>
+  <line x1="266" y1="167" x2="284" y2="148" stroke="#1C0A00" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="226" cy="144" r="7" fill="#1C0A00"/>
+  <circle cx="286" cy="144" r="7" fill="#1C0A00"/>
+  <!-- Stinger -->
+  <polygon points="256,358 248,380 264,380" fill="#1C0A00"/>
+</svg>
