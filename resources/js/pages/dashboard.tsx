@@ -314,8 +314,8 @@ export default function Dashboard({ hives }: Props) {
                                 </div>
 
                                 <div className="relative z-10 flex h-full flex-col gap-6">
-                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                        <div className="space-y-3">
+                                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                        <div className="min-w-0 space-y-4">
                                             <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-amber-950/55 uppercase">
                                                 <Leaf className="h-4 w-4" />
                                                 Readiness Score
@@ -329,32 +329,39 @@ export default function Dashboard({ hives }: Props) {
                                                         {selectedHive.name}
                                                     </h2>
                                                 </div>
-                                                <div className="flex flex-wrap items-center gap-2 text-sm text-amber-950/70">
-                                                    <span>
-                                                        {selectedHive.species ??
-                                                            'Unknown species'}
-                                                    </span>
-                                                    {selectedHive.location && (
-                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/35 px-3 py-1 text-xs font-medium text-amber-950/80 backdrop-blur-sm">
-                                                            <MapPin className="h-3.5 w-3.5" />
-                                                            {
-                                                                selectedHive.location
-                                                            }
+                                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                                                    <div className="flex flex-wrap items-center gap-2 text-sm text-amber-950/70">
+                                                        <span>
+                                                            {selectedHive.species ??
+                                                                'Unknown species'}
                                                         </span>
-                                                    )}
+                                                        {selectedHive.location && (
+                                                            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-white/35 px-3 py-1 text-xs font-medium text-amber-950/80 backdrop-blur-sm">
+                                                                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                                                <span className="truncate">
+                                                                    {
+                                                                        selectedHive.location
+                                                                    }
+                                                                </span>
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <Link
+                                                        href={route(
+                                                            'analytics.show',
+                                                            {
+                                                                hive: selectedHive.id,
+                                                            },
+                                                        )}
+                                                        className="inline-flex w-full items-center justify-center gap-2 self-start rounded-full border border-white/45 bg-white/70 px-4 py-2.5 text-sm font-semibold text-amber-950 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/85 sm:w-auto lg:self-start"
+                                                    >
+                                                        <LineChart className="h-4 w-4" />
+                                                        Analytics
+                                                    </Link>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <Link
-                                            href={route('analytics.show', {
-                                                hive: selectedHive.id,
-                                            })}
-                                            className="inline-flex items-center gap-2 self-start rounded-full border border-white/45 bg-white/70 px-4 py-2.5 text-sm font-semibold text-amber-950 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/85"
-                                        >
-                                            <LineChart className="h-4 w-4" />
-                                            Analytics
-                                        </Link>
                                     </div>
 
                                     <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">

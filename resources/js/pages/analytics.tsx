@@ -251,15 +251,16 @@ function SensorChart({
 
     return (
         <Card>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="font-bold text-amber-900">Sensor Readings</p>
-                <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end">
+                <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
                     <DatePicker
+                        className="w-[124px] shrink-0"
                         value={selectedDate}
                         onChange={onDateChange}
                         defaultValue={todayYMD}
                     />
-                    <div className="min-w-0 sm:w-[190px]">
+                    <div className="min-w-0 flex-1 sm:w-[190px] sm:flex-none">
                         <SelectField
                             value={group}
                             onChange={setGroup}

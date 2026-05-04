@@ -108,7 +108,7 @@ export function DatePicker({
                 type="button"
                 onClick={() => setOpen((o) => !o)}
                 className={cn(
-                    'flex items-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm whitespace-nowrap transition-all',
+                    'flex w-full items-center justify-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm whitespace-nowrap transition-all',
                     'focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
                     open && 'ring-2 ring-yellow-400/50',
                     hasCustomValue
