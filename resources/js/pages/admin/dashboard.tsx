@@ -21,7 +21,8 @@ export type HiveData = {
     humidity: number;
     co2: number;
     readiness: number;
-    status: 'ready' | 'growing' | 'alert' | 'offline';
+    status: 'ready' | 'growing' | 'alert' | 'offline' | 'no_data';
+    last_reading: string | null;
 };
 
 type ProductivityItem = {
@@ -56,6 +57,7 @@ const STATUS_BADGE: Record<HiveData['status'], string> = {
     growing: 'bg-yellow-100 text-yellow-700',
     alert:   'bg-red-100 text-red-700',
     offline: 'bg-gray-100 text-gray-500',
+    no_data: 'bg-slate-100 text-slate-400',
 };
 
 const READINESS_LABEL: Record<HiveData['status'], string> = {
@@ -63,12 +65,25 @@ const READINESS_LABEL: Record<HiveData['status'], string> = {
     growing: 'Approaching Readiness',
     alert:   'Needs Attention',
     offline: 'Sensor Offline',
+    no_data: 'No Data Today',
 };
 
 // ── Sensor warning thresholds ──────────────────────────────────────────
 const WARN_TEMP_ABOVE  = 35;   // °C
 const WARN_HUMID_ABOVE = 85;   // %
 const WARN_CO2_ABOVE   = 800;  // ADC (MQ135)
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function formatLastReading(ts: string | null): string {
+    if (!ts) return '—';
+    const date = new Date(ts);
+    const now  = new Date();
+    const diffMs   = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffDays === 0) return `Today ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    if (diffDays === 1) return 'Yesterday';
+    return `${diffDays} days ago`;
+}
 
 // ── AdminDashboard ─────────────────────────────────────────────────────
 export default function AdminDashboard({ stats, hives = [], productivityRanking = [], crossSiteComparison = [] }: Props) {
@@ -84,7 +99,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
     const selectedHive = selectedIndex !== null ? sortedHives[selectedIndex] : null;
 
     const readyCount = hives.filter(h => h.status === 'ready').length;
-    const alertCount = hives.filter(h => h.status === 'alert' || h.status === 'offline').length;
+    const alertCount = hives.filter(h => h.status === 'alert').length;
 
     const hasPrev = selectedIndex !== null && selectedIndex > 0;
     const hasNext = selectedIndex !== null && selectedIndex < sortedHives.length - 1;
@@ -181,6 +196,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                         </th>
                                         <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">HRI</th>
                                         <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">Status</th>
+                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">Last Reading</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -220,6 +236,9 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                                 <span className={`px-2 py-1 rounded-lg text-xs font-bold capitalize ${STATUS_BADGE[hive.status]}`}>
                                                     {hive.status}
                                                 </span>
+                                            </td>
+                                            <td className="py-3 px-3 text-center text-xs text-amber-900/50 hidden md:table-cell">
+                                                {formatLastReading(hive.last_reading)}
                                             </td>
                                         </tr>
                                     ))}
@@ -368,7 +387,15 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
 
                             {/* Sensor readings */}
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-3">Latest Sensor Readings</p>
+                                <div className="flex items-baseline gap-2 mb-3">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40">Latest Sensor Readings</p>
+                                    <span className="text-[10px] text-amber-900/30">{formatLastReading(hive.last_reading)}</span>
+                                </div>
+                                {hive.status === 'no_data' ? (
+                                    <div className="text-center text-sm text-amber-900/40 bg-yellow-50/50 rounded-xl py-4">
+                                        No sensor data received today
+                                    </div>
+                                ) : (
                                 <div className="grid grid-cols-1 gap-3">
                                     {[
                                         { icon: Thermometer, label: 'Temperature', value: hive.temp > 0 ? `${hive.temp}°C` : '—',    warn: hive.temp > WARN_TEMP_ABOVE },
@@ -386,6 +413,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                         </div>
                                     ))}
                                 </div>
+                                )}
                             </div>
 
                             {/* Keyboard hint */}
