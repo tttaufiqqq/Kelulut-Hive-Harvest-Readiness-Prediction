@@ -14,7 +14,7 @@ class ThesisController extends Controller
     public function index(): Response
     {
         $exists    = Storage::disk('public')->exists('thesis/thesis.pdf');
-        $url       = $exists ? Storage::disk('public')->url('thesis/thesis.pdf') : null;
+        $url       = $exists ? route('thesis.pdf') : null;
         $uploadedAt = $exists
             ? date('d M Y, H:i', Storage::disk('public')->lastModified('thesis/thesis.pdf'))
             : null;

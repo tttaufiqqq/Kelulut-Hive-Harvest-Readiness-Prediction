@@ -1,4 +1,4 @@
-import { X, Download, FileText } from 'lucide-react';
+import { X, Download, FileText, ExternalLink } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect } from 'react';
 
@@ -75,13 +75,32 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                             </div>
                         </div>
 
-                        {/* PDF Viewer */}
-                        <div className="flex-1 p-4 overflow-hidden">
+                        {/* PDF Viewer — desktop */}
+                        <div className="hidden md:block flex-1 p-4 overflow-hidden">
                             <iframe
                                 src={`${thesisUrl}#toolbar=0&navpanes=0`}
                                 className="w-full h-full rounded-2xl border border-yellow-100"
                                 title="BuzzyHive 2.0 Thesis"
                             />
+                        </div>
+
+                        {/* Mobile fallback — open natively */}
+                        <div className="md:hidden flex-1 flex flex-col items-center justify-center gap-5 p-8">
+                            <div className="bg-yellow-100 p-5 rounded-3xl">
+                                <FileText className="w-10 h-10 text-yellow-600" />
+                            </div>
+                            <p className="text-sm text-amber-900/50 text-center font-medium">
+                                PDF preview is not supported on mobile. Open it in your browser's native viewer instead.
+                            </p>
+                            <a
+                                href={thesisUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-yellow-950 font-bold text-sm rounded-full transition-colors"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                Open PDF
+                            </a>
                         </div>
                     </motion.div>
                 </div>
