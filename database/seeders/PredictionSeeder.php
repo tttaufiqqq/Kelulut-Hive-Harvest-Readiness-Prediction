@@ -34,15 +34,15 @@ class PredictionSeeder extends Seeder
     ];
 
     private array $hriRanges = [
-        'not_ready'    => [0.10, 0.24],
-        'approaching'  => [0.25, 0.49],
+        'not_ready' => [0.10, 0.24],
+        'approaching' => [0.25, 0.49],
         'nearly_ready' => [0.50, 0.74],
-        'ready'        => [0.75, 0.99],
+        'ready' => [0.75, 0.99],
     ];
 
     public function run(): void
     {
-        $hives    = DB::table('hives')->orderBy('id')->pluck('id');
+        $hives = DB::table('hives')->orderBy('id')->pluck('id');
         $hiveIndexMap = $hives->flip()->toArray(); // hive_id => index
 
         $logs = DB::table('sensor_logs')->orderBy('record_timestamp')->get();
@@ -50,15 +50,15 @@ class PredictionSeeder extends Seeder
 
         foreach ($logs as $log) {
             $hiveIndex = $hiveIndexMap[$log->hive_id] ?? 0;
-            $daysAgo   = (int) now()->diffInDays($log->record_timestamp);
+            $daysAgo = (int) now()->diffInDays($log->record_timestamp);
 
             [$level, $hriValue, $confidence] = $this->resolveLevel($daysAgo, $hiveIndex);
 
             $rows[] = [
-                'sensor_log_id'        => $log->id,
-                'readiness_level'      => $level,
-                'hri_value'            => $hriValue,
-                'confidence_score'     => $confidence,
+                'sensor_log_id' => $log->id,
+                'readiness_level' => $level,
+                'hri_value' => $hriValue,
+                'confidence_score' => $confidence,
                 'prediction_timestamp' => $log->record_timestamp,
             ];
         }
@@ -67,13 +67,13 @@ class PredictionSeeder extends Seeder
             DB::table('predictions')->insert($chunk);
         }
 
-        $this->command->info('PredictionSeeder: ' . count($rows) . ' rows inserted.');
+        $this->command->info('PredictionSeeder: '.count($rows).' rows inserted.');
     }
 
     private function resolveLevel(int $daysAgo, int $hiveIndex): array
     {
         $segments = $this->progressions[$hiveIndex] ?? $this->progressions[0];
-        $level    = 'not_ready';
+        $level = 'not_ready';
 
         foreach ($segments as $segment) {
             if ($daysAgo <= $segment['from'] && $daysAgo >= $segment['to']) {
@@ -83,7 +83,7 @@ class PredictionSeeder extends Seeder
         }
 
         [$min, $max] = $this->hriRanges[$level];
-        $hriValue   = round($min + (rand(0, 100) / 100) * ($max - $min), 2);
+        $hriValue = round($min + (rand(0, 100) / 100) * ($max - $min), 2);
         $confidence = round(0.62 + (rand(0, 33) / 100), 2);
 
         return [$level, $hriValue, $confidence];

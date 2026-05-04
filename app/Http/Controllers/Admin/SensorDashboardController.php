@@ -30,7 +30,7 @@ class SensorDashboardController extends Controller
         if ($date && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             $day = Carbon::parse($date);
             $hours = match ($window) {
-                '6h'  => 6,
+                '6h' => 6,
                 '24h' => 24,
                 default => 1,
             };
@@ -40,7 +40,7 @@ class SensorDashboardController extends Controller
             ]);
         } else {
             $since = match ($window) {
-                '6h'  => now()->subHours(6),
+                '6h' => now()->subHours(6),
                 '24h' => now()->subHours(24),
                 default => now()->subHour(),
             };
@@ -52,33 +52,33 @@ class SensorDashboardController extends Controller
         $latest = $logs->last();
 
         $lastSeenRaw = SensorLog::where('hive_id', $hiveId)->max('record_timestamp');
-        $lastSeen    = $lastSeenRaw ? Carbon::parse($lastSeenRaw)->diffForHumans() : null;
+        $lastSeen = $lastSeenRaw ? Carbon::parse($lastSeenRaw)->diffForHumans() : null;
 
         $history = $logs->map(fn ($log) => [
-            'time'        => $log->record_timestamp->format('H:i'),
+            'time' => $log->record_timestamp->format('H:i'),
             'temperature' => round($log->temp, 1),
-            'humidity'    => round($log->humidity, 1),
-            'mq2'         => $log->mq2_value,
-            'mq3'         => $log->mq3_value,
-            'mq5'         => $log->mq5_value,
-            'mq135'       => $log->mq135_value,
+            'humidity' => round($log->humidity, 1),
+            'mq2' => $log->mq2_value,
+            'mq3' => $log->mq3_value,
+            'mq5' => $log->mq5_value,
+            'mq135' => $log->mq135_value,
         ])->values();
 
         return Inertia::render('admin/sensors', [
-            'hives'    => $hives,
+            'hives' => $hives,
             'selected' => $hiveId,
-            'window'   => $window,
-            'date'     => $date ?? null,
-            'latest'   => $latest ? [
+            'window' => $window,
+            'date' => $date ?? null,
+            'latest' => $latest ? [
                 'temperature' => round($latest->temp, 1),
-                'humidity'    => round($latest->humidity, 1),
-                'mq2'         => $latest->mq2_value,
-                'mq3'         => $latest->mq3_value,
-                'mq5'         => $latest->mq5_value,
-                'mq135'       => $latest->mq135_value,
+                'humidity' => round($latest->humidity, 1),
+                'mq2' => $latest->mq2_value,
+                'mq3' => $latest->mq3_value,
+                'mq5' => $latest->mq5_value,
+                'mq135' => $latest->mq135_value,
                 'recorded_at' => $latest->record_timestamp->diffForHumans(),
             ] : null,
-            'history'   => $history,
+            'history' => $history,
             'last_seen' => $lastSeen,
         ]);
     }

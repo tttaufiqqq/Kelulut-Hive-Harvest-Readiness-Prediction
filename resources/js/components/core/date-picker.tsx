@@ -114,16 +114,14 @@ export function DatePicker({
                     hasCustomValue
                         ? 'border-yellow-400 bg-yellow-400/15 text-amber-900'
                         : value
-                        ? 'text-amber-950'
-                        : 'text-amber-900/40 hover:bg-yellow-50',
+                          ? 'text-amber-950'
+                          : 'text-amber-900/40 hover:bg-yellow-50',
                 )}
             >
                 <Calendar
                     className={cn(
                         'h-4 w-4 shrink-0',
-                        hasCustomValue
-                            ? 'text-amber-900'
-                            : 'text-amber-900/40',
+                        hasCustomValue ? 'text-amber-900' : 'text-amber-900/40',
                     )}
                 />
                 {displayLabel && <span>{displayLabel}</span>}

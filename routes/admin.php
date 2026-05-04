@@ -1,11 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\BeekeeperController;
-use App\Http\Controllers\Admin\IotNodeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HarvestController as AdminHarvestController;
 use App\Http\Controllers\Admin\HiveController as AdminHiveController;
 use App\Http\Controllers\Admin\InspectionController as AdminInspectionController;
+use App\Http\Controllers\Admin\IotNodeController;
 use App\Http\Controllers\Admin\SensorDashboardController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\ThesisController;

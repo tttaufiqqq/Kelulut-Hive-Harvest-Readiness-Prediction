@@ -49,11 +49,11 @@ export function TwoFactorRecoveryCodes({
     return (
         <Card>
             <div className="mb-4">
-                <h3 className="flex gap-3 items-center text-lg font-bold text-amber-900">
+                <h3 className="flex items-center gap-3 text-lg font-bold text-amber-900">
                     <LockKeyhole className="size-4" aria-hidden="true" />
                     2FA recovery codes
                 </h3>
-                <p className="text-sm text-amber-600/60 mt-1">
+                <p className="mt-1 text-sm text-amber-600/60">
                     Recovery codes let you regain access if you lose your 2FA
                     device. Store them in a secure password manager.
                 </p>
@@ -69,7 +69,7 @@ export function TwoFactorRecoveryCodes({
                     aria-controls="recovery-codes-section"
                 >
                     <RecoveryCodeIconComponent
-                        className="size-4 mr-1"
+                        className="mr-1 size-4"
                         aria-hidden="true"
                     />
                     {codesAreVisible ? 'Hide' : 'View'} recovery codes
@@ -77,7 +77,7 @@ export function TwoFactorRecoveryCodes({
 
                 {canRegenerateCodes && (
                     <Form
-                        {...regenerateRecoveryCodes.form()}
+                        {...regenerateRecoveryCodes()}
                         options={{ preserveScroll: true }}
                         onSuccess={fetchRecoveryCodes}
                     >
@@ -89,7 +89,8 @@ export function TwoFactorRecoveryCodes({
                                 disabled={processing}
                                 aria-describedby="regenerate-warning"
                             >
-                                <RefreshCw className="size-4 mr-1" /> Regenerate codes
+                                <RefreshCw className="mr-1 size-4" /> Regenerate
+                                codes
                             </Button>
                         )}
                     </Form>
@@ -117,7 +118,7 @@ export function TwoFactorRecoveryCodes({
                                         <div
                                             key={index}
                                             role="listitem"
-                                            className="select-text text-amber-900"
+                                            className="text-amber-900 select-text"
                                         >
                                             {code}
                                         </div>

@@ -17,11 +17,11 @@ class SiteController extends Controller
         $sites = MasterSite::withCount('hives')
             ->orderBy('name')
             ->get()
-            ->map(fn($site) => [
-                'id'          => $site->id,
-                'name'        => $site->name,
+            ->map(fn ($site) => [
+                'id' => $site->id,
+                'name' => $site->name,
                 'description' => $site->description,
-                'hive_count'  => $site->hives_count,
+                'hive_count' => $site->hives_count,
             ]);
 
         return Inertia::render('admin/sites/index', [

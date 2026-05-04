@@ -90,8 +90,8 @@ test('telegram id can be updated', function () {
     $response = $this
         ->actingAs($user)
         ->patch(route('profile.update'), [
-            'name'        => $user->name,
-            'email'       => $user->email,
+            'name' => $user->name,
+            'email' => $user->email,
             'telegram_id' => '123456789',
         ]);
 
@@ -105,8 +105,8 @@ test('telegram id can be cleared', function () {
     $response = $this
         ->actingAs($user)
         ->patch(route('profile.update'), [
-            'name'        => $user->name,
-            'email'       => $user->email,
+            'name' => $user->name,
+            'email' => $user->email,
             'telegram_id' => null,
         ]);
 

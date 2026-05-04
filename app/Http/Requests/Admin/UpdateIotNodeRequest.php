@@ -17,10 +17,10 @@ class UpdateIotNodeRequest extends FormRequest
         $nodeId = $this->route('device')->id;
 
         return [
-            'device_id'             => ['required', 'string', 'max:50', Rule::unique('iot_nodes', 'device_id')->ignore($nodeId)],
-            'hive_id'               => ['required', 'integer', 'exists:hives,id', Rule::unique('iot_nodes', 'hive_id')->ignore($nodeId)],
-            'device_status'         => ['required', Rule::in(['active', 'inactive'])],
-            'installation_date'     => ['required', 'date'],
+            'device_id' => ['required', 'string', 'max:50', Rule::unique('iot_nodes', 'device_id')->ignore($nodeId)],
+            'hive_id' => ['required', 'integer', 'exists:hives,id', Rule::unique('iot_nodes', 'hive_id')->ignore($nodeId)],
+            'device_status' => ['required', Rule::in(['active', 'inactive'])],
+            'installation_date' => ['required', 'date'],
             'last_maintenance_date' => ['nullable', 'date'],
         ];
     }

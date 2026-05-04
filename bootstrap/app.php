@@ -34,8 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'admin'      => EnsureUserIsAdmin::class,
-            'beekeeper'  => EnsureUserIsBeekeeper::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'beekeeper' => EnsureUserIsBeekeeper::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

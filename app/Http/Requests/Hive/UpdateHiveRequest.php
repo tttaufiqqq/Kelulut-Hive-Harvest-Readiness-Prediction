@@ -15,12 +15,12 @@ class UpdateHiveRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'         => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:100'],
             'beekeeper_id' => ['required', 'exists:users,id'],
-            'species_id'   => ['nullable', 'exists:master_species,id'],
-            'site_id'      => ['nullable', 'exists:master_sites,id'],
-            'status'       => ['required', Rule::in(['active', 'inactive'])],
-            'image'        => ['nullable', 'image', 'max:2048'],
+            'species_id' => ['nullable', 'exists:master_species,id'],
+            'site_id' => ['nullable', 'exists:master_sites,id'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+            'image' => ['nullable', 'image', 'max:2048'],
         ];
     }
 }

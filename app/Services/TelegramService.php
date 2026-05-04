@@ -16,10 +16,10 @@ class TelegramService
             ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'HTML']
         );
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::warning('Telegram alert failed', [
                 'chat_id' => $chatId,
-                'status'  => $response->status(),
+                'status' => $response->status(),
             ]);
         }
     }

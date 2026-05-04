@@ -10,11 +10,13 @@ interface Props {
 const errors: Record<number, { title: string; description: string }> = {
     403: {
         title: 'Access Restricted',
-        description: "You don't have permission to access this area. If you think this is a mistake, contact your administrator.",
+        description:
+            "You don't have permission to access this area. If you think this is a mistake, contact your administrator.",
     },
     404: {
         title: 'Page Not Found',
-        description: "The page you're looking for doesn't exist or has been moved.",
+        description:
+            "The page you're looking for doesn't exist or has been moved.",
     },
     500: {
         title: 'Server Error',
@@ -22,7 +24,8 @@ const errors: Record<number, { title: string; description: string }> = {
     },
     503: {
         title: 'Service Unavailable',
-        description: 'BuzzyHive is temporarily offline for maintenance. Please check back soon.',
+        description:
+            'BuzzyHive is temporarily offline for maintenance. Please check back soon.',
     },
 };
 
@@ -39,16 +42,15 @@ export default function ErrorPage({ status }: Props) {
         <>
             <Head title={`${status} — ${title}`} />
 
-            <div className="min-h-screen bg-[#FFFBEB] text-amber-950 font-sans flex flex-col">
-
+            <div className="flex min-h-screen flex-col bg-[#FFFBEB] font-sans text-amber-950">
                 {/* ── Header — matches AuthenticatedLayout ─────────────────── */}
-                <header className="bg-white/80 backdrop-blur-md border-b border-yellow-100 px-6 py-4">
-                    <div className="max-w-6xl mx-auto flex items-center">
+                <header className="border-b border-yellow-100 bg-white/80 px-6 py-4 backdrop-blur-md">
+                    <div className="mx-auto flex max-w-6xl items-center">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="bg-yellow-400 p-2 rounded-xl">
+                            <div className="rounded-xl bg-yellow-400 p-2">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="w-6 h-6"
+                                    className="h-6 w-6"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="#1a1200"
@@ -57,11 +59,20 @@ export default function ErrorPage({ status }: Props) {
                                     strokeLinejoin="round"
                                 >
                                     <path d="M12 2a7 7 0 0 1 7 7c0 4-3.5 8-7 11C8.5 17 5 13 5 9a7 7 0 0 1 7-7z" />
-                                    <circle cx="12" cy="9" r="2.5" fill="#1a1200" stroke="none" />
-                                    <path d="M8.5 14.5 Q12 12 15.5 14.5" strokeWidth="1.5" />
+                                    <circle
+                                        cx="12"
+                                        cy="9"
+                                        r="2.5"
+                                        fill="#1a1200"
+                                        stroke="none"
+                                    />
+                                    <path
+                                        d="M8.5 14.5 Q12 12 15.5 14.5"
+                                        strokeWidth="1.5"
+                                    />
                                 </svg>
                             </div>
-                            <span className="text-xl font-bold tracking-tight text-amber-900 hidden sm:block">
+                            <span className="hidden text-xl font-bold tracking-tight text-amber-900 sm:block">
                                 BuzzyHive2.0
                             </span>
                         </Link>
@@ -69,17 +80,18 @@ export default function ErrorPage({ status }: Props) {
                 </header>
 
                 {/* ── Error content ─────────────────────────────────────────── */}
-                <main className="flex-1 flex items-center justify-center p-6">
-                    <div className="text-center max-w-md w-full">
-
+                <main className="flex flex-1 items-center justify-center p-6">
+                    <div className="w-full max-w-md text-center">
                         {/* Hex bee icon */}
-                        <div className="flex justify-center mb-6">
+                        <div className="mb-6 flex justify-center">
                             <motion.div
-                                className="w-24 h-24 flex items-center justify-center"
+                                className="flex h-24 w-24 items-center justify-center"
                                 style={{
-                                    clipPath: 'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)',
+                                    clipPath:
+                                        'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)',
                                     backgroundColor: '#FBBF24',
-                                    boxShadow: '0 8px 24px rgba(251,191,36,0.30)',
+                                    boxShadow:
+                                        '0 8px 24px rgba(251,191,36,0.30)',
                                 }}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -87,7 +99,7 @@ export default function ErrorPage({ status }: Props) {
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="w-10 h-10"
+                                    className="h-10 w-10"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="#1a1200"
@@ -96,15 +108,24 @@ export default function ErrorPage({ status }: Props) {
                                     strokeLinejoin="round"
                                 >
                                     <path d="M12 2a7 7 0 0 1 7 7c0 4-3.5 8-7 11C8.5 17 5 13 5 9a7 7 0 0 1 7-7z" />
-                                    <circle cx="12" cy="9" r="2.5" fill="#1a1200" stroke="none" />
-                                    <path d="M8.5 14.5 Q12 12 15.5 14.5" strokeWidth="1.5" />
+                                    <circle
+                                        cx="12"
+                                        cy="9"
+                                        r="2.5"
+                                        fill="#1a1200"
+                                        stroke="none"
+                                    />
+                                    <path
+                                        d="M8.5 14.5 Q12 12 15.5 14.5"
+                                        strokeWidth="1.5"
+                                    />
                                 </svg>
                             </motion.div>
                         </div>
 
                         {/* Error code */}
                         <motion.p
-                            className="font-light tracking-tighter text-amber-400 mb-2"
+                            className="mb-2 font-light tracking-tighter text-amber-400"
                             style={{ fontSize: '96px', lineHeight: 1 }}
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -115,7 +136,7 @@ export default function ErrorPage({ status }: Props) {
 
                         {/* Heading */}
                         <motion.h1
-                            className="text-2xl font-semibold text-amber-950 mb-4"
+                            className="mb-4 text-2xl font-semibold text-amber-950"
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.15 }}
@@ -125,7 +146,7 @@ export default function ErrorPage({ status }: Props) {
 
                         {/* Message */}
                         <motion.p
-                            className="leading-relaxed text-amber-800/70 mb-8"
+                            className="mb-8 leading-relaxed text-amber-800/70"
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.2 }}
@@ -135,54 +156,61 @@ export default function ErrorPage({ status }: Props) {
 
                         {/* CTA buttons */}
                         <motion.div
-                            className="flex gap-3 justify-center flex-wrap mb-10"
+                            className="mb-10 flex flex-wrap justify-center gap-3"
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.25 }}
                         >
                             <Link
                                 href="/"
-                                className="inline-flex items-center gap-2 bg-yellow-400 text-amber-950 font-semibold px-6 py-3 rounded-xl hover:bg-yellow-300 transition-colors text-sm"
+                                className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-6 py-3 text-sm font-semibold text-amber-950 transition-colors hover:bg-yellow-300"
                             >
-                                <Home className="w-4 h-4" />
+                                <Home className="h-4 w-4" />
                                 Go Home
                             </Link>
 
                             {isAuthenticated && (
                                 <Link
                                     href={route('dashboard')}
-                                    className="inline-flex items-center gap-2 border border-yellow-300 text-amber-800 font-semibold px-6 py-3 rounded-xl hover:bg-yellow-100 transition-colors text-sm"
+                                    className="inline-flex items-center gap-2 rounded-xl border border-yellow-300 px-6 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-yellow-100"
                                 >
-                                    <LayoutDashboard className="w-4 h-4" />
+                                    <LayoutDashboard className="h-4 w-4" />
                                     Dashboard
                                 </Link>
                             )}
 
                             <button
                                 onClick={() => history.back()}
-                                className="inline-flex items-center gap-2 border border-yellow-300 text-amber-800 font-semibold px-6 py-3 rounded-xl hover:bg-yellow-100 transition-colors text-sm"
+                                className="inline-flex items-center gap-2 rounded-xl border border-yellow-300 px-6 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-yellow-100"
                             >
-                                <ArrowLeft className="w-4 h-4" />
+                                <ArrowLeft className="h-4 w-4" />
                                 Go Back
                             </button>
                         </motion.div>
 
                         {/* Divider + links */}
-                        <div className="border-t border-amber-100 pt-6 flex gap-4 justify-center flex-wrap">
-                            <Link href="/dashboard" className="text-sm text-amber-800/50 hover:text-amber-800 transition-colors">
+                        <div className="flex flex-wrap justify-center gap-4 border-t border-amber-100 pt-6">
+                            <Link
+                                href="/dashboard"
+                                className="text-sm text-amber-800/50 transition-colors hover:text-amber-800"
+                            >
                                 My Hives
                             </Link>
-                            <Link href="/harvests" className="text-sm text-amber-800/50 hover:text-amber-800 transition-colors">
+                            <Link
+                                href="/harvests"
+                                className="text-sm text-amber-800/50 transition-colors hover:text-amber-800"
+                            >
                                 Harvests
                             </Link>
-                            <a href="mailto:support@buzzyhive.com" className="text-sm text-amber-800/50 hover:text-amber-800 transition-colors">
+                            <a
+                                href="mailto:support@buzzyhive.com"
+                                className="text-sm text-amber-800/50 transition-colors hover:text-amber-800"
+                            >
                                 Support
                             </a>
                         </div>
-
                     </div>
                 </main>
-
             </div>
         </>
     );

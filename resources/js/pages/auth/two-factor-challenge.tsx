@@ -24,14 +24,16 @@ export default function TwoFactorChallenge() {
         if (showRecoveryInput) {
             return {
                 title: 'Recovery Code',
-                description: 'Enter one of your emergency recovery codes to access your account.',
+                description:
+                    'Enter one of your emergency recovery codes to access your account.',
                 toggleText: 'Use authentication code instead',
             };
         }
 
         return {
             title: 'Two-Factor Auth',
-            description: 'Enter the authentication code from your authenticator app.',
+            description:
+                'Enter the authentication code from your authenticator app.',
             toggleText: 'Use a recovery code instead',
         };
     }, [showRecoveryInput]);
@@ -50,7 +52,7 @@ export default function TwoFactorChallenge() {
             <Head title="Two-Factor Authentication — BuzzyHive 2.0" />
 
             <Form
-                {...store.form()}
+                {...store()}
                 className="space-y-5"
                 resetOnError
                 resetOnSuccess={!showRecoveryInput}
@@ -59,7 +61,7 @@ export default function TwoFactorChallenge() {
                     <>
                         {showRecoveryInput ? (
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                                <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                     Recovery Code
                                 </label>
                                 <input
@@ -68,13 +70,13 @@ export default function TwoFactorChallenge() {
                                     placeholder="Enter recovery code"
                                     autoFocus={showRecoveryInput}
                                     required
-                                    className="w-full px-4 py-3.5 rounded-2xl border-2 border-amber-100 bg-white text-amber-950 placeholder:text-amber-300 focus:outline-none focus:border-yellow-400 transition-colors font-medium"
+                                    className="w-full rounded-2xl border-2 border-amber-100 bg-white px-4 py-3.5 font-medium text-amber-950 transition-colors placeholder:text-amber-300 focus:border-yellow-400 focus:outline-none"
                                 />
                                 <InputError message={errors.recovery_code} />
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                                <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                     Authentication Code
                                 </label>
                                 <div className="flex justify-center">
@@ -90,7 +92,10 @@ export default function TwoFactorChallenge() {
                                             {Array.from(
                                                 { length: OTP_MAX_LENGTH },
                                                 (_, index) => (
-                                                    <InputOTPSlot key={index} index={index} />
+                                                    <InputOTPSlot
+                                                        key={index}
+                                                        index={index}
+                                                    />
                                                 ),
                                             )}
                                         </InputOTPGroup>
@@ -103,16 +108,18 @@ export default function TwoFactorChallenge() {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 text-yellow-950 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 group transition-colors text-lg"
+                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-yellow-400 py-4 text-lg font-bold text-yellow-950 transition-colors hover:bg-yellow-500 disabled:opacity-50"
                         >
                             {processing ? 'Verifying...' : 'Continue'}
-                            {!processing && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                            {!processing && (
+                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            )}
                         </button>
 
                         <p className="text-center text-sm text-amber-800/50">
                             <button
                                 type="button"
-                                className="font-semibold text-amber-700 hover:text-amber-950 underline underline-offset-4 transition-colors"
+                                className="font-semibold text-amber-700 underline underline-offset-4 transition-colors hover:text-amber-950"
                                 onClick={() => toggleRecoveryMode(clearErrors)}
                             >
                                 {authConfigContent.toggleText}

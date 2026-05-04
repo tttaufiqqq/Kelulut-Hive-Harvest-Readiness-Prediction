@@ -23,31 +23,31 @@ class DashboardController extends Controller
         try {
             $hives = $this->liveHiveMonitor();
         } catch (\Throwable $e) {
-            Log::error('AdminDashboard liveHiveMonitor failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            Log::error('AdminDashboard liveHiveMonitor failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
             $hives = [];
         }
 
         try {
             $productivity = $this->productivityRanking();
         } catch (\Throwable $e) {
-            Log::error('AdminDashboard productivityRanking failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            Log::error('AdminDashboard productivityRanking failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
             $productivity = [];
         }
 
         try {
             $crossSite = $this->crossSiteComparison();
         } catch (\Throwable $e) {
-            Log::error('AdminDashboard crossSiteComparison failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            Log::error('AdminDashboard crossSiteComparison failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
             $crossSite = [];
         }
 
         return Inertia::render('admin/dashboard', [
             'stats' => [
-                'total'   => (int) $stats->total,
+                'total' => (int) $stats->total,
                 'pending' => (int) $stats->pending,
-                'active'  => (int) $stats->active,
+                'active' => (int) $stats->active,
             ],
-            'hives'               => $hives,
+            'hives' => $hives,
             'productivityRanking' => $productivity,
             'crossSiteComparison' => $crossSite,
         ]);
@@ -77,7 +77,7 @@ class DashboardController extends Controller
             ->unique();
 
         // Fetch sensor logs for union of today + ever IDs
-        $allLogIds  = $latestTodayLogIds->values()->merge($latestEverLogIds->values())->unique();
+        $allLogIds = $latestTodayLogIds->values()->merge($latestEverLogIds->values())->unique();
         $sensorLogs = SensorLog::whereIn('id', $allLogIds)->get()->keyBy('id');
 
         // Query D: predictions for today's log IDs only
@@ -85,37 +85,37 @@ class DashboardController extends Controller
 
         return $hives->map(function ($hive) use ($latestTodayLogIds, $latestEverLogIds, $sensorLogs, $predictions, $alertHiveIds) {
             $todayLogId = $latestTodayLogIds->get($hive->id);
-            $everLogId  = $latestEverLogIds->get($hive->id);
-            $todayLog   = $todayLogId ? $sensorLogs->get($todayLogId) : null;
-            $everLog    = $everLogId ? $sensorLogs->get($everLogId) : null;
+            $everLogId = $latestEverLogIds->get($hive->id);
+            $todayLog = $todayLogId ? $sensorLogs->get($todayLogId) : null;
+            $everLog = $everLogId ? $sensorLogs->get($everLogId) : null;
             $prediction = $todayLogId ? $predictions->get($todayLogId) : null;
-            $hasAlert   = $alertHiveIds->contains($hive->id);
+            $hasAlert = $alertHiveIds->contains($hive->id);
 
-            if (!$todayLog) {
+            if (! $todayLog) {
                 $status = 'no_data';
             } elseif ($hasAlert) {
                 $status = 'alert';
             } elseif ($prediction) {
                 $status = match ($prediction->readiness_level) {
-                    'Ready to Harvest'                     => 'ready',
+                    'Ready to Harvest' => 'ready',
                     'Nearly Ready', 'Approaching', 'Not Ready' => 'growing',
-                    default                                => 'offline',
+                    default => 'offline',
                 };
             } else {
                 $status = 'offline';
             }
 
             return [
-                'id'           => (string) $hive->id,
-                'hive_name'    => $hive->name,
-                'beekeeper'    => $hive->user?->name ?? '—',
-                'species'      => $hive->species?->name ?? '—',
-                'weight'       => round((float) ($hive->harvests_sum_weight ?? 0), 1),
-                'temp'         => $todayLog ? round((float) $todayLog->temp, 1) : 0,
-                'humidity'     => $todayLog ? (int) round((float) $todayLog->humidity) : 0,
-                'co2'          => $todayLog ? (int) $todayLog->mq135_value : 0,
-                'readiness'    => $prediction ? (int) round((float) $prediction->confidence_score * 100) : 0,
-                'status'       => $status,
+                'id' => (string) $hive->id,
+                'hive_name' => $hive->name,
+                'beekeeper' => $hive->user?->name ?? '—',
+                'species' => $hive->species?->name ?? '—',
+                'weight' => round((float) ($hive->harvests_sum_weight ?? 0), 1),
+                'temp' => $todayLog ? round((float) $todayLog->temp, 1) : 0,
+                'humidity' => $todayLog ? (int) round((float) $todayLog->humidity) : 0,
+                'co2' => $todayLog ? (int) $todayLog->mq135_value : 0,
+                'readiness' => $prediction ? (int) round((float) $prediction->confidence_score * 100) : 0,
+                'status' => $status,
                 'last_reading' => $everLog ? Carbon::parse($everLog->record_timestamp)->toIso8601String() : null,
             ];
         })->values()->all();
@@ -128,10 +128,10 @@ class DashboardController extends Controller
             ->withCount('harvests')
             ->orderByDesc('harvests_sum_weight')
             ->get()
-            ->map(fn($h) => [
-                'hive_name'     => $h->name,
-                'beekeeper'     => $h->user?->name ?? '—',
-                'total_weight'  => round((float) ($h->harvests_sum_weight ?? 0), 1),
+            ->map(fn ($h) => [
+                'hive_name' => $h->name,
+                'beekeeper' => $h->user?->name ?? '—',
+                'total_weight' => round((float) ($h->harvests_sum_weight ?? 0), 1),
                 'harvest_count' => (int) ($h->harvests_count ?? 0),
             ])
             ->values()
@@ -152,11 +152,11 @@ class DashboardController extends Controller
                 COUNT(DISTINCT hives.id) as hive_count
             ')
             ->get()
-            ->map(fn($r) => [
-                'site_name'    => $r->site_name,
-                'avg_hri_pct'  => (int) round((float) ($r->avg_hri_pct ?? 0)),
+            ->map(fn ($r) => [
+                'site_name' => $r->site_name,
+                'avg_hri_pct' => (int) round((float) ($r->avg_hri_pct ?? 0)),
                 'total_weight' => round((float) ($r->total_weight ?? 0), 1),
-                'hive_count'   => (int) $r->hive_count,
+                'hive_count' => (int) $r->hive_count,
             ])
             ->values()
             ->all();

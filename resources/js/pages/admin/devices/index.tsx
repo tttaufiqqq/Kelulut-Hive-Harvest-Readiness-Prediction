@@ -1,11 +1,18 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { MoreVertical, Plus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    MoreVertical,
+    Plus,
+    Edit2,
+    Trash2,
+    ChevronLeft,
+    ChevronRight,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
 import { Alert } from '@/components/core/feedback';
-import { DatePickerField } from '@/components/core/date-picker';
 import { Input } from '@/components/core/input';
 import { Modal } from '@/components/core/modal';
 import { SelectField } from '@/components/core/select-field';
@@ -46,46 +53,67 @@ type DeviceFormData = {
 };
 
 const STATUS_OPTIONS = [
-    { value: 'active',   label: 'Active' },
+    { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
 ];
 
 function StatusBadge({ status }: { status: 'active' | 'inactive' }) {
     return status === 'active' ? (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Active</span>
+        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+            Active
+        </span>
     ) : (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-600">Inactive</span>
+        <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-600">
+            Inactive
+        </span>
     );
 }
 
-export default function DevicesIndex({ devices, all_hives, available_hives }: PageProps) {
-    const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
+export default function DevicesIndex({
+    devices,
+    all_hives,
+    available_hives,
+}: PageProps) {
+    const { props } = usePage<{
+        flash?: { success?: string; error?: string };
+    }>();
     const flash = props.flash;
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
-    const [deleting, setDeleting]       = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const close = () => setActiveModal(null);
 
-    const viewIndex  = activeModal?.type === 'view' ? activeModal.index : null;
+    const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
     const viewDevice = viewIndex !== null ? devices[viewIndex] : null;
-    const hasPrev    = viewIndex !== null && viewIndex > 0;
-    const hasNext    = viewIndex !== null && viewIndex < devices.length - 1;
+    const hasPrev = viewIndex !== null && viewIndex > 0;
+    const hasNext = viewIndex !== null && viewIndex < devices.length - 1;
 
     useEffect(() => {
-        if (viewIndex === null) return;
+        if (viewIndex === null) {
+            return;
+        }
+
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                setActiveModal(prev => prev?.type === 'view' && prev.index > 0
-                    ? { type: 'view', index: prev.index - 1 } : prev);
+                setActiveModal((prev) =>
+                    prev?.type === 'view' && prev.index > 0
+                        ? { type: 'view', index: prev.index - 1 }
+                        : prev,
+                );
             }
+
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                setActiveModal(prev => prev?.type === 'view' && prev.index < devices.length - 1
-                    ? { type: 'view', index: prev.index + 1 } : prev);
+                setActiveModal((prev) =>
+                    prev?.type === 'view' && prev.index < devices.length - 1
+                        ? { type: 'view', index: prev.index + 1 }
+                        : prev,
+                );
             }
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, devices.length]);
 
@@ -107,10 +135,10 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
 
     const openEdit = (device: DeviceRow) => {
         editForm.setData({
-            device_id:             device.device_id,
-            hive_id:               String(device.hive_id),
-            device_status:         device.device_status,
-            installation_date:     device.installation_date ?? '',
+            device_id: device.device_id,
+            hive_id: String(device.hive_id),
+            device_status: device.device_status,
+            installation_date: device.installation_date ?? '',
             last_maintenance_date: device.last_maintenance_date ?? '',
         });
         setActiveModal({ type: 'edit', device });
@@ -119,51 +147,87 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
     const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
         createForm.post(route('admin.devices.store'), {
-            onSuccess: () => { createForm.reset(); close(); },
+            onSuccess: () => {
+                createForm.reset();
+                close();
+            },
         });
     };
 
     const submitEdit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (activeModal?.type !== 'edit') return;
-        editForm.patch(route('admin.devices.update', { device: activeModal.device.id }), {
-            onSuccess: () => close(),
-        });
+
+        if (activeModal?.type !== 'edit') {
+            return;
+        }
+
+        editForm.patch(
+            route('admin.devices.update', { device: activeModal.device.id }),
+            {
+                onSuccess: () => close(),
+            },
+        );
     };
 
     const confirmDelete = () => {
-        if (activeModal?.type !== 'delete') return;
+        if (activeModal?.type !== 'delete') {
+            return;
+        }
+
         setDeleting(true);
-        router.delete(route('admin.devices.destroy', { device: activeModal.device.id }), {
-            onFinish: () => { setDeleting(false); close(); },
-        });
+        router.delete(
+            route('admin.devices.destroy', { device: activeModal.device.id }),
+            {
+                onFinish: () => {
+                    setDeleting(false);
+                    close();
+                },
+            },
+        );
     };
 
-    const availableOptions  = available_hives.map(h => ({ value: String(h.id), label: h.name }));
-    const allHiveOptions    = all_hives.map(h => ({ value: String(h.id), label: h.name }));
+    const availableOptions = available_hives.map((h) => ({
+        value: String(h.id),
+        label: h.name,
+    }));
+    const allHiveOptions = all_hives.map((h) => ({
+        value: String(h.id),
+        label: h.name,
+    }));
 
     return (
         <AdminLayout>
             <Head title="Devices — Admin" />
 
             <div className="space-y-6">
-                {flash?.success && <Alert variant="success">{flash.success}</Alert>}
-                {flash?.error   && <Alert variant="error">{flash.error}</Alert>}
+                {flash?.success && (
+                    <Alert variant="success">{flash.success}</Alert>
+                )}
+                {flash?.error && <Alert variant="error">{flash.error}</Alert>}
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-bold text-amber-900">IoT Devices</h3>
-                        <p className="text-sm text-amber-900/50">{devices.length} device{devices.length !== 1 ? 's' : ''} registered</p>
+                        <h3 className="text-lg font-bold text-amber-900">
+                            IoT Devices
+                        </h3>
+                        <p className="text-sm text-amber-900/50">
+                            {devices.length} device
+                            {devices.length !== 1 ? 's' : ''} registered
+                        </p>
                     </div>
                     <Button
                         variant="primary"
                         size="sm"
                         onClick={() => setActiveModal({ type: 'create' })}
                         disabled={available_hives.length === 0}
-                        title={available_hives.length === 0 ? 'All hives already have a device' : undefined}
+                        title={
+                            available_hives.length === 0
+                                ? 'All hives already have a device'
+                                : undefined
+                        }
                     >
-                        <Plus className="w-4 h-4 mr-1" />
+                        <Plus className="mr-1 h-4 w-4" />
                         Register Device
                     </Button>
                 </div>
@@ -173,57 +237,107 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-yellow-50/50 border-b border-yellow-100">
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50">Device ID</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50">Hive</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50">Status</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50 hidden md:table-cell">Installed</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50 hidden lg:table-cell">Last Maintenance</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50">Logs</th>
+                                <tr className="border-b border-yellow-100 bg-yellow-50/50">
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Device ID
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Hive
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Status
+                                    </th>
+                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase md:table-cell">
+                                        Installed
+                                    </th>
+                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase lg:table-cell">
+                                        Last Maintenance
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Logs
+                                    </th>
                                     <th className="px-6 py-3" />
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-yellow-50">
                                 {devices.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-10 text-center text-amber-900/40 text-sm">
+                                        <td
+                                            colSpan={7}
+                                            className="px-6 py-10 text-center text-sm text-amber-900/40"
+                                        >
                                             No devices registered yet.
                                         </td>
                                     </tr>
                                 )}
                                 {devices.map((device, index) => (
-                                    <tr key={device.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', index })}>
-                                        <td className="px-6 py-4 font-mono font-semibold text-amber-950">{device.device_id}</td>
-                                        <td className="px-6 py-4 text-amber-800">{device.hive_name ?? '—'}</td>
-                                        <td className="px-6 py-4"><StatusBadge status={device.device_status} /></td>
-                                        <td className="px-6 py-4 text-amber-900/60 hidden md:table-cell">{device.installation_date ?? '—'}</td>
-                                        <td className="px-6 py-4 text-amber-900/60 hidden lg:table-cell">{device.last_maintenance_date ?? '—'}</td>
+                                    <tr
+                                        key={device.id}
+                                        className="cursor-pointer transition-colors hover:bg-yellow-50/30"
+                                        onClick={() =>
+                                            setActiveModal({
+                                                type: 'view',
+                                                index,
+                                            })
+                                        }
+                                    >
+                                        <td className="px-6 py-4 font-mono font-semibold text-amber-950">
+                                            {device.device_id}
+                                        </td>
+                                        <td className="px-6 py-4 text-amber-800">
+                                            {device.hive_name ?? '—'}
+                                        </td>
                                         <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                                            <StatusBadge
+                                                status={device.device_status}
+                                            />
+                                        </td>
+                                        <td className="hidden px-6 py-4 text-amber-900/60 md:table-cell">
+                                            {device.installation_date ?? '—'}
+                                        </td>
+                                        <td className="hidden px-6 py-4 text-amber-900/60 lg:table-cell">
+                                            {device.last_maintenance_date ??
+                                                '—'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">
                                                 {device.sensor_log_count}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
+                                        <td
+                                            className="px-6 py-4 text-right"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
                                             <Dropdown
                                                 align="right"
                                                 trigger={
-                                                    <button className="p-1.5 hover:bg-yellow-100 rounded-xl transition-colors">
-                                                        <MoreVertical className="w-4 h-4 text-amber-900/50" />
+                                                    <button className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100">
+                                                        <MoreVertical className="h-4 w-4 text-amber-900/50" />
                                                     </button>
                                                 }
                                                 items={[
                                                     {
                                                         id: 'edit',
                                                         label: 'Edit',
-                                                        icon: <Edit2 className="w-4 h-4" />,
-                                                        onClick: () => openEdit(device),
+                                                        icon: (
+                                                            <Edit2 className="h-4 w-4" />
+                                                        ),
+                                                        onClick: () =>
+                                                            openEdit(device),
                                                     },
                                                     {
                                                         id: 'delete',
                                                         label: 'Delete',
-                                                        icon: <Trash2 className="w-4 h-4" />,
-                                                        variant: 'danger' as const,
-                                                        onClick: () => setActiveModal({ type: 'delete', device }),
+                                                        icon: (
+                                                            <Trash2 className="h-4 w-4" />
+                                                        ),
+                                                        variant:
+                                                            'danger' as const,
+                                                        onClick: () =>
+                                                            setActiveModal({
+                                                                type: 'delete',
+                                                                device,
+                                                            }),
                                                     },
                                                 ]}
                                             />
@@ -238,71 +352,143 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
 
             {/* ── View Modal ── */}
             {activeModal?.type === 'view' && viewDevice && (
-                <Modal isOpen onClose={close} title="Device Details" maxWidth="sm">
+                <Modal
+                    isOpen
+                    onClose={close}
+                    title="Device Details"
+                    maxWidth="sm"
+                >
                     <div className="space-y-4">
-                        <div className="flex items-center justify-end gap-1 -mt-1 mb-1">
+                        <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
                             <button
-                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index > 0 ? { type: 'view', index: prev.index - 1 } : prev)}
+                                onClick={() =>
+                                    setActiveModal((prev) =>
+                                        prev?.type === 'view' && prev.index > 0
+                                            ? {
+                                                  type: 'view',
+                                                  index: prev.index - 1,
+                                              }
+                                            : prev,
+                                    )
+                                }
                                 disabled={!hasPrev}
-                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
-                                <ChevronLeft className="w-4 h-4 text-amber-900" />
+                                <ChevronLeft className="h-4 w-4 text-amber-900" />
                             </button>
-                            <span className="text-xs text-amber-900/40 font-bold tabular-nums min-w-[3rem] text-center">
+                            <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
                                 {viewIndex! + 1} / {devices.length}
                             </span>
                             <button
-                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index < devices.length - 1 ? { type: 'view', index: prev.index + 1 } : prev)}
+                                onClick={() =>
+                                    setActiveModal((prev) =>
+                                        prev?.type === 'view' &&
+                                        prev.index < devices.length - 1
+                                            ? {
+                                                  type: 'view',
+                                                  index: prev.index + 1,
+                                              }
+                                            : prev,
+                                    )
+                                }
                                 disabled={!hasNext}
-                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
-                                <ChevronRight className="w-4 h-4 text-amber-900" />
+                                <ChevronRight className="h-4 w-4 text-amber-900" />
                             </button>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Device ID</p>
-                                <p className="font-mono font-semibold text-amber-950">{viewDevice.device_id}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Device ID
+                                </p>
+                                <p className="font-mono font-semibold text-amber-950">
+                                    {viewDevice.device_id}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Status</p>
-                                <StatusBadge status={viewDevice.device_status} />
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Status
+                                </p>
+                                <StatusBadge
+                                    status={viewDevice.device_status}
+                                />
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Hive</p>
-                                <p className="font-medium text-amber-950">{viewDevice.hive_name ?? '—'}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Hive
+                                </p>
+                                <p className="font-medium text-amber-950">
+                                    {viewDevice.hive_name ?? '—'}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Sensor Logs</p>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Sensor Logs
+                                </p>
+                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">
                                     {viewDevice.sensor_log_count}
                                 </span>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Installed</p>
-                                <p className="font-medium text-amber-950">{viewDevice.installation_date ?? '—'}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Installed
+                                </p>
+                                <p className="font-medium text-amber-950">
+                                    {viewDevice.installation_date ?? '—'}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Last Maintenance</p>
-                                <p className="font-medium text-amber-950">{viewDevice.last_maintenance_date ?? '—'}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Last Maintenance
+                                </p>
+                                <p className="font-medium text-amber-950">
+                                    {viewDevice.last_maintenance_date ?? '—'}
+                                </p>
                             </div>
                         </div>
-                        <p className="text-[10px] text-amber-900/25 text-center uppercase tracking-widest">Use arrow keys to navigate</p>
+                        <p className="text-center text-[10px] tracking-widest text-amber-900/25 uppercase">
+                            Use arrow keys to navigate
+                        </p>
                         <div className="flex gap-3 pt-2">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Close</Button>
-                            <Button type="button" variant="outline" onClick={() => { close(); openEdit(viewDevice!); }} className="flex-1">Edit</Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={close}
+                                className="flex-1"
+                            >
+                                Close
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    close();
+                                    openEdit(viewDevice!);
+                                }}
+                                className="flex-1"
+                            >
+                                Edit
+                            </Button>
                         </div>
                     </div>
                 </Modal>
             )}
 
             {/* ── Create Modal ── */}
-            <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="Register Device" maxWidth="sm">
+            <Modal
+                isOpen={activeModal?.type === 'create'}
+                onClose={close}
+                title="Register Device"
+                maxWidth="sm"
+            >
                 <form onSubmit={submitCreate} className="space-y-4">
                     <Input
                         label="Device ID"
                         value={createForm.data.device_id}
-                        onChange={e => createForm.setData('device_id', e.target.value)}
+                        onChange={(e) =>
+                            createForm.setData('device_id', e.target.value)
+                        }
                         placeholder="e.g. NODE-001"
                         autoFocus
                         error={createForm.errors.device_id}
@@ -310,14 +496,14 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                     <SelectField
                         label="Hive"
                         value={createForm.data.hive_id}
-                        onChange={v => createForm.setData('hive_id', v)}
+                        onChange={(v) => createForm.setData('hive_id', v)}
                         options={availableOptions}
                         error={createForm.errors.hive_id}
                     />
                     <SelectField
                         label="Status"
                         value={createForm.data.device_status}
-                        onChange={v => createForm.setData('device_status', v)}
+                        onChange={(v) => createForm.setData('device_status', v)}
                         options={STATUS_OPTIONS}
                         error={createForm.errors.device_status}
                     />
@@ -325,20 +511,41 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                         label="Installation Date"
                         type="date"
                         value={createForm.data.installation_date}
-                        onChange={e => createForm.setData('installation_date', e.target.value)}
+                        onChange={(e) =>
+                            createForm.setData(
+                                'installation_date',
+                                e.target.value,
+                            )
+                        }
                         error={createForm.errors.installation_date}
                     />
                     <DatePickerField
                         label="Last Maintenance Date (optional)"
                         value={createForm.data.last_maintenance_date || null}
-                        onChange={v => createForm.setData('last_maintenance_date', v ?? '')}
+                        onChange={(v) =>
+                            createForm.setData('last_maintenance_date', v ?? '')
+                        }
                         maxDate="today"
                         error={createForm.errors.last_maintenance_date}
                     />
                     <div className="flex gap-3 pt-2">
-                        <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                        <Button type="submit" variant="primary" disabled={createForm.processing} className="flex-1">
-                            {createForm.processing ? 'Registering...' : 'Register Device'}
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={close}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={createForm.processing}
+                            className="flex-1"
+                        >
+                            {createForm.processing
+                                ? 'Registering...'
+                                : 'Register Device'}
                         </Button>
                     </div>
                 </form>
@@ -351,21 +558,25 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                         <Input
                             label="Device ID"
                             value={editForm.data.device_id}
-                            onChange={e => editForm.setData('device_id', e.target.value)}
+                            onChange={(e) =>
+                                editForm.setData('device_id', e.target.value)
+                            }
                             autoFocus
                             error={editForm.errors.device_id}
                         />
                         <SelectField
                             label="Hive"
                             value={editForm.data.hive_id}
-                            onChange={v => editForm.setData('hive_id', v)}
+                            onChange={(v) => editForm.setData('hive_id', v)}
                             options={allHiveOptions}
                             error={editForm.errors.hive_id}
                         />
                         <SelectField
                             label="Status"
                             value={editForm.data.device_status}
-                            onChange={v => editForm.setData('device_status', v)}
+                            onChange={(v) =>
+                                editForm.setData('device_status', v)
+                            }
                             options={STATUS_OPTIONS}
                             error={editForm.errors.device_status}
                         />
@@ -373,20 +584,44 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
                             label="Installation Date"
                             type="date"
                             value={editForm.data.installation_date}
-                            onChange={e => editForm.setData('installation_date', e.target.value)}
+                            onChange={(e) =>
+                                editForm.setData(
+                                    'installation_date',
+                                    e.target.value,
+                                )
+                            }
                             error={editForm.errors.installation_date}
                         />
                         <DatePickerField
                             label="Last Maintenance Date (optional)"
                             value={editForm.data.last_maintenance_date || null}
-                            onChange={v => editForm.setData('last_maintenance_date', v ?? '')}
+                            onChange={(v) =>
+                                editForm.setData(
+                                    'last_maintenance_date',
+                                    v ?? '',
+                                )
+                            }
                             maxDate="today"
                             error={editForm.errors.last_maintenance_date}
                         />
                         <div className="flex gap-3 pt-2">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                            <Button type="submit" variant="primary" disabled={editForm.processing} className="flex-1">
-                                {editForm.processing ? 'Saving...' : 'Save Changes'}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={close}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                disabled={editForm.processing}
+                                className="flex-1"
+                            >
+                                {editForm.processing
+                                    ? 'Saving...'
+                                    : 'Save Changes'}
                             </Button>
                         </div>
                     </form>
@@ -395,25 +630,47 @@ export default function DevicesIndex({ devices, all_hives, available_hives }: Pa
 
             {/* ── Delete Confirmation ── */}
             {activeModal?.type === 'delete' && (
-                <Modal isOpen onClose={close} title="Remove Device" maxWidth="sm">
+                <Modal
+                    isOpen
+                    onClose={close}
+                    title="Remove Device"
+                    maxWidth="sm"
+                >
                     <div className="space-y-4">
                         <p className="text-sm text-amber-900/70">
-                            Remove <span className="font-semibold text-amber-950 font-mono">"{activeModal.device.device_id}"</span>?
+                            Remove{' '}
+                            <span className="font-mono font-semibold text-amber-950">
+                                "{activeModal.device.device_id}"
+                            </span>
+                            ?
                             {activeModal.device.sensor_log_count > 0 ? (
-                                <span className="block mt-2 text-rose-600 font-medium">
-                                    This device has {activeModal.device.sensor_log_count} sensor log(s). Delete the logs first.
+                                <span className="mt-2 block font-medium text-rose-600">
+                                    This device has{' '}
+                                    {activeModal.device.sensor_log_count} sensor
+                                    log(s). Delete the logs first.
                                 </span>
                             ) : (
                                 <span> This cannot be undone.</span>
                             )}
                         </p>
                         <div className="flex gap-3">
-                            <Button type="button" variant="ghost" onClick={close} disabled={deleting} className="flex-1">Cancel</Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={close}
+                                disabled={deleting}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
                             <Button
                                 type="button"
                                 variant="destructive"
                                 onClick={confirmDelete}
-                                disabled={deleting || activeModal.device.sensor_log_count > 0}
+                                disabled={
+                                    deleting ||
+                                    activeModal.device.sensor_log_count > 0
+                                }
                                 className="flex-1"
                             >
                                 {deleting ? 'Removing...' : 'Remove Device'}

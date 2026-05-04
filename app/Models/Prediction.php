@@ -25,6 +25,4 @@ class Prediction extends Model
     {
         return $this->belongsTo(SensorLog::class);
     }
-
-
 }

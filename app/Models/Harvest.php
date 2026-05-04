@@ -15,7 +15,7 @@ class Harvest extends Model
     protected $casts = [
         'beekeeper_id' => 'integer',
         'harvest_date' => 'date',
-        'weight'       => 'float',
+        'weight' => 'float',
     ];
 
     public function hive(): BelongsTo

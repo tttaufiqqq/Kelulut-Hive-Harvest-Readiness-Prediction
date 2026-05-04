@@ -28,23 +28,23 @@ class PredictionController extends Controller
                 'sensor_logs.record_timestamp',
             )
             ->get()
-            ->map(fn($p) => [
-                'id'                   => $p->id,
-                'readiness_level'      => $p->readiness_level,
-                'hri_value'            => (float) $p->hri_value,
-                'confidence_score'     => (float) $p->confidence_score,
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'readiness_level' => $p->readiness_level,
+                'hri_value' => (float) $p->hri_value,
+                'confidence_score' => (float) $p->confidence_score,
                 'prediction_timestamp' => Carbon::parse($p->prediction_timestamp)->format('d M Y, H:i'),
-                'temp'                 => round((float) $p->temp, 1),
-                'humidity'             => round((float) $p->humidity, 1),
-                'mq2_value'            => (int) $p->mq2_value,
-                'mq3_value'            => (int) $p->mq3_value,
-                'mq5_value'            => (int) $p->mq5_value,
-                'mq135_value'          => (int) $p->mq135_value,
-                'record_timestamp'     => Carbon::parse($p->record_timestamp)->format('d M Y, H:i'),
+                'temp' => round((float) $p->temp, 1),
+                'humidity' => round((float) $p->humidity, 1),
+                'mq2_value' => (int) $p->mq2_value,
+                'mq3_value' => (int) $p->mq3_value,
+                'mq5_value' => (int) $p->mq5_value,
+                'mq135_value' => (int) $p->mq135_value,
+                'record_timestamp' => Carbon::parse($p->record_timestamp)->format('d M Y, H:i'),
             ]);
 
         return Inertia::render('predictions', [
-            'hive'        => ['id' => $hive->id, 'name' => $hive->name],
+            'hive' => ['id' => $hive->id, 'name' => $hive->name],
             'predictions' => $predictions,
         ]);
     }

@@ -148,6 +148,13 @@ const emptyCreate = {
     notes: '',
 };
 
+type InspectionCreateFormData = typeof emptyCreate & {
+    weather_ids: number[];
+    flora_ids: number[];
+};
+
+type InspectionEditFormData = Omit<InspectionCreateFormData, 'hive_id'>;
+
 export default function InspectionsIndex({
     inspections,
     hives,
@@ -207,8 +214,12 @@ export default function InspectionsIndex({
     const [editWeatherIds, setEditWeatherIds] = useState<number[]>([]);
     const [editFloraIds, setEditFloraIds] = useState<number[]>([]);
 
-    const createForm = useForm({ ...emptyCreate });
-    const editForm = useForm({
+    const createForm = useForm<InspectionCreateFormData>({
+        ...emptyCreate,
+        weather_ids: [],
+        flora_ids: [],
+    });
+    const editForm = useForm<InspectionEditFormData>({
         inspection_date: '',
         blooming_status: '',
         vegetation_density: '',
@@ -216,6 +227,8 @@ export default function InspectionsIndex({
         structural_damage: '',
         food_source_observation: '',
         notes: '',
+        weather_ids: [],
+        flora_ids: [],
     });
 
     const openEdit = (inspection: Inspection) => {
@@ -228,6 +241,8 @@ export default function InspectionsIndex({
             structural_damage: inspection.structural_damage ?? '',
             food_source_observation: inspection.food_source_observation ?? '',
             notes: inspection.notes ?? '',
+            weather_ids: toMultiIds(inspection.weather_conditions),
+            flora_ids: toMultiIds(inspection.flora_types),
         });
         setEditWeatherIds(toMultiIds(inspection.weather_conditions));
         setEditFloraIds(toMultiIds(inspection.flora_types));

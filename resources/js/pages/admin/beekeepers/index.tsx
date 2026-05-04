@@ -1,5 +1,14 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { MoreVertical, Plus, RefreshCw, Power, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    MoreVertical,
+    Plus,
+    RefreshCw,
+    Power,
+    Edit2,
+    Trash2,
+    ChevronLeft,
+    ChevronRight,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
@@ -27,7 +36,7 @@ type ActiveModal =
 function StatusBadge({ status }: { status: string }) {
     if (status === 'pending') {
         return (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">
                 Pending
             </span>
         );
@@ -35,47 +44,63 @@ function StatusBadge({ status }: { status: string }) {
 
     if (status === 'active') {
         return (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
                 Active
             </span>
         );
     }
 
     return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">
+        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-500">
             Deactivated
         </span>
     );
 }
 
 export default function BeekeepersIndex({ beekeepers, stats }: Props) {
-    const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
+    const { props } = usePage<{
+        flash?: { success?: string; error?: string };
+    }>();
     const flash = props.flash;
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
     const close = () => setActiveModal(null);
 
-    const viewIndex      = activeModal?.type === 'view' ? activeModal.index : null;
-    const viewBeekeeper  = viewIndex !== null ? beekeepers.data[viewIndex] : null;
-    const hasPrev        = viewIndex !== null && viewIndex > 0;
-    const hasNext        = viewIndex !== null && viewIndex < beekeepers.data.length - 1;
+    const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
+    const viewBeekeeper =
+        viewIndex !== null ? beekeepers.data[viewIndex] : null;
+    const hasPrev = viewIndex !== null && viewIndex > 0;
+    const hasNext =
+        viewIndex !== null && viewIndex < beekeepers.data.length - 1;
 
     useEffect(() => {
-        if (viewIndex === null) return;
+        if (viewIndex === null) {
+            return;
+        }
+
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                setActiveModal(prev => prev?.type === 'view' && prev.index > 0
-                    ? { type: 'view', index: prev.index - 1 } : prev);
+                setActiveModal((prev) =>
+                    prev?.type === 'view' && prev.index > 0
+                        ? { type: 'view', index: prev.index - 1 }
+                        : prev,
+                );
             }
+
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                setActiveModal(prev => prev?.type === 'view' && prev.index < beekeepers.data.length - 1
-                    ? { type: 'view', index: prev.index + 1 } : prev);
+                setActiveModal((prev) =>
+                    prev?.type === 'view' &&
+                    prev.index < beekeepers.data.length - 1
+                        ? { type: 'view', index: prev.index + 1 }
+                        : prev,
+                );
             }
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, beekeepers.data.length]);
 
@@ -86,7 +111,11 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
     const editForm = useForm({ name: '', email: '', phone: '' });
 
     const openEdit = (user: User) => {
-        editForm.setData({ name: user.name, email: user.email, phone: user.phone ?? '' });
+        editForm.setData({
+            name: user.name,
+            email: user.email,
+            phone: user.phone ?? '',
+        });
         setActiveModal({ type: 'edit', user });
     };
 
@@ -95,19 +124,25 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
 
         const errors: Record<string, string> = {};
 
-        if (!createForm.data.name.trim() || createForm.data.name.trim().length < 2) {
-errors.name = 'Name must be at least 2 characters.';
-} else if (!/^[\p{L}\s'\-.]+$/u.test(createForm.data.name.trim())) {
-errors.name = 'Name must contain letters only.';
-}
+        if (
+            !createForm.data.name.trim() ||
+            createForm.data.name.trim().length < 2
+        ) {
+            errors.name = 'Name must be at least 2 characters.';
+        } else if (!/^[\p{L}\s'\-.]+$/u.test(createForm.data.name.trim())) {
+            errors.name = 'Name must contain letters only.';
+        }
 
         if (!/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(createForm.data.email)) {
-errors.email = 'Enter a valid email address.';
-}
+            errors.email = 'Enter a valid email address.';
+        }
 
-        if (createForm.data.phone && !/^(\+?60|0)[0-9\s-]{8,14}$/.test(createForm.data.phone)) {
-errors.phone = 'Use Malaysian format e.g. 012-345 6789';
-}
+        if (
+            createForm.data.phone &&
+            !/^(\+?60|0)[0-9\s-]{8,14}$/.test(createForm.data.phone)
+        ) {
+            errors.phone = 'Use Malaysian format e.g. 012-345 6789';
+        }
 
         if (Object.keys(errors).length > 0) {
             createForm.setError(errors as never);
@@ -117,8 +152,9 @@ errors.phone = 'Use Malaysian format e.g. 012-345 6789';
 
         createForm.post(route('admin.beekeepers.store'), {
             onSuccess: () => {
- createForm.reset(); close(); 
-},
+                createForm.reset();
+                close();
+            },
         });
     };
 
@@ -126,24 +162,30 @@ errors.phone = 'Use Malaysian format e.g. 012-345 6789';
         e.preventDefault();
 
         if (activeModal?.type !== 'edit') {
-return;
-}
+            return;
+        }
 
         const errors: Record<string, string> = {};
 
-        if (!editForm.data.name.trim() || editForm.data.name.trim().length < 2) {
-errors.name = 'Name must be at least 2 characters.';
-} else if (!/^[\p{L}\s'\-.]+$/u.test(editForm.data.name.trim())) {
-errors.name = 'Name must contain letters only.';
-}
+        if (
+            !editForm.data.name.trim() ||
+            editForm.data.name.trim().length < 2
+        ) {
+            errors.name = 'Name must be at least 2 characters.';
+        } else if (!/^[\p{L}\s'\-.]+$/u.test(editForm.data.name.trim())) {
+            errors.name = 'Name must contain letters only.';
+        }
 
         if (!/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(editForm.data.email)) {
-errors.email = 'Enter a valid email address.';
-}
+            errors.email = 'Enter a valid email address.';
+        }
 
-        if (editForm.data.phone && !/^(\+?60|0)[0-9\s-]{8,14}$/.test(editForm.data.phone)) {
-errors.phone = 'Use Malaysian format e.g. 012-345 6789';
-}
+        if (
+            editForm.data.phone &&
+            !/^(\+?60|0)[0-9\s-]{8,14}$/.test(editForm.data.phone)
+        ) {
+            errors.phone = 'Use Malaysian format e.g. 012-345 6789';
+        }
 
         if (Object.keys(errors).length > 0) {
             editForm.setError(errors as never);
@@ -151,43 +193,61 @@ errors.phone = 'Use Malaysian format e.g. 012-345 6789';
             return;
         }
 
-        editForm.patch(route('admin.beekeepers.update', { user: activeModal.user.id }), {
-            onSuccess: () => close(),
-        });
+        editForm.patch(
+            route('admin.beekeepers.update', { user: activeModal.user.id }),
+            {
+                onSuccess: () => close(),
+            },
+        );
     };
 
     const confirmToggle = () => {
         if (activeModal?.type !== 'toggle') {
-return;
-}
+            return;
+        }
 
-        router.patch(route('admin.beekeepers.toggle-status', { user: activeModal.user.id }), {}, {
-            onSuccess: () => close(),
-        });
+        router.patch(
+            route('admin.beekeepers.toggle-status', {
+                user: activeModal.user.id,
+            }),
+            {},
+            {
+                onSuccess: () => close(),
+            },
+        );
     };
 
     const confirmResend = () => {
         if (activeModal?.type !== 'resend') {
-return;
-}
+            return;
+        }
 
-        router.post(route('admin.beekeepers.resend-invite', { user: activeModal.user.id }), {}, {
-            onSuccess: () => close(),
-        });
+        router.post(
+            route('admin.beekeepers.resend-invite', {
+                user: activeModal.user.id,
+            }),
+            {},
+            {
+                onSuccess: () => close(),
+            },
+        );
     };
 
     const confirmDelete = () => {
         if (activeModal?.type !== 'delete') {
-return;
-}
+            return;
+        }
 
         setDeleting(true);
-        router.delete(route('admin.beekeepers.destroy', { user: activeModal.user.id }), {
-            onFinish: () => {
-                setDeleting(false);
-                close();
+        router.delete(
+            route('admin.beekeepers.destroy', { user: activeModal.user.id }),
+            {
+                onFinish: () => {
+                    setDeleting(false);
+                    close();
+                },
             },
-        });
+        );
     };
 
     return (
@@ -195,19 +255,29 @@ return;
             <Head title="Beekeepers — Admin" />
 
             <div className="space-y-6">
-
                 {/* Flash messages */}
-                {flash?.success && <Alert variant="success">{flash.success}</Alert>}
+                {flash?.success && (
+                    <Alert variant="success">{flash.success}</Alert>
+                )}
                 {flash?.error && <Alert variant="error">{flash.error}</Alert>}
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-bold text-amber-900">Beekeepers</h3>
-                        <p className="text-sm text-amber-900/50">{stats.total} total · {stats.pending} pending · {stats.active} active</p>
+                        <h3 className="text-lg font-bold text-amber-900">
+                            Beekeepers
+                        </h3>
+                        <p className="text-sm text-amber-900/50">
+                            {stats.total} total · {stats.pending} pending ·{' '}
+                            {stats.active} active
+                        </p>
                     </div>
-                    <Button variant="primary" size="sm" onClick={() => setActiveModal({ type: 'create' })}>
-                        <Plus className="w-4 h-4 mr-1" />
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => setActiveModal({ type: 'create' })}
+                    >
+                        <Plus className="mr-1 h-4 w-4" />
                         Add Beekeeper
                     </Button>
                 </div>
@@ -217,66 +287,141 @@ return;
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-yellow-50/50 border-b border-yellow-100">
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50">Name</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50">Email</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50 hidden md:table-cell">Phone</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50">Status</th>
-                                    <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-amber-900/50 hidden lg:table-cell">Joined</th>
+                                <tr className="border-b border-yellow-100 bg-yellow-50/50">
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Name
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Email
+                                    </th>
+                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase md:table-cell">
+                                        Phone
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Status
+                                    </th>
+                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase lg:table-cell">
+                                        Joined
+                                    </th>
                                     <th className="px-6 py-3" />
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-yellow-50">
                                 {beekeepers.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-10 text-center text-amber-900/40 text-sm">
-                                            No beekeepers yet. Add one to get started.
+                                        <td
+                                            colSpan={6}
+                                            className="px-6 py-10 text-center text-sm text-amber-900/40"
+                                        >
+                                            No beekeepers yet. Add one to get
+                                            started.
                                         </td>
                                     </tr>
                                 )}
                                 {beekeepers.data.map((user, index) => (
-                                    <tr key={user.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', index })}>
-                                        <td className="px-6 py-4 font-medium text-amber-950">{user.name}</td>
-                                        <td className="px-6 py-4 text-amber-900/70">{user.email}</td>
-                                        <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{user.phone ?? '—'}</td>
-                                        <td className="px-6 py-4"><StatusBadge status={user.status ?? 'active'} /></td>
-                                        <td className="px-6 py-4 text-amber-900/50 hidden lg:table-cell">
-                                            {new Date(user.created_at).toLocaleDateString()}
+                                    <tr
+                                        key={user.id}
+                                        className="cursor-pointer transition-colors hover:bg-yellow-50/30"
+                                        onClick={() =>
+                                            setActiveModal({
+                                                type: 'view',
+                                                index,
+                                            })
+                                        }
+                                    >
+                                        <td className="px-6 py-4 font-medium text-amber-950">
+                                            {user.name}
                                         </td>
-                                        <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
+                                        <td className="px-6 py-4 text-amber-900/70">
+                                            {user.email}
+                                        </td>
+                                        <td className="hidden px-6 py-4 text-amber-900/70 md:table-cell">
+                                            {user.phone ?? '—'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <StatusBadge
+                                                status={user.status ?? 'active'}
+                                            />
+                                        </td>
+                                        <td className="hidden px-6 py-4 text-amber-900/50 lg:table-cell">
+                                            {new Date(
+                                                user.created_at,
+                                            ).toLocaleDateString()}
+                                        </td>
+                                        <td
+                                            className="px-6 py-4 text-right"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
                                             <Dropdown
                                                 align="right"
                                                 trigger={
-                                                    <button className="p-1.5 hover:bg-yellow-100 rounded-xl transition-colors">
-                                                        <MoreVertical className="w-4 h-4 text-amber-900/50" />
+                                                    <button className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100">
+                                                        <MoreVertical className="h-4 w-4 text-amber-900/50" />
                                                     </button>
                                                 }
                                                 items={[
                                                     {
                                                         id: 'edit',
                                                         label: 'Edit',
-                                                        icon: <Edit2 className="w-4 h-4" />,
-                                                        onClick: () => openEdit(user),
+                                                        icon: (
+                                                            <Edit2 className="h-4 w-4" />
+                                                        ),
+                                                        onClick: () =>
+                                                            openEdit(user),
                                                     },
-                                                    ...(user.status === 'pending' ? [{
-                                                        id: 'resend',
-                                                        label: 'Resend Invite',
-                                                        icon: <RefreshCw className="w-4 h-4" />,
-                                                        onClick: () => setActiveModal({ type: 'resend', user }),
-                                                    }] : []),
+                                                    ...(user.status ===
+                                                    'pending'
+                                                        ? [
+                                                              {
+                                                                  id: 'resend',
+                                                                  label: 'Resend Invite',
+                                                                  icon: (
+                                                                      <RefreshCw className="h-4 w-4" />
+                                                                  ),
+                                                                  onClick: () =>
+                                                                      setActiveModal(
+                                                                          {
+                                                                              type: 'resend',
+                                                                              user,
+                                                                          },
+                                                                      ),
+                                                              },
+                                                          ]
+                                                        : []),
                                                     {
                                                         id: 'toggle',
-                                                        label: user.status === 'active' ? 'Deactivate' : 'Reactivate',
-                                                        icon: <Power className="w-4 h-4" />,
-                                                        variant: user.status === 'active' ? 'danger' as const : 'default' as const,
-                                                        onClick: () => setActiveModal({ type: 'toggle', user }),
+                                                        label:
+                                                            user.status ===
+                                                            'active'
+                                                                ? 'Deactivate'
+                                                                : 'Reactivate',
+                                                        icon: (
+                                                            <Power className="h-4 w-4" />
+                                                        ),
+                                                        variant:
+                                                            user.status ===
+                                                            'active'
+                                                                ? ('danger' as const)
+                                                                : ('default' as const),
+                                                        onClick: () =>
+                                                            setActiveModal({
+                                                                type: 'toggle',
+                                                                user,
+                                                            }),
                                                     },
                                                     {
                                                         id: 'delete',
                                                         label: 'Delete',
-                                                        icon: <Trash2 className="w-4 h-4" />,
-                                                        variant: 'danger' as const,
-                                                        onClick: () => setActiveModal({ type: 'delete', user }),
+                                                        icon: (
+                                                            <Trash2 className="h-4 w-4" />
+                                                        ),
+                                                        variant:
+                                                            'danger' as const,
+                                                        onClick: () =>
+                                                            setActiveModal({
+                                                                type: 'delete',
+                                                                user,
+                                                            }),
                                                     },
                                                 ]}
                                             />
@@ -291,37 +436,48 @@ return;
                 {/* Pagination */}
                 {beekeepers.last_page > 1 && (
                     <div className="flex items-center justify-center gap-1">
-                        {beekeepers.links.map((link, i) => (
+                        {beekeepers.links.map((link, i) =>
                             link.url ? (
                                 <Link
                                     key={i}
                                     href={link.url}
-                                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                                    className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                                         link.active
-                                            ? 'bg-amber-500 text-white font-semibold'
+                                            ? 'bg-amber-500 font-semibold text-white'
                                             : 'text-amber-900/70 hover:bg-yellow-100'
                                     }`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: link.label,
+                                    }}
                                 />
                             ) : (
                                 <span
                                     key={i}
                                     className="px-3 py-1.5 text-sm text-amber-900/30"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: link.label,
+                                    }}
                                 />
-                            )
-                        ))}
+                            ),
+                        )}
                     </div>
                 )}
             </div>
 
             {/* ── Create Modal ───────────────────────────────────────── */}
-            <Modal isOpen={activeModal?.type === 'create'} onClose={close} title="Add Beekeeper" maxWidth="md">
+            <Modal
+                isOpen={activeModal?.type === 'create'}
+                onClose={close}
+                title="Add Beekeeper"
+                maxWidth="md"
+            >
                 <form onSubmit={submitCreate} className="space-y-4">
                     <Input
                         label="Name"
                         value={createForm.data.name}
-                        onChange={(e) => createForm.setData('name', e.target.value)}
+                        onChange={(e) =>
+                            createForm.setData('name', e.target.value)
+                        }
                         placeholder="Full name"
                         autoFocus
                         error={createForm.errors.name}
@@ -330,7 +486,9 @@ return;
                         label="Email"
                         type="email"
                         value={createForm.data.email}
-                        onChange={(e) => createForm.setData('email', e.target.value)}
+                        onChange={(e) =>
+                            createForm.setData('email', e.target.value)
+                        }
                         placeholder="email@example.com"
                         error={createForm.errors.email}
                     />
@@ -338,14 +496,33 @@ return;
                         label="Phone (optional)"
                         type="tel"
                         value={createForm.data.phone}
-                        onChange={(e) => createForm.setData('phone', e.target.value.replace(/[^\d+\-\s]/g, ''))}
+                        onChange={(e) =>
+                            createForm.setData(
+                                'phone',
+                                e.target.value.replace(/[^\d+\-\s]/g, ''),
+                            )
+                        }
                         placeholder="+60 12-345 6789"
                         error={createForm.errors.phone}
                     />
                     <div className="flex gap-3 pt-2">
-                        <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                        <Button type="submit" variant="primary" disabled={createForm.processing} className="flex-1">
-                            {createForm.processing ? 'Sending...' : 'Send Invite'}
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={close}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={createForm.processing}
+                            className="flex-1"
+                        >
+                            {createForm.processing
+                                ? 'Sending...'
+                                : 'Send Invite'}
                         </Button>
                     </div>
                 </form>
@@ -353,53 +530,115 @@ return;
 
             {/* ── View Modal ─────────────────────────────────────────── */}
             {activeModal?.type === 'view' && viewBeekeeper && (
-                <Modal isOpen onClose={close} title="Beekeeper Details" maxWidth="lg">
+                <Modal
+                    isOpen
+                    onClose={close}
+                    title="Beekeeper Details"
+                    maxWidth="lg"
+                >
                     <div className="space-y-4">
-                        <div className="flex items-center justify-end gap-1 -mt-1 mb-1">
+                        <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
                             <button
-                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index > 0 ? { type: 'view', index: prev.index - 1 } : prev)}
+                                onClick={() =>
+                                    setActiveModal((prev) =>
+                                        prev?.type === 'view' && prev.index > 0
+                                            ? {
+                                                  type: 'view',
+                                                  index: prev.index - 1,
+                                              }
+                                            : prev,
+                                    )
+                                }
                                 disabled={!hasPrev}
-                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
-                                <ChevronLeft className="w-4 h-4 text-amber-900" />
+                                <ChevronLeft className="h-4 w-4 text-amber-900" />
                             </button>
-                            <span className="text-xs text-amber-900/40 font-bold tabular-nums min-w-[3rem] text-center">
+                            <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
                                 {viewIndex! + 1} / {beekeepers.data.length}
                             </span>
                             <button
-                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index < beekeepers.data.length - 1 ? { type: 'view', index: prev.index + 1 } : prev)}
+                                onClick={() =>
+                                    setActiveModal((prev) =>
+                                        prev?.type === 'view' &&
+                                        prev.index < beekeepers.data.length - 1
+                                            ? {
+                                                  type: 'view',
+                                                  index: prev.index + 1,
+                                              }
+                                            : prev,
+                                    )
+                                }
                                 disabled={!hasNext}
-                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
-                                <ChevronRight className="w-4 h-4 text-amber-900" />
+                                <ChevronRight className="h-4 w-4 text-amber-900" />
                             </button>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Name</p>
-                                <p className="font-medium text-amber-950">{viewBeekeeper.name}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Name
+                                </p>
+                                <p className="font-medium text-amber-950">
+                                    {viewBeekeeper.name}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Status</p>
-                                <StatusBadge status={viewBeekeeper.status ?? 'active'} />
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Status
+                                </p>
+                                <StatusBadge
+                                    status={viewBeekeeper.status ?? 'active'}
+                                />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Email</p>
-                                <p className="font-medium text-amber-950 break-all">{viewBeekeeper.email}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Email
+                                </p>
+                                <p className="font-medium break-all text-amber-950">
+                                    {viewBeekeeper.email}
+                                </p>
                             </div>
                             <div className="min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Phone</p>
-                                <p className="font-medium text-amber-950">{viewBeekeeper.phone ?? '—'}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Phone
+                                </p>
+                                <p className="font-medium text-amber-950">
+                                    {viewBeekeeper.phone ?? '—'}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Member Since</p>
-                                <p className="font-medium text-amber-950">{new Date(viewBeekeeper.created_at).toLocaleDateString()}</p>
+                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Member Since
+                                </p>
+                                <p className="font-medium text-amber-950">
+                                    {new Date(
+                                        viewBeekeeper.created_at,
+                                    ).toLocaleDateString()}
+                                </p>
                             </div>
                         </div>
-                        <p className="text-[10px] text-amber-900/25 text-center uppercase tracking-widest">Use arrow keys to navigate</p>
+                        <p className="text-center text-[10px] tracking-widest text-amber-900/25 uppercase">
+                            Use arrow keys to navigate
+                        </p>
                         <div className="flex gap-3 pt-2">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Close</Button>
-                            <Button type="button" variant="outline" onClick={() => openEdit(viewBeekeeper!)} className="flex-1">Edit</Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={close}
+                                className="flex-1"
+                            >
+                                Close
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => openEdit(viewBeekeeper!)}
+                                className="flex-1"
+                            >
+                                Edit
+                            </Button>
                         </div>
                     </div>
                 </Modal>
@@ -407,12 +646,19 @@ return;
 
             {/* ── Edit Modal ─────────────────────────────────────────── */}
             {activeModal?.type === 'edit' && (
-                <Modal isOpen onClose={close} title="Edit Beekeeper" maxWidth="md">
+                <Modal
+                    isOpen
+                    onClose={close}
+                    title="Edit Beekeeper"
+                    maxWidth="md"
+                >
                     <form onSubmit={submitEdit} className="space-y-4">
                         <Input
                             label="Name"
                             value={editForm.data.name}
-                            onChange={(e) => editForm.setData('name', e.target.value)}
+                            onChange={(e) =>
+                                editForm.setData('name', e.target.value)
+                            }
                             autoFocus
                             error={editForm.errors.name}
                         />
@@ -420,20 +666,41 @@ return;
                             label="Email"
                             type="email"
                             value={editForm.data.email}
-                            onChange={(e) => editForm.setData('email', e.target.value)}
+                            onChange={(e) =>
+                                editForm.setData('email', e.target.value)
+                            }
                             error={editForm.errors.email}
                         />
                         <Input
                             label="Phone (optional)"
                             type="tel"
                             value={editForm.data.phone}
-                            onChange={(e) => editForm.setData('phone', e.target.value.replace(/[^\d+\-\s]/g, ''))}
+                            onChange={(e) =>
+                                editForm.setData(
+                                    'phone',
+                                    e.target.value.replace(/[^\d+\-\s]/g, ''),
+                                )
+                            }
                             error={editForm.errors.phone}
                         />
                         <div className="flex gap-3 pt-2">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                            <Button type="submit" variant="primary" disabled={editForm.processing} className="flex-1">
-                                {editForm.processing ? 'Saving...' : 'Save Changes'}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={close}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                disabled={editForm.processing}
+                                className="flex-1"
+                            >
+                                {editForm.processing
+                                    ? 'Saving...'
+                                    : 'Save Changes'}
                             </Button>
                         </div>
                     </form>
@@ -445,7 +712,11 @@ return;
                 <Modal
                     isOpen
                     onClose={close}
-                    title={activeModal.user.status === 'active' ? 'Deactivate Beekeeper' : 'Reactivate Beekeeper'}
+                    title={
+                        activeModal.user.status === 'active'
+                            ? 'Deactivate Beekeeper'
+                            : 'Reactivate Beekeeper'
+                    }
                     maxWidth="sm"
                 >
                     <div className="space-y-4">
@@ -455,14 +726,27 @@ return;
                                 : `Reactivating ${activeModal.user.name} will restore their access to BuzzyHive.`}
                         </p>
                         <div className="flex gap-3">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
                             <Button
                                 type="button"
-                                variant={activeModal.user.status === 'active' ? 'destructive' : 'primary'}
+                                variant="ghost"
+                                onClick={close}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={
+                                    activeModal.user.status === 'active'
+                                        ? 'destructive'
+                                        : 'primary'
+                                }
                                 onClick={confirmToggle}
                                 className="flex-1"
                             >
-                                {activeModal.user.status === 'active' ? 'Deactivate' : 'Reactivate'}
+                                {activeModal.user.status === 'active'
+                                    ? 'Deactivate'
+                                    : 'Reactivate'}
                             </Button>
                         </div>
                     </div>
@@ -471,14 +755,37 @@ return;
 
             {/* ── Delete Confirmation Modal ───────────────────────────── */}
             {activeModal?.type === 'delete' && (
-                <Modal isOpen onClose={close} title="Delete Beekeeper" maxWidth="sm">
+                <Modal
+                    isOpen
+                    onClose={close}
+                    title="Delete Beekeeper"
+                    maxWidth="sm"
+                >
                     <div className="space-y-4">
                         <p className="text-sm text-amber-900/70">
-                            Are you sure you want to delete <span className="font-semibold text-amber-950">{activeModal.user.name}</span>? This action cannot be undone.
+                            Are you sure you want to delete{' '}
+                            <span className="font-semibold text-amber-950">
+                                {activeModal.user.name}
+                            </span>
+                            ? This action cannot be undone.
                         </p>
                         <div className="flex gap-3">
-                            <Button type="button" variant="ghost" onClick={close} disabled={deleting} className="flex-1">Cancel</Button>
-                            <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleting} className="flex-1">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={close}
+                                disabled={deleting}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={confirmDelete}
+                                disabled={deleting}
+                                className="flex-1"
+                            >
                                 {deleting ? 'Deleting...' : 'Delete'}
                             </Button>
                         </div>
@@ -488,14 +795,35 @@ return;
 
             {/* ── Resend Invite Confirmation Modal ───────────────────── */}
             {activeModal?.type === 'resend' && (
-                <Modal isOpen onClose={close} title="Resend Invite" maxWidth="sm">
+                <Modal
+                    isOpen
+                    onClose={close}
+                    title="Resend Invite"
+                    maxWidth="sm"
+                >
                     <div className="space-y-4">
                         <p className="text-sm text-amber-900/70">
-                            A new invite email will be sent to <span className="font-semibold text-amber-950">{activeModal.user.email}</span>. The previous link will be replaced.
+                            A new invite email will be sent to{' '}
+                            <span className="font-semibold text-amber-950">
+                                {activeModal.user.email}
+                            </span>
+                            . The previous link will be replaced.
                         </p>
                         <div className="flex gap-3">
-                            <Button type="button" variant="ghost" onClick={close} className="flex-1">Cancel</Button>
-                            <Button type="button" variant="primary" onClick={confirmResend} className="flex-1">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={close}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="primary"
+                                onClick={confirmResend}
+                                className="flex-1"
+                            >
                                 Resend
                             </Button>
                         </div>

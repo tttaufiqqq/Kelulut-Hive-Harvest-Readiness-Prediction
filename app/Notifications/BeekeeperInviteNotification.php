@@ -25,9 +25,9 @@ class BeekeeperInviteNotification extends Notification
         return (new MailMessage)
             ->subject('You\'ve been invited to BuzzyHive 2.0')
             ->view('emails.beekeeper-invite', [
-                'inviteUrl'     => $this->inviteUrl,
+                'inviteUrl' => $this->inviteUrl,
                 'invitedByName' => $this->invitedByName,
-                'notifiable'    => $notifiable,
+                'notifiable' => $notifiable,
             ]);
     }
 }

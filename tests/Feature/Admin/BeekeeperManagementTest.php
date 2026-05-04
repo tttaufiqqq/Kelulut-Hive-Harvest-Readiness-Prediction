@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\BeekeeperInviteNotification;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
@@ -32,7 +33,7 @@ test('admin can invite a new beekeeper', function () {
     $admin->assignRole('admin');
 
     $response = $this->actingAs($admin)->post(route('admin.beekeepers.store'), [
-        'name'  => 'Ali Hassan',
+        'name' => 'Ali Hassan',
         'email' => 'ali@buzzyhive.com',
         'phone' => '0123456789',
     ]);
@@ -50,7 +51,7 @@ test('admin cannot invite beekeeper with duplicate email', function () {
     User::factory()->create(['email' => 'duplicate@buzzyhive.com']);
 
     $response = $this->actingAs($admin)->post(route('admin.beekeepers.store'), [
-        'name'  => 'Another User',
+        'name' => 'Another User',
         'email' => 'duplicate@buzzyhive.com',
         'phone' => null,
     ]);
@@ -117,13 +118,13 @@ test('invite notification is sent when beekeeper is registered', function () {
     $admin->assignRole('admin');
 
     $this->actingAs($admin)->post(route('admin.beekeepers.store'), [
-        'name'  => 'Siti Aminah',
+        'name' => 'Siti Aminah',
         'email' => 'siti@buzzyhive.com',
         'phone' => null,
     ]);
 
     $beekeeper = User::where('email', 'siti@buzzyhive.com')->first();
-    Notification::assertSentTo($beekeeper, \App\Notifications\BeekeeperInviteNotification::class);
+    Notification::assertSentTo($beekeeper, BeekeeperInviteNotification::class);
 });
 
 test('admin can resend invite to pending beekeeper', function () {
@@ -138,7 +139,7 @@ test('admin can resend invite to pending beekeeper', function () {
         ->post(route('admin.beekeepers.resend-invite', $beekeeper));
 
     $response->assertRedirect(route('admin.beekeepers.index'));
-    Notification::assertSentTo($beekeeper, \App\Notifications\BeekeeperInviteNotification::class);
+    Notification::assertSentTo($beekeeper, BeekeeperInviteNotification::class);
 });
 
 test('admin cannot resend invite to active beekeeper', function () {
@@ -165,7 +166,7 @@ test('admin can update beekeeper details', function () {
 
     $response = $this->actingAs($admin)
         ->patch(route('admin.beekeepers.update', $beekeeper), [
-            'name'  => 'Updated Name',
+            'name' => 'Updated Name',
             'email' => 'updated@buzzyhive.com',
             'phone' => null,
         ]);
@@ -183,7 +184,7 @@ test('non-admin cannot update beekeeper details', function () {
 
     $response = $this->actingAs($beekeeper)
         ->patch(route('admin.beekeepers.update', $target), [
-            'name'  => 'Hacked Name',
+            'name' => 'Hacked Name',
             'email' => 'hacked@buzzyhive.com',
             'phone' => null,
         ]);

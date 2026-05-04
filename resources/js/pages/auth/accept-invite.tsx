@@ -11,7 +11,12 @@ type Props = {
     signature: string;
 };
 
-export default function AcceptInvite({ email, userId, expires, signature }: Props) {
+export default function AcceptInvite({
+    email,
+    userId,
+    expires,
+    signature,
+}: Props) {
     const { data, setData, post, processing, errors } = useForm({
         password: '',
         password_confirmation: '',
@@ -20,37 +25,42 @@ export default function AcceptInvite({ email, userId, expires, signature }: Prop
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('invite.accept.store', { user: userId, expires, signature }));
+        post(
+            route('invite.accept.store', { user: userId, expires, signature }),
+        );
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFBEB] relative flex overflow-hidden">
+        <div className="relative flex min-h-screen overflow-hidden bg-[#FFFBEB]">
             <Head title="Set Up Your Account — BuzzyHive 2.0" />
 
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-amber-950 -skew-x-12 translate-x-1/4 z-0 hidden lg:block" />
+            <div className="absolute top-0 right-0 z-0 hidden h-full w-1/2 translate-x-1/4 -skew-x-12 bg-amber-950 lg:block" />
 
             {/* Left Panel - Form */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 py-12 relative z-10">
+            <div className="relative z-10 flex w-full flex-col justify-center px-8 py-12 md:px-16 lg:w-1/2">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 mb-16 group w-fit">
-                    <div className="bg-yellow-400 p-2 rounded-xl group-hover:bg-yellow-500 transition-colors">
-                        <Bee className="w-5 h-5 text-yellow-950" />
+                <Link
+                    href="/"
+                    className="group mb-16 flex w-fit items-center gap-2"
+                >
+                    <div className="rounded-xl bg-yellow-400 p-2 transition-colors group-hover:bg-yellow-500">
+                        <Bee className="h-5 w-5 text-yellow-950" />
                     </div>
-                    <span className="text-lg font-black tracking-tighter uppercase text-amber-950">
+                    <span className="text-lg font-black tracking-tighter text-amber-950 uppercase">
                         BuzzyHive<span className="text-yellow-500">2.0</span>
                     </span>
                 </Link>
 
                 <div>
                     <div className="mb-8">
-                        <span className="bg-yellow-400 text-yellow-950 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                        <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold tracking-widest text-yellow-950 uppercase">
                             You're Invited
                         </span>
-                        <h1 className="text-5xl font-black uppercase tracking-tighter text-amber-950 mt-4 leading-none">
+                        <h1 className="mt-4 text-5xl leading-none font-black tracking-tighter text-amber-950 uppercase">
                             Activate <br />
                             <span className="text-yellow-500">Account.</span>
                         </h1>
-                        <p className="text-amber-800/60 mt-3 font-medium">
+                        <p className="mt-3 font-medium text-amber-800/60">
                             Create your password to get started.
                         </p>
                     </div>
@@ -58,25 +68,27 @@ export default function AcceptInvite({ email, userId, expires, signature }: Prop
                     <form onSubmit={submit} className="space-y-5">
                         {/* Email — read-only */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 Email
                             </label>
                             <input
                                 type="email"
                                 value={email}
                                 readOnly
-                                className="w-full px-4 py-3.5 rounded-2xl border-2 border-amber-100 bg-amber-50 text-amber-900/60 font-medium cursor-not-allowed"
+                                className="w-full cursor-not-allowed rounded-2xl border-2 border-amber-100 bg-amber-50 px-4 py-3.5 font-medium text-amber-900/60"
                             />
                         </div>
 
                         {/* Password */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 Password
                             </label>
                             <PasswordInput
                                 value={data.password}
-                                onChange={(e) => setData('password', e.target.value)}
+                                onChange={(e) =>
+                                    setData('password', e.target.value)
+                                }
                                 autoFocus
                                 autoComplete="new-password"
                                 placeholder="Create a password"
@@ -86,70 +98,92 @@ export default function AcceptInvite({ email, userId, expires, signature }: Prop
 
                         {/* Confirm Password */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 Confirm Password
                             </label>
                             <PasswordInput
                                 value={data.password_confirmation}
-                                onChange={(e) => setData('password_confirmation', e.target.value)}
+                                onChange={(e) =>
+                                    setData(
+                                        'password_confirmation',
+                                        e.target.value,
+                                    )
+                                }
                                 autoComplete="new-password"
                                 placeholder="Confirm your password"
                             />
-                            <InputError message={errors.password_confirmation} />
+                            <InputError
+                                message={errors.password_confirmation}
+                            />
                         </div>
 
                         {/* Telegram Chat ID */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
-                                Telegram Chat ID <span className="text-amber-900/40 normal-case font-normal">(optional)</span>
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
+                                Telegram Chat ID{' '}
+                                <span className="font-normal text-amber-900/40 normal-case">
+                                    (optional)
+                                </span>
                             </label>
                             <input
                                 type="text"
                                 value={data.telegram_id}
-                                onChange={(e) => setData('telegram_id', e.target.value)}
+                                onChange={(e) =>
+                                    setData('telegram_id', e.target.value)
+                                }
                                 placeholder="e.g. 123456789"
-                                className="w-full px-4 py-3.5 rounded-2xl border-2 border-amber-200 bg-amber-50/50 text-amber-900 font-medium focus:outline-none focus:border-yellow-400"
+                                className="w-full rounded-2xl border-2 border-amber-200 bg-amber-50/50 px-4 py-3.5 font-medium text-amber-900 focus:border-yellow-400 focus:outline-none"
                             />
                             <button
                                 type="button"
-                                onClick={() => window.open('https://t.me/raw_info_bot', '_blank')}
-                                className="flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors mt-1"
+                                onClick={() =>
+                                    window.open(
+                                        'https://t.me/raw_info_bot',
+                                        '_blank',
+                                    )
+                                }
+                                className="mt-1 flex items-center gap-1.5 text-xs font-bold text-amber-700 transition-colors hover:text-amber-900"
                             >
-                                <ExternalLink className="w-3.5 h-3.5" />
+                                <ExternalLink className="h-3.5 w-3.5" />
                                 Get My Telegram ID
                             </button>
-                            <div className="text-xs text-amber-900/40 space-y-0.5 mt-1">
+                            <div className="mt-1 space-y-0.5 text-xs text-amber-900/40">
                                 <p>1. Open the bot link above</p>
                                 <p>2. Send any message to the bot</p>
-                                <p>3. Copy the number shown and paste it here</p>
+                                <p>
+                                    3. Copy the number shown and paste it here
+                                </p>
                             </div>
                         </div>
 
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 text-yellow-950 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 group transition-colors text-lg"
+                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-yellow-400 py-4 text-lg font-bold text-yellow-950 transition-colors hover:bg-yellow-500 disabled:opacity-50"
                         >
                             {processing ? 'Activating...' : 'Activate Account'}
-                            {!processing && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                            {!processing && (
+                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            )}
                         </button>
                     </form>
                 </div>
             </div>
 
             {/* Right Panel - Decorative */}
-            <div className="hidden lg:flex w-1/2 relative z-10 items-center justify-center">
-                <div className="text-center px-12">
-                    <div className="inline-block bg-yellow-400 p-8 rounded-[2rem] shadow-2xl mb-8 rotate-6">
-                        <Bee className="w-16 h-16 text-yellow-950" />
+            <div className="relative z-10 hidden w-1/2 items-center justify-center lg:flex">
+                <div className="px-12 text-center">
+                    <div className="mb-8 inline-block rotate-6 rounded-[2rem] bg-yellow-400 p-8 shadow-2xl">
+                        <Bee className="h-16 w-16 text-yellow-950" />
                     </div>
 
-                    <h2 className="text-4xl font-black uppercase tracking-tighter text-white leading-none mb-4">
+                    <h2 className="mb-4 text-4xl leading-none font-black tracking-tighter text-white uppercase">
                         Harvest <br />
                         <span className="text-yellow-400">Intelligence.</span>
                     </h2>
-                    <p className="text-amber-200/60 font-medium max-w-xs mx-auto">
-                        IoT-integrated harvest readiness prediction for stingless bee farming.
+                    <p className="mx-auto max-w-xs font-medium text-amber-200/60">
+                        IoT-integrated harvest readiness prediction for
+                        stingless bee farming.
                     </p>
                 </div>
             </div>

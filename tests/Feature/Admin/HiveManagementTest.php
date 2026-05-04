@@ -26,7 +26,7 @@ test('admin can create a hive with valid beekeeper and name', function () {
     $beekeeper->assignRole('beekeeper');
 
     $response = $this->actingAs($admin)->post(route('admin.hives.store'), [
-        'name'         => 'Test Hive Alpha',
+        'name' => 'Test Hive Alpha',
         'beekeeper_id' => $beekeeper->id,
     ]);
 
@@ -63,9 +63,9 @@ test('admin can update a hive', function () {
     $hive = Hive::factory()->create(['beekeeper_id' => $beekeeper->id, 'name' => 'Old Name', 'status' => 'active']);
 
     $response = $this->actingAs($admin)->patch(route('admin.hives.update', $hive), [
-        'name'         => 'Updated Hive',
+        'name' => 'Updated Hive',
         'beekeeper_id' => $beekeeper->id,
-        'status'       => 'active',
+        'status' => 'active',
     ]);
 
     $response->assertRedirect(route('admin.hives.index'));

@@ -8,7 +8,8 @@ use Illuminate\Console\Command;
 
 class BackfillPredictions extends Command
 {
-    protected $signature   = 'ml:backfill {--limit=50 : Max logs to process}';
+    protected $signature = 'ml:backfill {--limit=50 : Max logs to process}';
+
     protected $description = 'Run ML predictions for sensor logs that have no prediction yet';
 
     public function handle(MlPredictionService $mlService): void
@@ -20,6 +21,7 @@ class BackfillPredictions extends Command
 
         if ($logs->isEmpty()) {
             $this->info('No unpredicted sensor logs found.');
+
             return;
         }
 

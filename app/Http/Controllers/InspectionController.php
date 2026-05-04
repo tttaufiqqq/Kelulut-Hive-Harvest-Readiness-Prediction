@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Inspection\StoreInspectionRequest;
 use App\Http\Requests\Inspection\UpdateInspectionRequest;
-use App\Models\Inspection;
 use App\Models\Hive;
-use App\Models\MasterWeatherCondition;
+use App\Models\Inspection;
 use App\Models\MasterFloraType;
+use App\Models\MasterWeatherCondition;
 use Inertia\Inertia;
 
 class InspectionController extends Controller
@@ -30,11 +30,11 @@ class InspectionController extends Controller
             ->get();
 
         return Inertia::render('inspections/index', [
-            'inspections'      => $inspections,
-            'hives'            => $hives,
+            'inspections' => $inspections,
+            'hives' => $hives,
             'weatherConditions' => MasterWeatherCondition::orderBy('name')->get(['id', 'name']),
-            'floraTypes'       => MasterFloraType::orderBy('name')->get(['id', 'name']),
-            'filters'          => request()->only('hive_id'),
+            'floraTypes' => MasterFloraType::orderBy('name')->get(['id', 'name']),
+            'filters' => request()->only('hive_id'),
         ]);
     }
 

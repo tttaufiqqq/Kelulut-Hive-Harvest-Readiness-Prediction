@@ -19,7 +19,7 @@ export default function ResetPassword({ token, email }: Props) {
             <Head title="Reset Password — BuzzyHive 2.0" />
 
             <Form
-                {...update.form()}
+                {...update()}
                 transform={(data) => ({ ...data, token, email })}
                 resetOnSuccess={['password', 'password_confirmation']}
                 className="space-y-5"
@@ -27,20 +27,20 @@ export default function ResetPassword({ token, email }: Props) {
                 {({ processing, errors }) => (
                     <>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 Email
                             </label>
                             <input
                                 type="email"
                                 value={email}
                                 readOnly
-                                className="w-full px-4 py-3.5 rounded-2xl border-2 border-amber-100 bg-amber-50 text-amber-900/60 font-medium cursor-not-allowed"
+                                className="w-full cursor-not-allowed rounded-2xl border-2 border-amber-100 bg-amber-50 px-4 py-3.5 font-medium text-amber-900/60"
                             />
                             <InputError message={errors.email} />
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 New Password
                             </label>
                             <PasswordInput
@@ -54,7 +54,7 @@ export default function ResetPassword({ token, email }: Props) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 Confirm Password
                             </label>
                             <PasswordInput
@@ -63,16 +63,20 @@ export default function ResetPassword({ token, email }: Props) {
                                 autoComplete="new-password"
                                 placeholder="Confirm your new password"
                             />
-                            <InputError message={errors.password_confirmation} />
+                            <InputError
+                                message={errors.password_confirmation}
+                            />
                         </div>
 
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 text-yellow-950 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 group transition-colors text-lg"
+                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-yellow-400 py-4 text-lg font-bold text-yellow-950 transition-colors hover:bg-yellow-500 disabled:opacity-50"
                         >
                             {processing ? 'Resetting...' : 'Reset Password'}
-                            {!processing && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                            {!processing && (
+                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            )}
                         </button>
                     </>
                 )}

@@ -38,7 +38,7 @@ class MasterDataSeeder extends Seeder
             ['sensor_type' => 'temp',     'min_value' => 37.1, 'max_value' => 40.0,  'level' => 'warning',  'meaning' => 'Temperature slightly elevated',     'recommended_action' => 'Monitor closely'],
             ['sensor_type' => 'temp',     'min_value' => 40.1, 'max_value' => 99.0,  'level' => 'critical', 'meaning' => 'Dangerously high temperature',      'recommended_action' => 'Inspect hive immediately'],
             ['sensor_type' => 'humidity', 'min_value' => 60.0, 'max_value' => 80.0,  'level' => 'normal',   'meaning' => 'Optimal humidity for honey curing',  'recommended_action' => 'No action needed'],
-            ['sensor_type' => 'humidity', 'min_value' => 80.1, 'max_value' => 90.0,  'level' => 'warning',  'meaning' => 'High humidity, risk of fermentation','recommended_action' => 'Improve ventilation'],
+            ['sensor_type' => 'humidity', 'min_value' => 80.1, 'max_value' => 90.0,  'level' => 'warning',  'meaning' => 'High humidity, risk of fermentation', 'recommended_action' => 'Improve ventilation'],
             ['sensor_type' => 'humidity', 'min_value' => 90.1, 'max_value' => 100.0, 'level' => 'critical', 'meaning' => 'Excessive humidity',                'recommended_action' => 'Urgent ventilation fix'],
             ['sensor_type' => 'mq2',      'min_value' => 0,    'max_value' => 300,   'level' => 'normal',   'meaning' => 'Normal smoke/gas levels',            'recommended_action' => 'No action needed'],
             ['sensor_type' => 'mq2',      'min_value' => 301,  'max_value' => 500,   'level' => 'warning',  'meaning' => 'Elevated smoke/gas detected',        'recommended_action' => 'Check surrounding area'],

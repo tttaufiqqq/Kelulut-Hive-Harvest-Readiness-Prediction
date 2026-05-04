@@ -15,7 +15,7 @@ class UpdateSiteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => ['required', 'string', 'max:100', Rule::unique('master_sites', 'name')->ignore($this->route('site'))],
+            'name' => ['required', 'string', 'max:100', Rule::unique('master_sites', 'name')->ignore($this->route('site'))],
             'description' => ['nullable', 'string', 'max:255'],
         ];
     }

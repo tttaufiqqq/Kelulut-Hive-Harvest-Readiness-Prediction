@@ -15,7 +15,7 @@ class Inspection extends Model
     ];
 
     protected $casts = [
-        'beekeeper_id'    => 'integer',
+        'beekeeper_id' => 'integer',
         'inspection_date' => 'date',
     ];
 

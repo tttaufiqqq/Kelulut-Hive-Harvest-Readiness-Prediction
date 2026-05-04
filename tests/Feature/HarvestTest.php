@@ -3,9 +3,10 @@
 use App\Models\Harvest;
 use App\Models\Hive;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'beekeeper', 'guard_name' => 'web']);
@@ -18,6 +19,7 @@ function makeBeekeeper(): User
 {
     $user = User::factory()->create();
     $user->assignRole('beekeeper');
+
     return $user;
 }
 
@@ -29,9 +31,9 @@ function makeHiveFor(User $beekeeper): Hive
 function harvestPayload(int $hiveId): array
 {
     return [
-        'hive_id'      => $hiveId,
+        'hive_id' => $hiveId,
         'harvest_date' => today()->toDateString(),
-        'weight'       => 1.5,
+        'weight' => 1.5,
     ];
 }
 
@@ -39,16 +41,16 @@ function harvestPayload(int $hiveId): array
 
 test('beekeeper can store harvest for own hive', function () {
     $beekeeper = makeBeekeeper();
-    $hive      = makeHiveFor($beekeeper);
+    $hive = makeHiveFor($beekeeper);
 
     $response = $this->actingAs($beekeeper)
         ->post(route('harvests.store'), harvestPayload($hive->id));
 
     $response->assertRedirect(route('harvests.index'));
     $this->assertDatabaseHas('harvests', [
-        'hive_id'      => $hive->id,
+        'hive_id' => $hive->id,
         'beekeeper_id' => $beekeeper->id,
-        'weight'       => 1.5,
+        'weight' => 1.5,
     ]);
 });
 
@@ -56,8 +58,8 @@ test('beekeeper can store harvest for own hive', function () {
 
 test('beekeeper cannot store harvest for another beekeepers hive', function () {
     $beekeeper = makeBeekeeper();
-    $other     = makeBeekeeper();
-    $hive      = makeHiveFor($other);
+    $other = makeBeekeeper();
+    $hive = makeHiveFor($other);
 
     $this->actingAs($beekeeper)
         ->post(route('harvests.store'), harvestPayload($hive->id))
@@ -70,12 +72,12 @@ test('beekeeper cannot store harvest for another beekeepers hive', function () {
 
 test('beekeeper can update own harvest', function () {
     $beekeeper = makeBeekeeper();
-    $hive      = makeHiveFor($beekeeper);
-    $harvest   = Harvest::create([
-        'hive_id'      => $hive->id,
+    $hive = makeHiveFor($beekeeper);
+    $harvest = Harvest::create([
+        'hive_id' => $hive->id,
         'beekeeper_id' => $beekeeper->id,
         'harvest_date' => today()->toDateString(),
-        'weight'       => 1.0,
+        'weight' => 1.0,
     ]);
 
     $response = $this->actingAs($beekeeper)
@@ -89,13 +91,13 @@ test('beekeeper can update own harvest', function () {
 
 test('beekeeper cannot update another beekeepers harvest', function () {
     $beekeeper = makeBeekeeper();
-    $other     = makeBeekeeper();
-    $hive      = makeHiveFor($other);
-    $harvest   = Harvest::create([
-        'hive_id'      => $hive->id,
+    $other = makeBeekeeper();
+    $hive = makeHiveFor($other);
+    $harvest = Harvest::create([
+        'hive_id' => $hive->id,
         'beekeeper_id' => $other->id,
         'harvest_date' => today()->toDateString(),
-        'weight'       => 1.0,
+        'weight' => 1.0,
     ]);
 
     $response = $this->actingAs($beekeeper)
@@ -109,12 +111,12 @@ test('beekeeper cannot update another beekeepers harvest', function () {
 
 test('beekeeper can delete own harvest', function () {
     $beekeeper = makeBeekeeper();
-    $hive      = makeHiveFor($beekeeper);
-    $harvest   = Harvest::create([
-        'hive_id'      => $hive->id,
+    $hive = makeHiveFor($beekeeper);
+    $harvest = Harvest::create([
+        'hive_id' => $hive->id,
         'beekeeper_id' => $beekeeper->id,
         'harvest_date' => today()->toDateString(),
-        'weight'       => 1.0,
+        'weight' => 1.0,
     ]);
 
     $response = $this->actingAs($beekeeper)

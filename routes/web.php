@@ -2,24 +2,27 @@
 
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\AcceptInviteController;
-use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\InspectionController;
+use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\ReportingController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
-    $exists = \Illuminate\Support\Facades\Storage::disk('public')->exists('thesis/thesis.pdf');
+    $exists = Storage::disk('public')->exists('thesis/thesis.pdf');
+
     return inertia('LandingPage', [
         'thesisUrl' => $exists ? route('thesis.pdf') : null,
     ]);
 })->name('home');
 
 Route::get('/thesis/pdf', function () {
-    abort_unless(\Illuminate\Support\Facades\Storage::disk('public')->exists('thesis/thesis.pdf'), 404);
-    return \Illuminate\Support\Facades\Storage::disk('public')->response('thesis/thesis.pdf', 'BuzzyHive-2.0-Thesis.pdf', [
-        'Content-Type'        => 'application/pdf',
+    abort_unless(Storage::disk('public')->exists('thesis/thesis.pdf'), 404);
+
+    return Storage::disk('public')->response('thesis/thesis.pdf', 'BuzzyHive-2.0-Thesis.pdf', [
+        'Content-Type' => 'application/pdf',
         'Content-Disposition' => 'inline; filename="BuzzyHive-2.0-Thesis.pdf"',
     ]);
 })->name('thesis.pdf');

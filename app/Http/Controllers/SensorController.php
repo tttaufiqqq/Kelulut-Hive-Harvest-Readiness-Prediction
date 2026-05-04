@@ -22,36 +22,36 @@ class SensorController extends Controller
 
         // ── Validate ──────────────────────────────────────────────
         $data = $request->validate([
-            'device_id'   => 'required|string',
-            'hive_id'     => 'required|integer|exists:hives,id',
-            'temp'        => 'required|numeric|between:-10,60',
-            'humidity'    => 'required|numeric|between:0,100',
-            'mq2_value'   => 'required|integer|between:0,4095',
-            'mq3_value'   => 'required|integer|between:0,4095',
-            'mq5_value'   => 'required|integer|between:0,4095',
+            'device_id' => 'required|string',
+            'hive_id' => 'required|integer|exists:hives,id',
+            'temp' => 'required|numeric|between:-10,60',
+            'humidity' => 'required|numeric|between:0,100',
+            'mq2_value' => 'required|integer|between:0,4095',
+            'mq3_value' => 'required|integer|between:0,4095',
+            'mq5_value' => 'required|integer|between:0,4095',
             'mq135_value' => 'required|integer|between:0,4095',
         ]);
 
         // ── Resolve IoT Node ──────────────────────────────────────
-        $node = IotNode::where('device_id',     $data['device_id'])
-                       ->where('hive_id',        $data['hive_id'])
-                       ->where('device_status', 'active')
-                       ->first();
+        $node = IotNode::where('device_id', $data['device_id'])
+            ->where('hive_id', $data['hive_id'])
+            ->where('device_status', 'active')
+            ->first();
 
-        if (!$node) {
+        if (! $node) {
             return response()->json(['error' => 'Device not registered'], 404);
         }
 
         // ── Store sensor log ──────────────────────────────────────
         $log = SensorLog::create([
-            'hive_id'          => $data['hive_id'],
-            'device_id'        => $node->id,
-            'temp'             => $data['temp'],
-            'humidity'         => $data['humidity'],
-            'mq2_value'        => $data['mq2_value'],
-            'mq3_value'        => $data['mq3_value'],
-            'mq5_value'        => $data['mq5_value'],
-            'mq135_value'      => $data['mq135_value'],
+            'hive_id' => $data['hive_id'],
+            'device_id' => $node->id,
+            'temp' => $data['temp'],
+            'humidity' => $data['humidity'],
+            'mq2_value' => $data['mq2_value'],
+            'mq3_value' => $data['mq3_value'],
+            'mq5_value' => $data['mq5_value'],
+            'mq135_value' => $data['mq135_value'],
             'record_timestamp' => now(),
         ]);
 
@@ -60,30 +60,31 @@ class SensorController extends Controller
             $thresholds = DB::table('master_sensor_thresholds')->get();
 
             $sensorMap = [
-                'temp'     => $data['temp'],
+                'temp' => $data['temp'],
                 'humidity' => $data['humidity'],
-                'mq2'      => $data['mq2_value'],
-                'mq3'      => $data['mq3_value'],
-                'mq5'      => $data['mq5_value'],
-                'mq135'    => $data['mq135_value'],
+                'mq2' => $data['mq2_value'],
+                'mq3' => $data['mq3_value'],
+                'mq5' => $data['mq5_value'],
+                'mq135' => $data['mq135_value'],
             ];
 
             $matched = $thresholds->filter(function ($t) use ($sensorMap) {
                 $reading = $sensorMap[$t->sensor_type] ?? null;
+
                 return $reading !== null
                     && $reading >= $t->min_value
                     && $reading <= $t->max_value;
             })->map(fn ($t) => [
                 'sensor_log_id' => $log->id,
-                'threshold_id'  => $t->id,
+                'threshold_id' => $t->id,
             ])->values()->all();
 
-            if (!empty($matched)) {
+            if (! empty($matched)) {
                 DB::table('sensor_log_thresholds')->insert($matched);
             }
         } catch (\Throwable $e) {
             Log::warning('Threshold matching failed', [
-                'error'         => $e->getMessage(),
+                'error' => $e->getMessage(),
                 'sensor_log_id' => $log->id,
             ]);
         }

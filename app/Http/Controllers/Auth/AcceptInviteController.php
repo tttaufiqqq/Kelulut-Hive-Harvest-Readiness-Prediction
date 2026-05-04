@@ -20,9 +20,9 @@ class AcceptInviteController extends Controller
         }
 
         return Inertia::render('auth/accept-invite', [
-            'email'     => $user->email,
-            'userId'    => $user->id,
-            'expires'   => $request->query('expires'),
+            'email' => $user->email,
+            'userId' => $user->id,
+            'expires' => $request->query('expires'),
             'signature' => $request->query('signature'),
         ]);
     }
@@ -34,15 +34,15 @@ class AcceptInviteController extends Controller
         }
 
         $request->validate([
-            'password'    => ['required', 'confirmed', Password::defaults()],
+            'password' => ['required', 'confirmed', Password::defaults()],
             'telegram_id' => ['nullable', 'string', 'max:100'],
         ]);
 
         $user->update([
-            'password'          => Hash::make($request->password),
-            'status'            => 'active',
+            'password' => Hash::make($request->password),
+            'status' => 'active',
             'email_verified_at' => now(),
-            'telegram_id'       => $request->telegram_id,
+            'telegram_id' => $request->telegram_id,
         ]);
 
         auth()->login($user);

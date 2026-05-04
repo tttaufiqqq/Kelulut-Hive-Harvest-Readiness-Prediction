@@ -39,14 +39,14 @@ export function DeleteUser() {
                 onClose={() => setShowModal(false)}
                 title="Delete your account?"
             >
-                <p className="text-sm text-amber-900/60 mb-6">
+                <p className="mb-6 text-sm text-amber-900/60">
                     Once your account is deleted, all of its resources and data
                     will also be permanently deleted. Please enter your password
                     to confirm.
                 </p>
 
                 <Form
-                    {...ProfileController.destroy.form()}
+                    {...ProfileController.destroy()}
                     options={{
                         preserveScroll: true,
                     }}
@@ -57,7 +57,7 @@ export function DeleteUser() {
                     {({ resetAndClearErrors, processing, errors }) => (
                         <>
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-amber-900 ml-1">
+                                <label className="ml-1 text-sm font-medium text-amber-900">
                                     Password
                                 </label>
                                 <PasswordInput
@@ -68,7 +68,9 @@ export function DeleteUser() {
                                     autoComplete="current-password"
                                 />
                                 {errors.password && (
-                                    <p className="text-xs text-red-500 ml-1">{errors.password}</p>
+                                    <p className="ml-1 text-xs text-red-500">
+                                        {errors.password}
+                                    </p>
                                 )}
                             </div>
 

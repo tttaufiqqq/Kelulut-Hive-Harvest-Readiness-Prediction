@@ -14,8 +14,9 @@ class DemoHiveSeeder extends Seeder
     {
         $admin = User::where('email', 'admin@buzzyhive.urban-alert.com')->first();
 
-        if (!$admin) {
+        if (! $admin) {
             $this->command->error('Admin user not found. Run DatabaseSeeder first.');
+
             return;
         }
 
@@ -38,17 +39,17 @@ class DemoHiveSeeder extends Seeder
                 ['name' => $data['name']],
                 [
                     'beekeeper_id' => $admin->id,
-                    'site_id'      => $data['site_id'],
-                    'species_id'   => $data['species_id'],
-                    'status'       => 'active',
+                    'site_id' => $data['site_id'],
+                    'species_id' => $data['species_id'],
+                    'status' => 'active',
                 ]
             );
 
             IotNode::firstOrCreate(
                 ['device_id' => $data['node']],
                 [
-                    'hive_id'           => $hive->id,
-                    'device_status'     => 'active',
+                    'hive_id' => $hive->id,
+                    'device_status' => 'active',
                     'installation_date' => now()->subDays(60),
                 ]
             );

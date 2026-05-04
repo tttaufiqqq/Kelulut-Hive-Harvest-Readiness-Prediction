@@ -14,11 +14,11 @@ class HiveFactory extends Factory
     {
         return [
             'beekeeper_id' => User::factory(),
-            'name'         => 'Hive ' . fake()->unique()->word(),
-            'species_id'   => null,
-            'site_id'      => null,
-            'image_path'   => null,
-            'status'       => 'active',
+            'name' => 'Hive '.fake()->unique()->word(),
+            'species_id' => null,
+            'site_id' => null,
+            'image_path' => null,
+            'status' => 'active',
         ];
     }
 }

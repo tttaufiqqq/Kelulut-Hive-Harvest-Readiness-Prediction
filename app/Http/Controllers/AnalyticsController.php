@@ -31,17 +31,17 @@ class AnalyticsController extends Controller
             ->groupByRaw('DATE(predictions.prediction_timestamp)')
             ->orderBy('date')
             ->get()
-            ->map(fn($row) => [
-                'date'      => Carbon::parse($row->date)->format('M d'),
+            ->map(fn ($row) => [
+                'date' => Carbon::parse($row->date)->format('M d'),
                 'hri_score' => round($row->hri_score),
-                'avg_7d'    => $avg7dPct,
+                'avg_7d' => $avg7dPct,
             ]);
 
         // ── Q2: Sensor readings — selected date (default today), grouped by hour
         $sensorDate = $request->date('sensor_date') ?? today();
 
-        $isSqlite   = DB::connection()->getDriverName() === 'sqlite';
-        $hourExpr   = $isSqlite
+        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+        $hourExpr = $isSqlite
             ? "strftime('%H:00', record_timestamp)"
             : 'DATE_FORMAT(record_timestamp, "%H:00")';
 
@@ -59,14 +59,14 @@ class AnalyticsController extends Controller
             ->groupByRaw($hourExpr)
             ->orderBy('time')
             ->get()
-            ->map(fn($r) => [
-                'time'     => $r->time,
-                'temp'     => round($r->temp, 1),
+            ->map(fn ($r) => [
+                'time' => $r->time,
+                'temp' => round($r->temp, 1),
                 'humidity' => round($r->humidity, 1),
-                'mq2'      => round($r->mq2),
-                'mq3'      => round($r->mq3),
-                'mq5'      => round($r->mq5),
-                'mq135'    => round($r->mq135),
+                'mq2' => round($r->mq2),
+                'mq3' => round($r->mq3),
+                'mq5' => round($r->mq5),
+                'mq135' => round($r->mq135),
             ]);
 
         // ── Q3: Latest prediction ─────────────────────────────────────────────
@@ -77,9 +77,9 @@ class AnalyticsController extends Controller
             ->first();
 
         $latestPrediction = $latestPredictionRow ? [
-            'readiness_level'      => $latestPredictionRow->readiness_level,
-            'hri_value'            => (float) $latestPredictionRow->hri_value,
-            'confidence_score'     => (float) $latestPredictionRow->confidence_score,
+            'readiness_level' => $latestPredictionRow->readiness_level,
+            'hri_value' => (float) $latestPredictionRow->hri_value,
+            'confidence_score' => (float) $latestPredictionRow->confidence_score,
             'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->format('d M Y, H:i'),
         ] : null;
 
@@ -88,32 +88,32 @@ class AnalyticsController extends Controller
             ->with(['color', 'flavor'])
             ->orderByDesc('harvest_date')
             ->get()
-            ->map(fn($h) => [
-                'date'   => Carbon::parse($h->harvest_date)->format('M d'),
+            ->map(fn ($h) => [
+                'date' => Carbon::parse($h->harvest_date)->format('M d'),
                 'weight' => (float) $h->weight,
-                'color'  => $h->color?->name,
+                'color' => $h->color?->name,
                 'flavor' => $h->flavor?->name,
             ]);
 
         // ── Q5: Hive summary ──────────────────────────────────────────────────
-        $summary        = $hive->summary;
-        $totalHarvests  = Harvest::where('hive_id', $hive->id)->count();
-        $lastHarvestDate= Harvest::where('hive_id', $hive->id)->max('harvest_date');
+        $summary = $hive->summary;
+        $totalHarvests = Harvest::where('hive_id', $hive->id)->count();
+        $lastHarvestDate = Harvest::where('hive_id', $hive->id)->max('harvest_date');
 
         return Inertia::render('analytics', [
             'hive' => [
-                'id'                     => $hive->id,
-                'name'                   => $hive->name,
+                'id' => $hive->id,
+                'name' => $hive->name,
                 'latest_readiness_level' => $summary?->latest_readiness_level,
-                'avg_hri_pct'            => round(($summary?->avg_hri_value ?? 0) * 100),
-                'avg_hri_7d_pct'         => $avg7dPct,
-                'total_harvests'         => $totalHarvests,
-                'last_harvest_date'      => $lastHarvestDate,
+                'avg_hri_pct' => round(($summary?->avg_hri_value ?? 0) * 100),
+                'avg_hri_7d_pct' => $avg7dPct,
+                'total_harvests' => $totalHarvests,
+                'last_harvest_date' => $lastHarvestDate,
             ],
-            'hriTrend'         => $hriTrend,
-            'sensorReadings'   => $sensorReadings,
+            'hriTrend' => $hriTrend,
+            'sensorReadings' => $sensorReadings,
             'latestPrediction' => $latestPrediction,
-            'harvestHistory'   => $harvestHistory,
+            'harvestHistory' => $harvestHistory,
         ]);
     }
 }

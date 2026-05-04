@@ -21,28 +21,28 @@ class HiveController extends Controller
         $hives = Hive::with(['user', 'species', 'site'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn($hive) => [
-                'id'             => $hive->id,
-                'name'           => $hive->name,
-                'beekeeper_id'   => $hive->beekeeper_id,
+            ->map(fn ($hive) => [
+                'id' => $hive->id,
+                'name' => $hive->name,
+                'beekeeper_id' => $hive->beekeeper_id,
                 'beekeeper_name' => $hive->user?->name,
-                'species'        => $hive->species?->name,
-                'species_id'     => $hive->species_id,
-                'site'           => $hive->site?->name,
-                'site_id'        => $hive->site_id,
-                'status'         => $hive->status,
-                'age_months'     => (int) $hive->created_at->diffInMonths(now()),
-                'image_path'     => $hive->image_path,
+                'species' => $hive->species?->name,
+                'species_id' => $hive->species_id,
+                'site' => $hive->site?->name,
+                'site_id' => $hive->site_id,
+                'status' => $hive->status,
+                'age_months' => (int) $hive->created_at->diffInMonths(now()),
+                'image_path' => $hive->image_path,
             ]);
 
         return Inertia::render('admin/hives/index', [
-            'hives'        => $hives->values(),
-            'beekeepers'   => User::role('beekeeper')->orderBy('name')->get(['id', 'name']),
+            'hives' => $hives->values(),
+            'beekeepers' => User::role('beekeeper')->orderBy('name')->get(['id', 'name']),
             'species_list' => MasterSpecies::orderBy('name')->get(['id', 'name']),
-            'sites_list'   => MasterSite::orderBy('name')->get(['id', 'name']),
-            'stats'        => [
-                'total'    => $hives->count(),
-                'active'   => $hives->where('status', 'active')->count(),
+            'sites_list' => MasterSite::orderBy('name')->get(['id', 'name']),
+            'stats' => [
+                'total' => $hives->count(),
+                'active' => $hives->where('status', 'active')->count(),
                 'inactive' => $hives->where('status', 'inactive')->count(),
             ],
         ]);

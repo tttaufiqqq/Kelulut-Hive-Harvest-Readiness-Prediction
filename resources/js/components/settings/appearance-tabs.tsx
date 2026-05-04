@@ -32,7 +32,7 @@ export function AppearanceToggleTab({
                     className={cn(
                         'flex items-center rounded-xl px-3.5 py-1.5 transition-colors',
                         appearance === value
-                            ? 'bg-white shadow-sm text-amber-900 dark:bg-amber-800 dark:text-amber-100'
+                            ? 'bg-white text-amber-900 shadow-sm dark:bg-amber-800 dark:text-amber-100'
                             : 'text-amber-900/50 hover:bg-yellow-200/60 dark:text-amber-200/50 dark:hover:bg-amber-800/60',
                     )}
                 >

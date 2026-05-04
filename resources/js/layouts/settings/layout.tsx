@@ -30,16 +30,17 @@ export function SettingsLayout({ children }: PropsWithChildren) {
     }
 
     return (
-        <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
-
+        <div className="mx-auto max-w-6xl space-y-8 p-6 md:p-10">
             {/* Page header — matches dashboard pattern */}
-            <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Settings' }]} />
+            <Breadcrumbs
+                items={[{ label: 'Home', href: '/' }, { label: 'Settings' }]}
+            />
 
             <div className="flex flex-col lg:flex-row lg:gap-10">
-                <aside className="w-full lg:w-44 mb-6 lg:mb-0">
+                <aside className="mb-6 w-full lg:mb-0 lg:w-44">
                     {/* Mobile: horizontal tabs */}
                     <nav
-                        className="flex lg:hidden overflow-x-auto gap-1 bg-yellow-100/50 rounded-2xl p-1.5"
+                        className="flex gap-1 overflow-x-auto rounded-2xl bg-yellow-100/50 p-1.5 lg:hidden"
                         aria-label="Settings"
                     >
                         {sidebarNavItems.map((item, index) => (
@@ -47,10 +48,10 @@ export function SettingsLayout({ children }: PropsWithChildren) {
                                 key={`${toUrl(item.href)}-${index}`}
                                 href={item.href}
                                 className={cn(
-                                    'flex-shrink-0 px-4 py-2 text-sm rounded-xl transition-all',
+                                    'flex-shrink-0 rounded-xl px-4 py-2 text-sm transition-all',
                                     isCurrentOrParentUrl(item.href)
-                                        ? 'bg-white shadow-sm font-semibold text-amber-900'
-                                        : 'text-amber-900/60 hover:bg-yellow-200/50'
+                                        ? 'bg-white font-semibold text-amber-900 shadow-sm'
+                                        : 'text-amber-900/60 hover:bg-yellow-200/50',
                                 )}
                             >
                                 {item.title}
@@ -60,7 +61,7 @@ export function SettingsLayout({ children }: PropsWithChildren) {
 
                     {/* Desktop: vertical tabs */}
                     <nav
-                        className="hidden lg:flex flex-col gap-1 bg-yellow-100/50 rounded-2xl p-1.5"
+                        className="hidden flex-col gap-1 rounded-2xl bg-yellow-100/50 p-1.5 lg:flex"
                         aria-label="Settings"
                     >
                         {sidebarNavItems.map((item, index) => (
@@ -68,10 +69,10 @@ export function SettingsLayout({ children }: PropsWithChildren) {
                                 key={`${toUrl(item.href)}-${index}`}
                                 href={item.href}
                                 className={cn(
-                                    'px-4 py-2 text-sm rounded-xl transition-all',
+                                    'rounded-xl px-4 py-2 text-sm transition-all',
                                     isCurrentOrParentUrl(item.href)
-                                        ? 'bg-white shadow-sm font-semibold text-amber-900'
-                                        : 'text-amber-900/60 hover:bg-yellow-200/50'
+                                        ? 'bg-white font-semibold text-amber-900 shadow-sm'
+                                        : 'text-amber-900/60 hover:bg-yellow-200/50',
                                 )}
                             >
                                 {item.title}
@@ -86,9 +87,7 @@ export function SettingsLayout({ children }: PropsWithChildren) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
                 >
-                    <section className="max-w-xl space-y-8">
-                        {children}
-                    </section>
+                    <section className="max-w-xl space-y-8">{children}</section>
                 </motion.div>
             </div>
         </div>

@@ -6,10 +6,11 @@ use App\Models\IotNode;
 use App\Models\Prediction;
 use App\Models\SensorLog;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'beekeeper', 'guard_name' => 'web']);
@@ -24,23 +25,24 @@ function sensorStack(): array
     $user->assignRole('beekeeper');
     $hive = Hive::create(['beekeeper_id' => $user->id, 'name' => 'Test Hive']);
     IotNode::create([
-        'hive_id'       => $hive->id,
-        'device_id'     => 'NODE-001',
+        'hive_id' => $hive->id,
+        'device_id' => 'NODE-001',
         'device_status' => 'active',
     ]);
+
     return compact('user', 'hive');
 }
 
 function sensorPayload(int $hiveId): array
 {
     return [
-        'device_id'   => 'NODE-001',
-        'hive_id'     => $hiveId,
-        'temp'        => 33.5,
-        'humidity'    => 70.0,
-        'mq2_value'   => 250,
-        'mq3_value'   => 200,
-        'mq5_value'   => 180,
+        'device_id' => 'NODE-001',
+        'hive_id' => $hiveId,
+        'temp' => 33.5,
+        'humidity' => 70.0,
+        'mq2_value' => 250,
+        'mq3_value' => 200,
+        'mq5_value' => 180,
         'mq135_value' => 220,
     ];
 }
@@ -48,8 +50,8 @@ function sensorPayload(int $hiveId): array
 function fakeMlOk(): void
 {
     Http::fake(['*/predict' => Http::response([
-        'readiness_level'  => 'not_ready',
-        'hri_value'        => 0.25,
+        'readiness_level' => 'not_ready',
+        'hri_value' => 0.25,
         'confidence_score' => 0.80,
     ], 200)]);
 }
@@ -164,19 +166,19 @@ test('threshold records are written for matching sensor readings', function () {
     ['hive' => $hive] = sensorStack();
 
     // Seed a threshold that matches temp=33.5
-    \DB::table('master_sensor_thresholds')->insert([
-        'sensor_type'        => 'temp',
-        'min_value'          => 32.0,
-        'max_value'          => 37.0,
-        'level'              => 'normal',
-        'meaning'            => 'Optimal hive temperature',
+    DB::table('master_sensor_thresholds')->insert([
+        'sensor_type' => 'temp',
+        'min_value' => 32.0,
+        'max_value' => 37.0,
+        'level' => 'normal',
+        'meaning' => 'Optimal hive temperature',
         'recommended_action' => 'No action needed',
-        'created_at'         => now(),
-        'updated_at'         => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
     ]);
 
     $this->postJson('/api/sensor-data', sensorPayload($hive->id), ['X-API-Key' => 'test-api-key']);
 
     $logId = SensorLog::first()->id;
-    expect(\DB::table('sensor_log_thresholds')->where('sensor_log_id', $logId)->count())->toBe(1);
+    expect(DB::table('sensor_log_thresholds')->where('sensor_log_id', $logId)->count())->toBe(1);
 });

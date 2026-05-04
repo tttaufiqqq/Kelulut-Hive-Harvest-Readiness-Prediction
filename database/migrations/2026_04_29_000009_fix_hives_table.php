@@ -10,21 +10,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('hives', function (Blueprint $table) {
-            if (!Schema::hasColumn('hives', 'beekeeper_id')) {
+            if (! Schema::hasColumn('hives', 'beekeeper_id')) {
                 $table->unsignedBigInteger('beekeeper_id')->nullable()->after('id');
             }
-            if (!Schema::hasColumn('hives', 'site_id')) {
+            if (! Schema::hasColumn('hives', 'site_id')) {
                 $table->foreignId('site_id')->nullable()->after('beekeeper_id')
-                      ->constrained('master_sites')->nullOnDelete();
+                    ->constrained('master_sites')->nullOnDelete();
             }
-            if (!Schema::hasColumn('hives', 'species_id')) {
+            if (! Schema::hasColumn('hives', 'species_id')) {
                 $table->foreignId('species_id')->nullable()->after('site_id')
-                      ->constrained('master_species')->nullOnDelete();
+                    ->constrained('master_species')->nullOnDelete();
             }
-            if (!Schema::hasColumn('hives', 'image_path')) {
+            if (! Schema::hasColumn('hives', 'image_path')) {
                 $table->string('image_path')->nullable()->after('name');
             }
-            if (!Schema::hasColumn('hives', 'status')) {
+            if (! Schema::hasColumn('hives', 'status')) {
                 $table->enum('status', ['active', 'inactive'])->default('active')->after('image_path');
             }
         });
@@ -37,7 +37,7 @@ return new class extends Migration
             $table->unsignedBigInteger('beekeeper_id')->nullable(false)->change();
 
             $fks = collect(Schema::getForeignKeys('hives'))->pluck('name');
-            if (!$fks->contains('hives_beekeeper_id_foreign')) {
+            if (! $fks->contains('hives_beekeeper_id_foreign')) {
                 $table->foreign('beekeeper_id')->references('id')->on('users')->cascadeOnDelete();
             }
             if ($fks->contains('hives_user_id_foreign')) {
@@ -46,8 +46,8 @@ return new class extends Migration
 
             $cols = Schema::getColumnListing('hives');
             $toDrop = array_intersect($cols, ['user_id', 'location', 'gps_lat', 'gps_lng',
-                                              'colony_strength', 'queen_status', 'brood_status']);
-            if (!empty($toDrop)) {
+                'colony_strength', 'queen_status', 'brood_status']);
+            if (! empty($toDrop)) {
                 $table->dropColumn($toDrop);
             }
         });

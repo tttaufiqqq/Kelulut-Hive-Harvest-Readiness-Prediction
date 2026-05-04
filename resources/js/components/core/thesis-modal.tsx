@@ -37,12 +37,12 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 24 }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="relative bg-[#FFFBEB] w-full max-w-5xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col"
+                        className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-[#FFFBEB] shadow-2xl"
                         style={{ height: 'min(90vh, 860px)' }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Top accent bar */}
-                        <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-400" />
+                        <div className="absolute top-0 left-0 h-1.5 w-full bg-yellow-400" />
 
                         {/* Header */}
                         <div className="shrink-0 border-b border-yellow-100 px-5 pt-6 pb-4 sm:px-6 sm:pt-7">
@@ -52,7 +52,7 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                                         <FileText className="h-5 w-5 text-yellow-700" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h2 className="text-base leading-tight font-black uppercase tracking-tight text-amber-950 sm:text-lg">
+                                        <h2 className="text-base leading-tight font-black tracking-tight text-amber-950 uppercase sm:text-lg">
                                             Research Thesis
                                         </h2>
                                         <p className="mt-1 text-xs leading-relaxed font-medium text-amber-900/50 sm:text-sm">
@@ -87,26 +87,27 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                         >
                             <iframe
                                 src={`${thesisUrl}#toolbar=0&navpanes=0`}
-                                className="w-full h-full rounded-2xl border border-yellow-100"
+                                className="h-full w-full rounded-2xl border border-yellow-100"
                                 title="BuzzyHive 2.0 Thesis"
                             />
                         </ScrollArea>
 
                         {/* Mobile fallback — open natively */}
-                        <div className="md:hidden flex-1 flex flex-col items-center justify-center gap-5 p-8">
-                            <div className="bg-yellow-100 p-5 rounded-3xl">
-                                <FileText className="w-10 h-10 text-yellow-600" />
+                        <div className="flex flex-1 flex-col items-center justify-center gap-5 p-8 md:hidden">
+                            <div className="rounded-3xl bg-yellow-100 p-5">
+                                <FileText className="h-10 w-10 text-yellow-600" />
                             </div>
-                            <p className="text-sm text-amber-900/50 text-center font-medium">
-                                PDF preview is not supported on mobile. Open it in your browser's native viewer instead.
+                            <p className="text-center text-sm font-medium text-amber-900/50">
+                                PDF preview is not supported on mobile. Open it
+                                in your browser's native viewer instead.
                             </p>
                             <a
                                 href={thesisUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-yellow-950 font-bold text-sm rounded-full transition-colors"
+                                className="flex items-center gap-2 rounded-full bg-yellow-400 px-6 py-3 text-sm font-bold text-yellow-950 transition-colors hover:bg-yellow-500"
                             >
-                                <ExternalLink className="w-4 h-4" />
+                                <ExternalLink className="h-4 w-4" />
                                 Open PDF
                             </a>
                         </div>

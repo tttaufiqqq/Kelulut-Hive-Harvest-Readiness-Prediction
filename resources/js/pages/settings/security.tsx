@@ -56,7 +56,7 @@ export default function Security({
                         />
 
                         <Form
-                            {...SecurityController.update.form()}
+                            {...SecurityController.update()}
                             options={{
                                 preserveScroll: true,
                             }}
@@ -80,7 +80,7 @@ export default function Security({
                             {({ errors, processing, recentlySuccessful }) => (
                                 <>
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-amber-900 ml-1">
+                                        <label className="ml-1 text-sm font-medium text-amber-900">
                                             Current password
                                         </label>
                                         <PasswordInput
@@ -91,12 +91,14 @@ export default function Security({
                                             placeholder="Current password"
                                         />
                                         {errors.current_password && (
-                                            <p className="text-xs text-red-500 ml-1">{errors.current_password}</p>
+                                            <p className="ml-1 text-xs text-red-500">
+                                                {errors.current_password}
+                                            </p>
                                         )}
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-amber-900 ml-1">
+                                        <label className="ml-1 text-sm font-medium text-amber-900">
                                             New password
                                         </label>
                                         <PasswordInput
@@ -107,12 +109,14 @@ export default function Security({
                                             placeholder="New password"
                                         />
                                         {errors.password && (
-                                            <p className="text-xs text-red-500 ml-1">{errors.password}</p>
+                                            <p className="ml-1 text-xs text-red-500">
+                                                {errors.password}
+                                            </p>
                                         )}
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-amber-900 ml-1">
+                                        <label className="ml-1 text-sm font-medium text-amber-900">
                                             Confirm password
                                         </label>
                                         <PasswordInput
@@ -122,7 +126,9 @@ export default function Security({
                                             placeholder="Confirm password"
                                         />
                                         {errors.password_confirmation && (
-                                            <p className="text-xs text-red-500 ml-1">{errors.password_confirmation}</p>
+                                            <p className="ml-1 text-xs text-red-500">
+                                                {errors.password_confirmation}
+                                            </p>
                                         )}
                                     </div>
 
@@ -141,7 +147,9 @@ export default function Security({
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
                                                     exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.3 }}
+                                                    transition={{
+                                                        duration: 0.3,
+                                                    }}
                                                     className="text-sm text-amber-600/60"
                                                 >
                                                     Saved
@@ -166,14 +174,14 @@ export default function Security({
                             {twoFactorEnabled ? (
                                 <div className="flex flex-col items-start justify-start space-y-4">
                                     <p className="text-sm text-amber-900/50">
-                                        You will be prompted for a secure, random
-                                        pin during login, which you can retrieve
-                                        from the TOTP-supported application on your
-                                        phone.
+                                        You will be prompted for a secure,
+                                        random pin during login, which you can
+                                        retrieve from the TOTP-supported
+                                        application on your phone.
                                     </p>
 
                                     <div className="relative inline">
-                                        <Form {...disable.form()}>
+                                        <Form {...disable()}>
                                             {({ processing }) => (
                                                 <Button
                                                     variant="destructive"
@@ -195,10 +203,11 @@ export default function Security({
                             ) : (
                                 <div className="flex flex-col items-start justify-start space-y-4">
                                     <p className="text-sm text-amber-900/50">
-                                        When you enable two-factor authentication,
-                                        you will be prompted for a secure pin during
-                                        login. This pin can be retrieved from a
-                                        TOTP-supported application on your phone.
+                                        When you enable two-factor
+                                        authentication, you will be prompted for
+                                        a secure pin during login. This pin can
+                                        be retrieved from a TOTP-supported
+                                        application on your phone.
                                     </p>
 
                                     <div>
@@ -214,7 +223,7 @@ export default function Security({
                                             </Button>
                                         ) : (
                                             <Form
-                                                {...enable.form()}
+                                                {...enable()}
                                                 onSuccess={() =>
                                                     setShowSetupModal(true)
                                                 }

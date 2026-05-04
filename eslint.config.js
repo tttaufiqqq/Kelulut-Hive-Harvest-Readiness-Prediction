@@ -110,6 +110,7 @@ export default [
             'node_modules',
             'public',
             'bootstrap/ssr',
+            'ml/.venv/**',
             'tailwind.config.js',
             'vite.config.ts',
             'resources/js/actions/**',

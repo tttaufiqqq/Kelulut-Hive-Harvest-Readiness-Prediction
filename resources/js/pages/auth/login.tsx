@@ -1,10 +1,16 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowRight, Lock, Mail } from 'lucide-react';
-import { BeeIcon as Bee } from '@/components/core/bee-icon';
 import React from 'react';
+import { BeeIcon as Bee } from '@/components/core/bee-icon';
 import { InputError } from '@/components/core/input-error';
 
-export default function Login({ status, canResetPassword }: { status?: string; canResetPassword: boolean }) {
+export default function Login({
+    status,
+    canResetPassword,
+}: {
+    status?: string;
+    canResetPassword: boolean;
+}) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -19,39 +25,42 @@ export default function Login({ status, canResetPassword }: { status?: string; c
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFBEB] relative flex overflow-hidden">
+        <div className="relative flex min-h-screen overflow-hidden bg-[#FFFBEB]">
             <Head title="Log in — BuzzyHive2.0" />
 
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-amber-950 -skew-x-12 translate-x-1/4 z-0 hidden lg:block" />
+            <div className="absolute top-0 right-0 z-0 hidden h-full w-1/2 translate-x-1/4 -skew-x-12 bg-amber-950 lg:block" />
 
             {/* Left Panel - Form */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 py-12 relative z-10">
+            <div className="relative z-10 flex w-full flex-col justify-center px-8 py-12 md:px-16 lg:w-1/2">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 mb-16 group w-fit">
-                    <div className="bg-yellow-400 p-2 rounded-xl group-hover:bg-yellow-500 transition-colors">
-                        <Bee className="w-5 h-5 text-yellow-950" />
+                <Link
+                    href="/"
+                    className="group mb-16 flex w-fit items-center gap-2"
+                >
+                    <div className="rounded-xl bg-yellow-400 p-2 transition-colors group-hover:bg-yellow-500">
+                        <Bee className="h-5 w-5 text-yellow-950" />
                     </div>
-                    <span className="text-lg font-black tracking-tighter uppercase text-amber-950">
+                    <span className="text-lg font-black tracking-tighter text-amber-950 uppercase">
                         BuzzyHive<span className="text-yellow-500">2.0</span>
                     </span>
                 </Link>
 
                 <div>
                     <div className="mb-8">
-                        <span className="bg-yellow-400 text-yellow-950 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                        <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold tracking-widest text-yellow-950 uppercase">
                             Welcome Back
                         </span>
-                        <h1 className="text-5xl font-black uppercase tracking-tighter text-amber-950 mt-4 leading-none">
+                        <h1 className="mt-4 text-5xl leading-none font-black tracking-tighter text-amber-950 uppercase">
                             Sign <br />
                             <span className="text-yellow-500">In.</span>
                         </h1>
-                        <p className="text-amber-800/60 mt-3 font-medium">
+                        <p className="mt-3 font-medium text-amber-800/60">
                             Access your apiary dashboard and hive insights.
                         </p>
                     </div>
 
                     {status && (
-                        <div className="mb-6 text-sm font-medium text-emerald-700 bg-emerald-50 px-4 py-3 rounded-2xl">
+                        <div className="mb-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                             {status}
                         </div>
                     )}
@@ -59,20 +68,22 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                     <form onSubmit={submit} className="space-y-5">
                         {/* Email */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 Email
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400" />
+                                <Mail className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-amber-400" />
                                 <input
                                     id="email"
                                     type="email"
                                     value={data.email}
                                     autoComplete="username"
                                     autoFocus
-                                    onChange={(e) => setData('email', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('email', e.target.value)
+                                    }
                                     placeholder="you@example.com"
-                                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-amber-100 bg-white text-amber-950 placeholder:text-amber-300 focus:outline-none focus:border-yellow-400 transition-colors font-medium"
+                                    className="w-full rounded-2xl border-2 border-amber-100 bg-white py-3.5 pr-4 pl-11 font-medium text-amber-950 transition-colors placeholder:text-amber-300 focus:border-yellow-400 focus:outline-none"
                                 />
                             </div>
                             <InputError message={errors.email} />
@@ -80,19 +91,21 @@ export default function Login({ status, canResetPassword }: { status?: string; c
 
                         {/* Password */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-amber-900/60">
+                            <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                 Password
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400" />
+                                <Lock className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-amber-400" />
                                 <input
                                     id="password"
                                     type="password"
                                     value={data.password}
                                     autoComplete="current-password"
-                                    onChange={(e) => setData('password', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('password', e.target.value)
+                                    }
                                     placeholder="••••••••"
-                                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-amber-100 bg-white text-amber-950 placeholder:text-amber-300 focus:outline-none focus:border-yellow-400 transition-colors font-medium"
+                                    className="w-full rounded-2xl border-2 border-amber-100 bg-white py-3.5 pr-4 pl-11 font-medium text-amber-950 transition-colors placeholder:text-amber-300 focus:border-yellow-400 focus:outline-none"
                                 />
                             </div>
                             <InputError message={errors.password} />
@@ -100,20 +113,24 @@ export default function Login({ status, canResetPassword }: { status?: string; c
 
                         {/* Remember & Forgot */}
                         <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label className="flex cursor-pointer items-center gap-2">
                                 <input
                                     type="checkbox"
                                     name="remember"
                                     checked={data.remember}
-                                    onChange={(e) => setData('remember', e.target.checked)}
+                                    onChange={(e) =>
+                                        setData('remember', e.target.checked)
+                                    }
                                     className="rounded border-amber-300 text-yellow-500 focus:ring-yellow-400"
                                 />
-                                <span className="text-sm font-medium text-amber-800">Remember me</span>
+                                <span className="text-sm font-medium text-amber-800">
+                                    Remember me
+                                </span>
                             </label>
                             {canResetPassword && (
                                 <Link
                                     href="/forgot-password"
-                                    className="text-sm font-bold text-yellow-600 hover:text-yellow-700 underline underline-offset-2"
+                                    className="text-sm font-bold text-yellow-600 underline underline-offset-2 hover:text-yellow-700"
                                 >
                                     Forgot password?
                                 </Link>
@@ -124,27 +141,28 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 text-yellow-950 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 group transition-colors text-lg"
+                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-yellow-400 py-4 text-lg font-bold text-yellow-950 transition-colors hover:bg-yellow-500 disabled:opacity-50"
                         >
                             {processing ? 'Signing in...' : 'Sign In'}
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                         </button>
                     </form>
                 </div>
             </div>
 
             {/* Right Panel - Decorative */}
-            <div className="hidden lg:flex w-1/2 relative z-10 items-center justify-center">
-                <div className="text-center px-12">
-                    <div className="inline-block bg-yellow-400 p-8 rounded-[2rem] shadow-2xl mb-8 rotate-6">
-                        <Bee className="w-16 h-16 text-yellow-950" />
+            <div className="relative z-10 hidden w-1/2 items-center justify-center lg:flex">
+                <div className="px-12 text-center">
+                    <div className="mb-8 inline-block rotate-6 rounded-[2rem] bg-yellow-400 p-8 shadow-2xl">
+                        <Bee className="h-16 w-16 text-yellow-950" />
                     </div>
-                    <h2 className="text-4xl font-black uppercase tracking-tighter text-white leading-none mb-4">
+                    <h2 className="mb-4 text-4xl leading-none font-black tracking-tighter text-white uppercase">
                         Harvest <br />
                         <span className="text-yellow-400">Intelligence.</span>
                     </h2>
-                    <p className="text-amber-200/60 font-medium max-w-xs mx-auto">
-                        IoT-integrated harvest readiness prediction for stingless bee farming.
+                    <p className="mx-auto max-w-xs font-medium text-amber-200/60">
+                        IoT-integrated harvest readiness prediction for
+                        stingless bee farming.
                     </p>
                 </div>
             </div>

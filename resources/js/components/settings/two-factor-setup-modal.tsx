@@ -90,7 +90,11 @@ function TwoFactorSetupStep({
                     </div>
 
                     <div className="flex w-full space-x-5">
-                        <Button variant="primary" className="w-full" onClick={onNextStep}>
+                        <Button
+                            variant="primary"
+                            className="w-full"
+                            onClick={onNextStep}
+                        >
                             {buttonText}
                         </Button>
                     </div>
@@ -114,11 +118,11 @@ function TwoFactorSetupStep({
                                         type="text"
                                         readOnly
                                         value={manualSetupKey}
-                                        className="h-full w-full bg-yellow-50/50 p-3 text-amber-900 outline-none text-sm"
+                                        className="h-full w-full bg-yellow-50/50 p-3 text-sm text-amber-900 outline-none"
                                     />
                                     <button
                                         onClick={() => copy(manualSetupKey)}
-                                        className="border-l border-yellow-200 px-3 hover:bg-yellow-100 transition-colors"
+                                        className="border-l border-yellow-200 px-3 transition-colors hover:bg-yellow-100"
                                     >
                                         <IconComponent className="w-4 text-amber-900/60" />
                                     </button>
@@ -150,7 +154,7 @@ function TwoFactorVerificationStep({
 
     return (
         <Form
-            {...confirm.form()}
+            {...confirm()}
             onSuccess={() => onClose()}
             resetOnError
             resetOnSuccess
@@ -314,7 +318,7 @@ export function TwoFactorSetupModal({
         <Modal isOpen={isOpen} onClose={handleClose} title={modalConfig.title}>
             <div className="flex flex-col items-center space-y-5">
                 <GridScanIcon />
-                <p className="text-sm text-amber-900/60 text-center -mt-2">
+                <p className="-mt-2 text-center text-sm text-amber-900/60">
                     {modalConfig.description}
                 </p>
 

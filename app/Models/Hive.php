@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Hive extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'beekeeper_id', 'name', 'site_id', 'species_id',
         'image_path', 'status',

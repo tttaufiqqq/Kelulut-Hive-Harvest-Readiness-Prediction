@@ -1,17 +1,24 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import {
     ResponsiveContainer,
-    AreaChart, Area,
-    BarChart, Bar,
-    LineChart, Line,
-    XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+    AreaChart,
+    Area,
+    BarChart,
+    Bar,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
 } from 'recharts';
 import { Card } from '@/components/core/card';
+import { DatePicker } from '@/components/core/date-picker';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { SelectField } from '@/components/core/select-field';
-import { DatePicker } from '@/components/core/date-picker';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -67,17 +74,17 @@ interface Props {
 // ─── Readiness maps ───────────────────────────────────────────────────────────
 
 const READINESS_LABELS: Record<string, string> = {
-    not_ready:    'Not Ready',
-    approaching:  'Approaching',
+    not_ready: 'Not Ready',
+    approaching: 'Approaching',
     nearly_ready: 'Nearly Ready',
-    ready:        'Ready to Harvest',
+    ready: 'Ready to Harvest',
 };
 
 const READINESS_COLORS: Record<string, string> = {
-    not_ready:    '#dc2626',
-    approaching:  '#d97706',
+    not_ready: '#dc2626',
+    approaching: '#d97706',
     nearly_ready: '#ca8a04',
-    ready:        '#16a34a',
+    ready: '#16a34a',
 };
 
 const TOOLTIP_STYLE = {
@@ -97,20 +104,29 @@ function HriScoreCard({ hive }: { hive: HiveData }) {
     const label = READINESS_LABELS[level] ?? level;
 
     return (
-        <Card className="h-full flex flex-col items-center justify-center py-8 gap-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/50">HRI Score</p>
-            <p className="text-7xl font-black tracking-tighter" style={{ color }}>
+        <Card className="flex h-full flex-col items-center justify-center gap-2 py-8">
+            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                HRI Score
+            </p>
+            <p
+                className="text-7xl font-black tracking-tighter"
+                style={{ color }}
+            >
                 {hive.avg_hri_pct}%
             </p>
             <span
-                className="px-4 py-1 rounded-full text-sm font-bold text-white"
+                className="rounded-full px-4 py-1 text-sm font-bold text-white"
                 style={{ backgroundColor: color }}
             >
                 {label}
             </span>
             <div className="mt-4 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">7-day avg</p>
-                <p className="text-xl font-bold text-amber-900">{hive.avg_hri_7d_pct}%</p>
+                <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                    7-day avg
+                </p>
+                <p className="text-xl font-bold text-amber-900">
+                    {hive.avg_hri_7d_pct}%
+                </p>
             </div>
         </Card>
     );
@@ -125,42 +141,98 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
 
     return (
         <Card className="h-full">
-            <p className="font-bold text-amber-900 mb-4">HRI Score — 30 Day Trend</p>
+            <p className="mb-4 font-bold text-amber-900">
+                HRI Score — 30 Day Trend
+            </p>
             <div className="w-full">
-                {mounted && <ResponsiveContainer width="100%" height={220}>
-                    <AreaChart data={data}>
-                        <defs>
-                            <linearGradient id="hriGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false}
-                            tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} dy={8} />
-                        <YAxis domain={[0, 100]} axisLine={false} tickLine={false}
-                            tickFormatter={(v) => `${v}%`}
-                            tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} />
-                        <Tooltip contentStyle={TOOLTIP_STYLE} />
-                        <Legend wrapperStyle={{ fontSize: 11 }} />
-                        <Area type="monotone" dataKey="hri_score" name="HRI Score"
-                            stroke="#F59E0B" strokeWidth={3} fill="url(#hriGrad)" />
-                        <Line type="monotone" dataKey="avg_7d" name="7d Avg"
-                            stroke="#92400E" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
-                    </AreaChart>
-                </ResponsiveContainer>}
+                {mounted && (
+                    <ResponsiveContainer width="100%" height={220}>
+                        <AreaChart data={data}>
+                            <defs>
+                                <linearGradient
+                                    id="hriGrad"
+                                    x1="0"
+                                    y1="0"
+                                    x2="0"
+                                    y2="1"
+                                >
+                                    <stop
+                                        offset="5%"
+                                        stopColor="#F59E0B"
+                                        stopOpacity={0.3}
+                                    />
+                                    <stop
+                                        offset="95%"
+                                        stopColor="#F59E0B"
+                                        stopOpacity={0}
+                                    />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                vertical={false}
+                                stroke="#FEF3C7"
+                            />
+                            <XAxis
+                                dataKey="date"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                }}
+                                dy={8}
+                            />
+                            <YAxis
+                                domain={[0, 100]}
+                                axisLine={false}
+                                tickLine={false}
+                                tickFormatter={(v) => `${v}%`}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                }}
+                            />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Area
+                                type="monotone"
+                                dataKey="hri_score"
+                                name="HRI Score"
+                                stroke="#F59E0B"
+                                strokeWidth={3}
+                                fill="url(#hriGrad)"
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="avg_7d"
+                                name="7d Avg"
+                                stroke="#92400E"
+                                strokeWidth={1.5}
+                                strokeDasharray="4 2"
+                                dot={false}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                )}
             </div>
         </Card>
     );
 }
 
 const SENSOR_GROUP_OPTIONS = [
-    { value: 'all',         label: 'All Sensors' },
+    { value: 'all', label: 'All Sensors' },
     { value: 'environment', label: 'Environmental (Temp + Humidity)' },
-    { value: 'gas',         label: 'Gas Sensors (MQ2 – MQ135)' },
+    { value: 'gas', label: 'Gas Sensors (MQ2 – MQ135)' },
 ];
 
-function SensorChart({ data, selectedDate, onDateChange }: {
+function SensorChart({
+    data,
+    selectedDate,
+    onDateChange,
+}: {
     data: SensorReading[];
     selectedDate: string;
     onDateChange: (date: string | null) => void;
@@ -179,10 +251,14 @@ function SensorChart({ data, selectedDate, onDateChange }: {
 
     return (
         <Card>
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <p className="font-bold text-amber-900">Sensor Readings</p>
                 <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end">
-                    <DatePicker value={selectedDate} onChange={onDateChange} defaultValue={todayYMD} />
+                    <DatePicker
+                        value={selectedDate}
+                        onChange={onDateChange}
+                        defaultValue={todayYMD}
+                    />
                     <div className="min-w-0 sm:w-[190px]">
                         <SelectField
                             value={group}
@@ -193,70 +269,165 @@ function SensorChart({ data, selectedDate, onDateChange }: {
                 </div>
             </div>
             <div className="w-full">
-                {mounted && <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
-                        <XAxis dataKey="time" axisLine={false} tickLine={false}
-                            tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} dy={8} />
-                        <YAxis axisLine={false} tickLine={false}
-                            tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} />
-                        <Tooltip contentStyle={TOOLTIP_STYLE} />
-                        <Legend wrapperStyle={{ fontSize: 11 }} />
-                        {showEnv && <Line type="monotone" dataKey="temp"     name="Temp (°C)"    stroke="#ef4444" strokeWidth={2} dot={false} />}
-                        {showEnv && <Line type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={2} dot={false} />}
-                        {showGas && <Line type="monotone" dataKey="mq2"      name="MQ2 ADC"      stroke="#8b5cf6" strokeWidth={2} dot={false} />}
-                        {showGas && <Line type="monotone" dataKey="mq3"      name="MQ3 ADC"      stroke="#f97316" strokeWidth={2} dot={false} />}
-                        {showGas && <Line type="monotone" dataKey="mq5"      name="MQ5 ADC"      stroke="#10b981" strokeWidth={2} dot={false} />}
-                        {showGas && <Line type="monotone" dataKey="mq135"    name="MQ135 ADC"    stroke="#f59e0b" strokeWidth={2} dot={false} />}
-                    </LineChart>
-                </ResponsiveContainer>}
+                {mounted && (
+                    <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={data}>
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                vertical={false}
+                                stroke="#FEF3C7"
+                            />
+                            <XAxis
+                                dataKey="time"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                }}
+                                dy={8}
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                }}
+                            />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            {showEnv && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="temp"
+                                    name="Temp (°C)"
+                                    stroke="#ef4444"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            )}
+                            {showEnv && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="humidity"
+                                    name="Humidity (%)"
+                                    stroke="#3b82f6"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            )}
+                            {showGas && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="mq2"
+                                    name="MQ2 ADC"
+                                    stroke="#8b5cf6"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            )}
+                            {showGas && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="mq3"
+                                    name="MQ3 ADC"
+                                    stroke="#f97316"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            )}
+                            {showGas && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="mq5"
+                                    name="MQ5 ADC"
+                                    stroke="#10b981"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            )}
+                            {showGas && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="mq135"
+                                    name="MQ135 ADC"
+                                    stroke="#f59e0b"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            )}
+                        </LineChart>
+                    </ResponsiveContainer>
+                )}
             </div>
         </Card>
     );
 }
 
-function LatestPredictionCard({ prediction }: { prediction: LatestPrediction | null }) {
+function LatestPredictionCard({
+    prediction,
+}: {
+    prediction: LatestPrediction | null;
+}) {
     if (!prediction) {
         return (
-            <Card className="flex flex-col items-center justify-center py-8 gap-2">
-                <p className="font-bold text-amber-900 mb-2">Latest Prediction</p>
-                <p className="text-amber-700/60 text-sm">No predictions yet</p>
+            <Card className="flex flex-col items-center justify-center gap-2 py-8">
+                <p className="mb-2 font-bold text-amber-900">
+                    Latest Prediction
+                </p>
+                <p className="text-sm text-amber-700/60">No predictions yet</p>
             </Card>
         );
     }
 
     const color = READINESS_COLORS[prediction.readiness_level] ?? '#d97706';
-    const label = READINESS_LABELS[prediction.readiness_level] ?? prediction.readiness_level;
+    const label =
+        READINESS_LABELS[prediction.readiness_level] ??
+        prediction.readiness_level;
     const confidencePct = Math.round(prediction.confidence_score * 100);
 
     return (
         <Card className="flex flex-col gap-4 py-6">
             <p className="font-bold text-amber-900">Latest Prediction</p>
             <span
-                className="self-start px-4 py-1 rounded-full text-sm font-bold text-white"
+                className="self-start rounded-full px-4 py-1 text-sm font-bold text-white"
                 style={{ backgroundColor: color }}
             >
                 {label}
             </span>
             <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40 mb-1">
+                <p className="mb-1 text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
                     Confidence — {confidencePct}%
                 </p>
-                <div className="w-full h-3 bg-amber-100 rounded-full overflow-hidden">
+                <div className="h-3 w-full overflow-hidden rounded-full bg-amber-100">
                     <div
                         className="h-full rounded-full"
-                        style={{ width: `${confidencePct}%`, backgroundColor: color }}
+                        style={{
+                            width: `${confidencePct}%`,
+                            backgroundColor: color,
+                        }}
                     />
                 </div>
             </div>
             <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">HRI Value</p>
-                    <p className="text-xl font-bold text-amber-900">{Math.round(prediction.hri_value * 100)}%</p>
+                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                        HRI Value
+                    </p>
+                    <p className="text-xl font-bold text-amber-900">
+                        {Math.round(prediction.hri_value * 100)}%
+                    </p>
                 </div>
                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-900/40">Timestamp</p>
-                    <p className="text-sm font-semibold text-amber-900">{prediction.prediction_timestamp}</p>
+                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                        Timestamp
+                    </p>
+                    <p className="text-sm font-semibold text-amber-900">
+                        {prediction.prediction_timestamp}
+                    </p>
                 </div>
             </div>
         </Card>
@@ -273,26 +444,57 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
     if (data.length === 0) {
         return (
             <Card className="flex items-center justify-center py-10">
-                <p className="text-amber-700/60 text-sm">No harvest records yet</p>
+                <p className="text-sm text-amber-700/60">
+                    No harvest records yet
+                </p>
             </Card>
         );
     }
 
     return (
         <Card>
-            <p className="font-bold text-amber-900 mb-4">Harvest History — Weight (kg)</p>
+            <p className="mb-4 font-bold text-amber-900">
+                Harvest History — Weight (kg)
+            </p>
             <div className="w-full">
-                {mounted && <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FEF3C7" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false}
-                            tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} dy={8} />
-                        <YAxis axisLine={false} tickLine={false}
-                            tick={{ fill: '#78350F', fontSize: 10, fontWeight: 600 }} />
-                        <Tooltip contentStyle={TOOLTIP_STYLE} />
-                        <Bar dataKey="weight" name="Weight (kg)" fill="#F59E0B" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>}
+                {mounted && (
+                    <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={data}>
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                vertical={false}
+                                stroke="#FEF3C7"
+                            />
+                            <XAxis
+                                dataKey="date"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                }}
+                                dy={8}
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                }}
+                            />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                            <Bar
+                                dataKey="weight"
+                                name="Weight (kg)"
+                                fill="#F59E0B"
+                                radius={[6, 6, 0, 0]}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                )}
             </div>
         </Card>
     );
@@ -300,7 +502,13 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Analytics({ hive, hriTrend, sensorReadings, latestPrediction, harvestHistory }: Props) {
+export default function Analytics({
+    hive,
+    hriTrend,
+    sensorReadings,
+    latestPrediction,
+    harvestHistory,
+}: Props) {
     const todayString = () => new Date().toISOString().slice(0, 10);
     const [sensorDate, setSensorDate] = useState(todayString);
 
@@ -310,42 +518,51 @@ export default function Analytics({ hive, hriTrend, sensorReadings, latestPredic
         router.get(
             route('analytics.show', { hive: hive.id }),
             { sensor_date: resolved },
-            { preserveState: true, preserveScroll: true, only: ['sensorReadings'] },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['sensorReadings'],
+            },
         );
     }
 
     return (
         <AuthenticatedLayout>
             <Head title={`Analytics — ${hive.name}`} />
-            <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
-
+            <div className="mx-auto max-w-6xl space-y-8 p-6 md:p-10">
                 <div className="flex flex-col gap-2">
-                    <Breadcrumbs items={[
-                        { label: 'Home', href: '/' },
-                        { label: 'My Hives', href: '/dashboard' },
-                        { label: hive.name, href: '/dashboard' },
-                        { label: 'Analytics' },
-                    ]} />
+                    <Breadcrumbs
+                        items={[
+                            { label: 'Home', href: '/' },
+                            { label: 'My Hives', href: '/dashboard' },
+                            { label: hive.name, href: '/dashboard' },
+                            { label: 'Analytics' },
+                        ]}
+                    />
                     <div className="flex items-center gap-3">
                         <Link
                             href="/dashboard"
-                            className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 transition-colors"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-900 transition-colors hover:bg-amber-200"
                         >
-                            <ArrowLeft className="w-4 h-4" />
+                            <ArrowLeft className="h-4 w-4" />
                         </Link>
                         <div>
-                            <h1 className="text-2xl font-black text-amber-900">Analytics</h1>
-                            <p className="text-amber-700 text-sm mt-1">{hive.name} — Harvest Readiness Intelligence</p>
+                            <h1 className="text-2xl font-black text-amber-900">
+                                Analytics
+                            </h1>
+                            <p className="mt-1 text-sm text-amber-700">
+                                {hive.name} — Harvest Readiness Intelligence
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Top row: score card + HRI trend */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                    <div className="lg:col-span-1 h-full">
+                <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
+                    <div className="h-full lg:col-span-1">
                         <HriScoreCard hive={hive} />
                     </div>
-                    <div className="lg:col-span-2 h-full">
+                    <div className="h-full lg:col-span-2">
                         <HriTrendChart data={hriTrend} />
                     </div>
                 </div>
@@ -358,11 +575,10 @@ export default function Analytics({ hive, hriTrend, sensorReadings, latestPredic
                 />
 
                 {/* Prediction + harvest */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <LatestPredictionCard prediction={latestPrediction} />
                     <HarvestBar data={harvestHistory} />
                 </div>
-
             </div>
         </AuthenticatedLayout>
     );

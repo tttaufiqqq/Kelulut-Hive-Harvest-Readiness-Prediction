@@ -33,7 +33,7 @@ test('beekeeper can accept invite and set password', function () {
     $url = URL::temporarySignedRoute('invite.accept.store', now()->addDays(7), ['user' => $user->id]);
 
     $response = $this->post($url, [
-        'password'              => 'new-secure-password',
+        'password' => 'new-secure-password',
         'password_confirmation' => 'new-secure-password',
     ]);
 
@@ -52,7 +52,7 @@ test('beekeeper cannot accept invite twice', function () {
     $url = URL::temporarySignedRoute('invite.accept.store', now()->addDays(7), ['user' => $user->id]);
 
     $response = $this->post($url, [
-        'password'              => 'new-secure-password',
+        'password' => 'new-secure-password',
         'password_confirmation' => 'new-secure-password',
     ]);
 

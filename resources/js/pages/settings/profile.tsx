@@ -35,7 +35,7 @@ export default function Profile({
                         />
 
                         <Form
-                            {...ProfileController.update.form()}
+                            {...ProfileController.update()}
                             options={{
                                 preserveScroll: true,
                             }}
@@ -69,14 +69,17 @@ export default function Profile({
                                     <Input
                                         id="telegram_id"
                                         label="Telegram Chat ID"
-                                        defaultValue={(auth.user as any).telegram_id ?? ''}
+                                        defaultValue={
+                                            (auth.user as any).telegram_id ?? ''
+                                        }
                                         name="telegram_id"
                                         placeholder="e.g. 123456789"
                                         error={(errors as any).telegram_id}
                                     />
 
                                     {mustVerifyEmail &&
-                                        auth.user.email_verified_at === null && (
+                                        auth.user.email_verified_at ===
+                                            null && (
                                             <div>
                                                 <p className="-mt-4 text-sm text-amber-600/60">
                                                     Your email address is
@@ -94,9 +97,9 @@ export default function Profile({
                                                 {status ===
                                                     'verification-link-sent' && (
                                                     <div className="mt-2 text-sm font-medium text-emerald-600">
-                                                        A new verification link has
-                                                        been sent to your email
-                                                        address.
+                                                        A new verification link
+                                                        has been sent to your
+                                                        email address.
                                                     </div>
                                                 )}
                                             </div>
@@ -117,7 +120,9 @@ export default function Profile({
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
                                                     exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.3 }}
+                                                    transition={{
+                                                        duration: 0.3,
+                                                    }}
                                                     className="text-sm text-amber-600/60"
                                                 >
                                                     Saved

@@ -30,9 +30,9 @@ class BeekeeperController extends Controller
         return Inertia::render('admin/beekeepers/index', [
             'beekeepers' => $beekeepers,
             'stats' => [
-                'total'   => (int) $stats->total,
+                'total' => (int) $stats->total,
                 'pending' => (int) $stats->pending,
-                'active'  => (int) $stats->active,
+                'active' => (int) $stats->active,
             ],
         ]);
     }
@@ -40,11 +40,11 @@ class BeekeeperController extends Controller
     public function store(StoreBeekeeperRequest $request): RedirectResponse
     {
         $beekeeper = User::create([
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'phone'      => $request->phone,
-            'password'   => null,
-            'status'     => 'pending',
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => null,
+            'status' => 'pending',
             'invited_by' => $request->user()->id,
         ]);
 

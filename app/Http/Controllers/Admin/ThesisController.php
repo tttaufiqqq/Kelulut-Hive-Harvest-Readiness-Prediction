@@ -13,14 +13,14 @@ class ThesisController extends Controller
 {
     public function index(): Response
     {
-        $exists    = Storage::disk('public')->exists('thesis/thesis.pdf');
-        $url       = $exists ? route('thesis.pdf') : null;
+        $exists = Storage::disk('public')->exists('thesis/thesis.pdf');
+        $url = $exists ? route('thesis.pdf') : null;
         $uploadedAt = $exists
             ? date('d M Y, H:i', Storage::disk('public')->lastModified('thesis/thesis.pdf'))
             : null;
 
         return Inertia::render('admin/thesis', [
-            'thesisUrl'  => $url,
+            'thesisUrl' => $url,
             'uploadedAt' => $uploadedAt,
         ]);
     }

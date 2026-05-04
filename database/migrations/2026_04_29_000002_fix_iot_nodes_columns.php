@@ -17,7 +17,7 @@ return new class extends Migration
             if (Schema::hasColumn('iot_nodes', 'status')) {
                 $table->renameColumn('status', 'device_status');
             }
-            if (!Schema::hasColumn('iot_nodes', 'last_maintenance_date')) {
+            if (! Schema::hasColumn('iot_nodes', 'last_maintenance_date')) {
                 $table->date('last_maintenance_date')->nullable()->after('installation_date');
             }
         });

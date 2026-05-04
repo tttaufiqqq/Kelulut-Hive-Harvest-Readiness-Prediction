@@ -4,28 +4,34 @@ import type { AuthLayoutProps } from '@/types';
 
 export function AuthLayout({ children, title, description }: AuthLayoutProps) {
     return (
-        <div className="min-h-screen bg-[#FFFBEB] relative flex overflow-hidden">
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-amber-950 -skew-x-12 translate-x-1/4 z-0 hidden lg:block" />
+        <div className="relative flex min-h-screen overflow-hidden bg-[#FFFBEB]">
+            <div className="absolute top-0 right-0 z-0 hidden h-full w-1/2 translate-x-1/4 -skew-x-12 bg-amber-950 lg:block" />
 
             {/* Left Panel - Form */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 py-12 relative z-10">
+            <div className="relative z-10 flex w-full flex-col justify-center px-8 py-12 md:px-16 lg:w-1/2">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 mb-16 group w-fit">
-                    <div className="bg-yellow-400 p-2 rounded-xl group-hover:bg-yellow-500 transition-colors">
-                        <Bee className="w-5 h-5 text-yellow-950" />
+                <Link
+                    href="/"
+                    className="group mb-16 flex w-fit items-center gap-2"
+                >
+                    <div className="rounded-xl bg-yellow-400 p-2 transition-colors group-hover:bg-yellow-500">
+                        <Bee className="h-5 w-5 text-yellow-950" />
                     </div>
-                    <span className="text-lg font-black tracking-tighter uppercase text-amber-950">
+                    <span className="text-lg font-black tracking-tighter text-amber-950 uppercase">
                         BuzzyHive<span className="text-yellow-500">2.0</span>
                     </span>
                 </Link>
 
                 <div>
                     <div className="mb-8">
-                        <h1 className="text-5xl font-black uppercase tracking-tighter text-amber-950 leading-none">
-                            {title}<span className="text-yellow-500">.</span>
+                        <h1 className="text-5xl leading-none font-black tracking-tighter text-amber-950 uppercase">
+                            {title}
+                            <span className="text-yellow-500">.</span>
                         </h1>
                         {description && (
-                            <p className="text-amber-800/60 mt-3 font-medium">{description}</p>
+                            <p className="mt-3 font-medium text-amber-800/60">
+                                {description}
+                            </p>
                         )}
                     </div>
 
@@ -34,17 +40,18 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
             </div>
 
             {/* Right Panel - Decorative */}
-            <div className="hidden lg:flex w-1/2 relative z-10 items-center justify-center">
-                <div className="text-center px-12">
-                    <div className="inline-block bg-yellow-400 p-8 rounded-[2rem] shadow-2xl mb-8 rotate-6">
-                        <Bee className="w-16 h-16 text-yellow-950" />
+            <div className="relative z-10 hidden w-1/2 items-center justify-center lg:flex">
+                <div className="px-12 text-center">
+                    <div className="mb-8 inline-block rotate-6 rounded-[2rem] bg-yellow-400 p-8 shadow-2xl">
+                        <Bee className="h-16 w-16 text-yellow-950" />
                     </div>
-                    <h2 className="text-4xl font-black uppercase tracking-tighter text-white leading-none mb-4">
+                    <h2 className="mb-4 text-4xl leading-none font-black tracking-tighter text-white uppercase">
                         Harvest <br />
                         <span className="text-yellow-400">Intelligence.</span>
                     </h2>
-                    <p className="text-amber-200/60 font-medium max-w-xs mx-auto">
-                        IoT-integrated harvest readiness prediction for stingless bee farming.
+                    <p className="mx-auto max-w-xs font-medium text-amber-200/60">
+                        IoT-integrated harvest readiness prediction for
+                        stingless bee farming.
                     </p>
                 </div>
             </div>

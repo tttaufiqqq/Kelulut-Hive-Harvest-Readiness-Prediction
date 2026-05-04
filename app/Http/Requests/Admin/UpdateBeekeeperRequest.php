@@ -25,7 +25,7 @@ class UpdateBeekeeperRequest extends FormRequest
         $userId = $this->route('user')?->id;
 
         return [
-            'name'  => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\pL\s\'\-\.]+$/u'],
+            'name' => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\pL\s\'\-\.]+$/u'],
             'email' => ['required', 'email:rfc', 'max:255', "unique:users,email,{$userId}"],
             'phone' => ['nullable', 'string', 'regex:/^(\+?60|0)[0-9\-\s]{8,14}$/'],
         ];

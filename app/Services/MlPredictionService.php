@@ -15,17 +15,18 @@ class MlPredictionService
     public function predict(SensorLog $log): ?Prediction
     {
         try {
-            $response = Http::timeout(10)->post(config('services.ml.url') . '/predict', [
-                'mq2_value'   => $log->mq2_value,
-                'mq3_value'   => $log->mq3_value,
-                'mq5_value'   => $log->mq5_value,
+            $response = Http::timeout(10)->post(config('services.ml.url').'/predict', [
+                'mq2_value' => $log->mq2_value,
+                'mq3_value' => $log->mq3_value,
+                'mq5_value' => $log->mq5_value,
                 'mq135_value' => $log->mq135_value,
-                'temp'        => $log->temp,
-                'humidity'    => $log->humidity,
+                'temp' => $log->temp,
+                'humidity' => $log->humidity,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::warning('ML API error', ['status' => $response->status(), 'sensor_log_id' => $log->id]);
+
                 return null;
             }
 
@@ -33,14 +34,15 @@ class MlPredictionService
 
             if (isset($data['error'])) {
                 Log::warning('ML API returned error', ['error' => $data['error'], 'sensor_log_id' => $log->id]);
+
                 return null;
             }
 
             $prediction = Prediction::create([
-                'sensor_log_id'        => $log->id,
-                'readiness_level'      => $data['readiness_level'],
-                'hri_value'            => $data['hri_value'],
-                'confidence_score'     => $data['confidence_score'],
+                'sensor_log_id' => $log->id,
+                'readiness_level' => $data['readiness_level'],
+                'hri_value' => $data['hri_value'],
+                'confidence_score' => $data['confidence_score'],
                 'prediction_timestamp' => now(),
             ]);
 
@@ -67,16 +69,16 @@ class MlPredictionService
                 HriSummary::updateOrCreate(
                     ['hive_id' => $log->hive_id, 'summary_date' => $today],
                     [
-                        'avg_temperature'        => round((float) $avgStats->avg_temp, 2),
-                        'avg_humidity'           => round((float) $avgStats->avg_humidity, 2),
-                        'avg_mq2'                => round((float) $avgStats->avg_mq2, 2),
-                        'avg_hri_value'          => round((float) ($avgHri ?? 0), 4),
+                        'avg_temperature' => round((float) $avgStats->avg_temp, 2),
+                        'avg_humidity' => round((float) $avgStats->avg_humidity, 2),
+                        'avg_mq2' => round((float) $avgStats->avg_mq2, 2),
+                        'avg_hri_value' => round((float) ($avgHri ?? 0), 4),
                         'latest_readiness_level' => $prediction->readiness_level,
                     ],
                 );
             } catch (\Throwable $e) {
                 Log::warning('HriSummary update failed', [
-                    'error'         => $e->getMessage(),
+                    'error' => $e->getMessage(),
                     'sensor_log_id' => $log->id,
                 ]);
             }
@@ -84,9 +86,10 @@ class MlPredictionService
             return $prediction;
         } catch (\Throwable $e) {
             Log::warning('ML prediction failed', [
-                'error'         => $e->getMessage(),
+                'error' => $e->getMessage(),
                 'sensor_log_id' => $log->id,
             ]);
+
             return null;
         }
     }
