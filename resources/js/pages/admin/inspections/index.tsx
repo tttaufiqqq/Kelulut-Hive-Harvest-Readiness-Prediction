@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
@@ -14,7 +15,7 @@ type Props = {
     filters:     { hive_id?: string };
 };
 
-type ActiveModal = { type: 'view'; inspection: Inspection } | null;
+type ActiveModal = { type: 'view'; index: number } | null;
 
 const BLOOMING_STYLES: Record<string, string> = {
     pre_bloom:   'bg-sky-100 text-sky-700',
@@ -57,6 +58,29 @@ function WeatherPills({ conditions }: { conditions?: MasterWeatherCondition[] })
 export default function AdminInspectionsIndex({ inspections, stats, hives, filters }: Props) {
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const close = () => setActiveModal(null);
+
+    const viewIndex      = activeModal?.type === 'view' ? activeModal.index : null;
+    const viewInspection = viewIndex !== null ? inspections.data[viewIndex] : null;
+    const hasPrev        = viewIndex !== null && viewIndex > 0;
+    const hasNext        = viewIndex !== null && viewIndex < inspections.data.length - 1;
+
+    useEffect(() => {
+        if (viewIndex === null) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveModal(prev => prev?.type === 'view' && prev.index > 0
+                    ? { type: 'view', index: prev.index - 1 } : prev);
+            }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveModal(prev => prev?.type === 'view' && prev.index < inspections.data.length - 1
+                    ? { type: 'view', index: prev.index + 1 } : prev);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [viewIndex, inspections.data.length]);
 
     const hiveOptions = (items: { id: number; name: string }[]) => [
         { value: '', label: 'All Hives' },
@@ -117,8 +141,8 @@ export default function AdminInspectionsIndex({ inspections, stats, hives, filte
                                         </td>
                                     </tr>
                                 )}
-                                {inspections.data.map((inspection) => (
-                                    <tr key={inspection.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', inspection })}>
+                                {inspections.data.map((inspection, index) => (
+                                    <tr key={inspection.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', index })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{inspection.hive?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{inspection.beekeeper?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70">
@@ -164,57 +188,77 @@ export default function AdminInspectionsIndex({ inspections, stats, hives, filte
                 )}
             </div>
 
-            {activeModal?.type === 'view' && (
+            {activeModal?.type === 'view' && viewInspection && (
                 <Modal isOpen onClose={close} title="Inspection Details" maxWidth="md">
                     <div className="space-y-4">
+                        <div className="flex items-center justify-end gap-1 -mt-1 mb-1">
+                            <button
+                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index > 0 ? { type: 'view', index: prev.index - 1 } : prev)}
+                                disabled={!hasPrev}
+                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-4 h-4 text-amber-900" />
+                            </button>
+                            <span className="text-xs text-amber-900/40 font-bold tabular-nums min-w-[3rem] text-center">
+                                {viewIndex! + 1} / {inspections.data.length}
+                            </span>
+                            <button
+                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index < inspections.data.length - 1 ? { type: 'view', index: prev.index + 1 } : prev)}
+                                disabled={!hasNext}
+                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                            >
+                                <ChevronRight className="w-4 h-4 text-amber-900" />
+                            </button>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Hive</p>
-                                <p className="font-medium text-amber-950">{activeModal.inspection.hive?.name ?? '—'}</p>
+                                <p className="font-medium text-amber-950">{viewInspection.hive?.name ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Beekeeper</p>
-                                <p className="font-medium text-amber-950">{activeModal.inspection.beekeeper?.name ?? '—'}</p>
+                                <p className="font-medium text-amber-950">{viewInspection.beekeeper?.name ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Date</p>
                                 <p className="font-medium text-amber-950">
-                                    {new Date(activeModal.inspection.inspection_date).toLocaleDateString()}
+                                    {new Date(viewInspection.inspection_date).toLocaleDateString()}
                                 </p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Blooming Status</p>
-                                <BloomingBadge status={activeModal.inspection.blooming_status} />
+                                <BloomingBadge status={viewInspection.blooming_status} />
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Vegetation Density</p>
-                                <p className="font-medium text-amber-950 capitalize">{activeModal.inspection.vegetation_density ?? '—'}</p>
+                                <p className="font-medium text-amber-950 capitalize">{viewInspection.vegetation_density ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Nectar Availability</p>
-                                <p className="font-medium text-amber-950 capitalize">{activeModal.inspection.nectar_source_availability ?? '—'}</p>
+                                <p className="font-medium text-amber-950 capitalize">{viewInspection.nectar_source_availability ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Structural Damage</p>
-                                <p className="font-medium text-amber-950 capitalize">{activeModal.inspection.structural_damage ?? '—'}</p>
+                                <p className="font-medium text-amber-950 capitalize">{viewInspection.structural_damage ?? '—'}</p>
                             </div>
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Weather Conditions</p>
-                            <WeatherPills conditions={activeModal.inspection.weather_conditions} />
+                            <WeatherPills conditions={viewInspection.weather_conditions} />
                         </div>
-                        {activeModal.inspection.food_source_observation && (
+                        {viewInspection.food_source_observation && (
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Food Source Observation</p>
-                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{activeModal.inspection.food_source_observation}</p>
+                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{viewInspection.food_source_observation}</p>
                             </div>
                         )}
-                        {activeModal.inspection.notes && (
+                        {viewInspection.notes && (
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Notes</p>
-                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{activeModal.inspection.notes}</p>
+                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{viewInspection.notes}</p>
                             </div>
                         )}
+                        <p className="text-[10px] text-amber-900/25 text-center uppercase tracking-widest">Use arrow keys to navigate</p>
                         <div className="pt-2">
                             <Button type="button" variant="ghost" onClick={close} className="w-full">Close</Button>
                         </div>
