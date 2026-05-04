@@ -366,6 +366,25 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
                     </div>
                 </div>
 
+                {/* ── Window Nudge Bar ──────────────────────────────── */}
+                {latest === null && (
+                    <div className="flex items-center gap-3 flex-wrap px-4 py-3 bg-amber-50 rounded-xl border border-amber-100">
+                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                        <span className="text-sm text-amber-700 font-semibold flex-1">
+                            No readings in the last {window}.
+                        </span>
+                        {nudgeWindows.map(w => (
+                            <button
+                                key={w}
+                                onClick={() => navigate({ window: w })}
+                                className="px-3 py-1 text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg transition-colors"
+                            >
+                                {w}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* ── Sensor Cards ─────────────────────────────────── */}
                 {hives.length === 0 ? (
                     <Card>
