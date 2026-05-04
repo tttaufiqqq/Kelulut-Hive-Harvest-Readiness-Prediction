@@ -51,6 +51,9 @@ class SensorDashboardController extends Controller
 
         $latest = $logs->last();
 
+        $lastSeenRaw = SensorLog::where('hive_id', $hiveId)->max('record_timestamp');
+        $lastSeen    = $lastSeenRaw ? Carbon::parse($lastSeenRaw)->diffForHumans() : null;
+
         $history = $logs->map(fn ($log) => [
             'time'        => $log->record_timestamp->format('H:i'),
             'temperature' => round($log->temp, 1),
@@ -75,7 +78,8 @@ class SensorDashboardController extends Controller
                 'mq135'       => $latest->mq135_value,
                 'recorded_at' => $latest->record_timestamp->diffForHumans(),
             ] : null,
-            'history'  => $history,
+            'history'   => $history,
+            'last_seen' => $lastSeen,
         ]);
     }
 }
