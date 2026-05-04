@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SensorLog extends Model
@@ -34,5 +35,15 @@ class SensorLog extends Model
     public function prediction(): HasOne
     {
         return $this->hasOne(Prediction::class);
+    }
+
+    public function matchedThresholds(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            MasterSensorThreshold::class,
+            'sensor_log_thresholds',
+            'sensor_log_id',
+            'threshold_id',
+        );
     }
 }
