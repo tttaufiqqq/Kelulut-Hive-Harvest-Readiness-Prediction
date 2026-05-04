@@ -886,13 +886,84 @@ function PredictionHistory({
 
 function EmptyPredictionState() {
     return (
-        <Card className="flex flex-col items-center justify-center gap-3 py-16">
-            <p className="font-bold text-amber-900">No predictions yet</p>
-            <p className="max-w-xs text-center text-sm text-amber-700/60">
-                Predictions appear once sensor data has been sent by the ESP32
-                and processed by the ML model.
-            </p>
-        </Card>
+        <div className="space-y-6">
+            <Card className="border-none bg-gradient-to-br from-[#f7c94a] via-[#eda521] to-[#d78914] p-8 text-amber-950 shadow-[0_30px_60px_-38px_rgba(120,53,15,0.75)]">
+                <p className="text-[10px] font-black tracking-widest text-amber-950/55 uppercase">
+                    Waiting For Live Data
+                </p>
+                <h2 className="mt-3 text-2xl font-black text-amber-950">
+                    No predictions yet
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-amber-950/75">
+                    This page will populate once the ESP32 sends a reading, the
+                    platform stores the sensor log, and the ML service returns a
+                    readiness result for the hive.
+                </p>
+            </Card>
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                <Card className="space-y-4 border border-amber-100/90 bg-white/95">
+                    <div>
+                        <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
+                            Prediction Process
+                        </p>
+                        <h3 className="mt-2 text-lg font-bold text-amber-900">
+                            What will appear here
+                        </h3>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        {PROCESS_STEPS.map((step, index) => (
+                            <div
+                                key={step.title}
+                                className="rounded-[1.25rem] border border-dashed border-amber-200 bg-amber-50/60 p-4"
+                            >
+                                <p className="text-[10px] font-black tracking-widest text-amber-900/40 uppercase">
+                                    Step 0{index + 1}
+                                </p>
+                                <p className="mt-2 text-sm font-semibold text-amber-900">
+                                    {step.title}
+                                </p>
+                                <p className="mt-2 text-sm text-amber-900/60">
+                                    {step.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+                <Card className="space-y-4 border border-amber-100/90 bg-white/95">
+                    <div>
+                        <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
+                            Threshold Analysis
+                        </p>
+                        <h3 className="mt-2 text-lg font-bold text-amber-900">
+                            Rule-based context
+                        </h3>
+                    </div>
+                    <p className="text-sm leading-6 text-amber-900/60">
+                        When a stored reading matches a configured sensor range,
+                        its threshold meaning and recommended action will appear
+                        here. If nothing matches, the UI will say that clearly.
+                    </p>
+                </Card>
+
+                <Card className="space-y-4 border border-amber-100/90 bg-white/95">
+                    <div>
+                        <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
+                            ML Prediction
+                        </p>
+                        <h3 className="mt-2 text-lg font-bold text-amber-900">
+                            Final readiness result
+                        </h3>
+                    </div>
+                    <p className="text-sm leading-6 text-amber-900/60">
+                        Once the Flask model returns readiness, HRI, and
+                        confidence, the final harvest decision will appear here
+                        together with the latest stored timestamp.
+                    </p>
+                </Card>
+            </div>
+        </div>
     );
 }
 
