@@ -44,7 +44,7 @@ type Props = {
 // ── ArcGauge ────────────────────────────────────────────────────────────
 // Needle drawn pointing right (+x), rotated by -(1-ratio)*180° around pivot.
 // displayValue starts at 0 on mount so the transition plays from zero on load.
-function ArcGauge({ value, max, color }: { value: number; max: number; color: string }) {
+function ArcGauge({ value, max, color, noData = false }: { value: number; max: number; color: string; noData?: boolean }) {
     const [displayValue, setDisplayValue] = useState(0);
     const mounted = useRef(false);
 
@@ -71,7 +71,7 @@ function ArcGauge({ value, max, color }: { value: number; max: number; color: st
     return (
         <svg viewBox="0 0 120 65" className="w-full max-w-[180px] mx-auto">
             {/* Background arc */}
-            <path d={d} fill="none" stroke="#FEF3C7" strokeWidth="7" strokeLinecap="round" />
+            <path d={d} fill="none" stroke={noData ? '#D1D5DB' : '#FEF3C7'} strokeWidth="7" strokeLinecap="round" />
             {/* Filled arc — animates on value change */}
             <path
                 d={d}
@@ -80,7 +80,7 @@ function ArcGauge({ value, max, color }: { value: number; max: number; color: st
                 strokeWidth="7"
                 strokeLinecap="round"
                 style={{
-                    strokeDasharray: `${fill} ${arcLength}`,
+                    strokeDasharray: noData ? `0 ${arcLength}` : `${fill} ${arcLength}`,
                     transition: 'stroke-dasharray 0.7s ease-out, stroke 0.4s ease',
                 }}
             />
@@ -89,12 +89,17 @@ function ArcGauge({ value, max, color }: { value: number; max: number; color: st
                 transformOrigin: `${cx}px ${cy}px`,
                 transform: `rotate(${rotateDeg}deg)`,
                 transition: 'transform 0.7s ease-out',
+                opacity: noData ? 0 : 1,
             }}>
                 <line x1={cx - 7} y1={cy} x2={cx + 38} y2={cy} stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
             </g>
             {/* Pivot dot */}
-            <circle cx={cx} cy={cy} r="4" fill="#78350F" />
-            <circle cx={cx} cy={cy} r="2" fill="#FEF3C7" />
+            <circle cx={cx} cy={cy} r="4" fill={noData ? '#D1D5DB' : '#78350F'} />
+            <circle cx={cx} cy={cy} r="2" fill={noData ? '#D1D5DB' : '#FEF3C7'} />
+            {/* No-data label */}
+            {noData && (
+                <text x={cx} y={cy - 8} textAnchor="middle" fill="#9CA3AF" fontSize="14" fontWeight="bold">--</text>
+            )}
         </svg>
     );
 }
@@ -379,6 +384,7 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
                                     value={latest?.temperature ?? 0}
                                     max={45}
                                     color={latest ? tempColor(latest.temperature) : '#FEF3C7'}
+                                    noData={!latest}
                                 />
                                 {latest && <StatusBadge color={tempColor(latest.temperature)} />}
                                 <SensorLine data={history} dataKey="temperature" />
@@ -446,6 +452,7 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
                                                 value={latest?.[key] ?? 0}
                                                 max={MQ_GAUGE_MAX}
                                                 color={latest ? mqColor(latest[key]) : '#FEF3C7'}
+                                                noData={!latest}
                                             />
                                             {latest && <StatusBadge color={mqColor(latest[key])} />}
                                             <SensorLine data={history} dataKey={key} />
