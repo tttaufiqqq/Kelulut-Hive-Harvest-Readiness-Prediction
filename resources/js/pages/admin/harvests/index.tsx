@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
@@ -7,7 +8,7 @@ import { SelectField } from '@/components/core/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
 import type { Harvest, PaginatedHarvests } from '@/types';
 
-type ActiveModal = { type: 'view'; harvest: Harvest } | null;
+type ActiveModal = { type: 'view'; index: number } | null;
 
 type Props = {
     harvests: PaginatedHarvests;
@@ -35,6 +36,29 @@ function ProductivityBadge({ level }: { level: Harvest['productivity_level'] }) 
 export default function AdminHarvestsIndex({ harvests, stats, hives, filters }: Props) {
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const close = () => setActiveModal(null);
+
+    const viewIndex   = activeModal?.type === 'view' ? activeModal.index : null;
+    const viewHarvest = viewIndex !== null ? harvests.data[viewIndex] : null;
+    const hasPrev     = viewIndex !== null && viewIndex > 0;
+    const hasNext     = viewIndex !== null && viewIndex < harvests.data.length - 1;
+
+    useEffect(() => {
+        if (viewIndex === null) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveModal(prev => prev?.type === 'view' && prev.index > 0
+                    ? { type: 'view', index: prev.index - 1 } : prev);
+            }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveModal(prev => prev?.type === 'view' && prev.index < harvests.data.length - 1
+                    ? { type: 'view', index: prev.index + 1 } : prev);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [viewIndex, harvests.data.length]);
 
     const hiveOptions = (items: { id: number; name: string }[]) => [
         { value: '', label: 'All Hives' },
@@ -105,8 +129,8 @@ export default function AdminHarvestsIndex({ harvests, stats, hives, filters }: 
                                         </td>
                                     </tr>
                                 )}
-                                {harvests.data.map((harvest) => (
-                                    <tr key={harvest.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', harvest })}>
+                                {harvests.data.map((harvest, index) => (
+                                    <tr key={harvest.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', index })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{harvest.hive?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{harvest.beekeeper?.name ?? '—'}</td>
                                         <td className="px-6 py-4 text-amber-900/70">
@@ -152,47 +176,67 @@ export default function AdminHarvestsIndex({ harvests, stats, hives, filters }: 
                 )}
             </div>
 
-            {activeModal?.type === 'view' && (
+            {activeModal?.type === 'view' && viewHarvest && (
                 <Modal isOpen onClose={close} title="Harvest Details" maxWidth="md">
                     <div className="space-y-4">
+                        <div className="flex items-center justify-end gap-1 -mt-1 mb-1">
+                            <button
+                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index > 0 ? { type: 'view', index: prev.index - 1 } : prev)}
+                                disabled={!hasPrev}
+                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-4 h-4 text-amber-900" />
+                            </button>
+                            <span className="text-xs text-amber-900/40 font-bold tabular-nums min-w-[3rem] text-center">
+                                {viewIndex! + 1} / {harvests.data.length}
+                            </span>
+                            <button
+                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index < harvests.data.length - 1 ? { type: 'view', index: prev.index + 1 } : prev)}
+                                disabled={!hasNext}
+                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                            >
+                                <ChevronRight className="w-4 h-4 text-amber-900" />
+                            </button>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Hive</p>
-                                <p className="font-medium text-amber-950">{activeModal.harvest.hive?.name ?? '—'}</p>
+                                <p className="font-medium text-amber-950">{viewHarvest.hive?.name ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Beekeeper</p>
-                                <p className="font-medium text-amber-950">{activeModal.harvest.beekeeper?.name ?? '—'}</p>
+                                <p className="font-medium text-amber-950">{viewHarvest.beekeeper?.name ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Date</p>
                                 <p className="font-medium text-amber-950">
-                                    {new Date(activeModal.harvest.harvest_date).toLocaleDateString()}
+                                    {new Date(viewHarvest.harvest_date).toLocaleDateString()}
                                 </p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Weight</p>
-                                <p className="font-medium text-amber-950">{activeModal.harvest.weight} kg</p>
+                                <p className="font-medium text-amber-950">{viewHarvest.weight} kg</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Productivity</p>
-                                <ProductivityBadge level={activeModal.harvest.productivity_level} />
+                                <ProductivityBadge level={viewHarvest.productivity_level} />
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Color</p>
-                                <p className="font-medium text-amber-950">{activeModal.harvest.color?.name ?? '—'}</p>
+                                <p className="font-medium text-amber-950">{viewHarvest.color?.name ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Flavor</p>
-                                <p className="font-medium text-amber-950">{activeModal.harvest.flavor?.name ?? '—'}</p>
+                                <p className="font-medium text-amber-950">{viewHarvest.flavor?.name ?? '—'}</p>
                             </div>
                         </div>
-                        {activeModal.harvest.notes && (
+                        {viewHarvest.notes && (
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Notes</p>
-                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{activeModal.harvest.notes}</p>
+                                <p className="text-sm text-amber-900/70 whitespace-pre-wrap">{viewHarvest.notes}</p>
                             </div>
                         )}
+                        <p className="text-[10px] text-amber-900/25 text-center uppercase tracking-widest">Use arrow keys to navigate</p>
                         <div className="pt-2">
                             <Button type="button" variant="ghost" onClick={close} className="w-full">Close</Button>
                         </div>
