@@ -15,14 +15,16 @@ class MlPredictionService
     public function predict(SensorLog $log): ?Prediction
     {
         try {
-            $response = Http::timeout(10)->post(config('services.ml.url').'/predict', [
+            $payload = [
                 'mq2_value' => $log->mq2_value,
                 'mq3_value' => $log->mq3_value,
                 'mq5_value' => $log->mq5_value,
                 'mq135_value' => $log->mq135_value,
                 'temp' => $log->temp,
                 'humidity' => $log->humidity,
-            ]);
+            ];
+
+            $response = Http::timeout(10)->post(config('services.ml.url').'/predict', $payload);
 
             if (! $response->successful()) {
                 Log::warning('ML API error', ['status' => $response->status(), 'sensor_log_id' => $log->id]);
@@ -38,11 +40,40 @@ class MlPredictionService
                 return null;
             }
 
+            $warningState = $data['warning_state'] ?? 'normal';
+            $logContext = [
+                'sensor_log_id' => $log->id,
+                'input' => $payload,
+                'model_version' => $data['model_version'] ?? null,
+                'warning_state' => $warningState,
+                'guardrail_action' => $data['guardrail_action'] ?? 'none',
+                'out_of_distribution' => (bool) ($data['out_of_distribution'] ?? false),
+                'out_of_distribution_features' => $data['out_of_distribution_features'] ?? [],
+                'prediction_warning' => $data['prediction_warning'] ?? null,
+                'raw_readiness_level' => $data['raw_readiness_level'] ?? null,
+                'readiness_level' => $data['readiness_level'] ?? null,
+            ];
+
+            if ($warningState === 'normal') {
+                Log::info('ML prediction stored', $logContext);
+            } else {
+                Log::warning('ML prediction stored with low-trust warning', $logContext);
+            }
+
             $prediction = Prediction::create([
                 'sensor_log_id' => $log->id,
                 'readiness_level' => $data['readiness_level'],
+                'raw_readiness_level' => $data['raw_readiness_level'] ?? $data['readiness_level'],
                 'hri_value' => $data['hri_value'],
+                'raw_hri_value' => $data['raw_hri_value'] ?? $data['hri_value'],
                 'confidence_score' => $data['confidence_score'],
+                'model_version' => $data['model_version'] ?? 'unknown-model',
+                'warning_state' => $warningState,
+                'prediction_warning' => $data['prediction_warning'] ?? null,
+                'guardrail_action' => $data['guardrail_action'] ?? 'none',
+                'threshold_warning_level' => $data['threshold_warning_level'] ?? null,
+                'out_of_distribution' => (bool) ($data['out_of_distribution'] ?? false),
+                'out_of_distribution_features' => $data['out_of_distribution_features'] ?? [],
                 'prediction_timestamp' => now(),
             ]);
 

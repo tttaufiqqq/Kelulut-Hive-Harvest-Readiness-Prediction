@@ -53,6 +53,7 @@ def predict():
             raw_label=raw_label,
             confidence=confidence,
             feature_bounds=metadata['feature_bounds'],
+            metadata=metadata,
         )
 
         app.logger.info(

@@ -64,6 +64,7 @@ def run_case(case: dict[str, object]) -> dict[str, object]:
         raw_label=raw_label,
         confidence=confidence,
         feature_bounds=METADATA['feature_bounds'],
+        metadata=METADATA,
     )
 
     return {

@@ -51,8 +51,17 @@ function fakeMlOk(): void
 {
     Http::fake(['*/predict' => Http::response([
         'readiness_level' => 'not_ready',
+        'raw_readiness_level' => 'not_ready',
         'hri_value' => 0.25,
+        'raw_hri_value' => 0.25,
         'confidence_score' => 0.80,
+        'model_version' => 'test-model-v1',
+        'warning_state' => 'normal',
+        'guardrail_action' => 'none',
+        'threshold_warning_level' => null,
+        'prediction_warning' => null,
+        'out_of_distribution' => false,
+        'out_of_distribution_features' => [],
     ], 200)]);
 }
 
@@ -78,6 +87,39 @@ test('prediction is stored and linked to sensor log', function () {
 
     expect(Prediction::count())->toBe(1);
     expect(Prediction::first()->sensor_log_id)->toBe(SensorLog::first()->id);
+});
+
+test('prediction warning metadata is stored when ml flags low trust', function () {
+    Http::fake(['*/predict' => Http::response([
+        'readiness_level' => 'approaching',
+        'raw_readiness_level' => 'ready',
+        'hri_value' => 0.50,
+        'raw_hri_value' => 1.00,
+        'confidence_score' => 0.96,
+        'model_version' => 'synthetic-flat-knn-k7-distance',
+        'warning_state' => 'critical',
+        'guardrail_action' => 'suppress',
+        'threshold_warning_level' => 'critical',
+        'prediction_warning' => 'Critical threshold signals override the optimistic raw ML prediction.',
+        'out_of_distribution' => true,
+        'out_of_distribution_features' => [
+            ['feature' => 'temp', 'value' => 41.6, 'min' => 25.3, 'max' => 33.6],
+        ],
+    ], 200)]);
+
+    ['hive' => $hive] = sensorStack();
+
+    $this->postJson('/api/sensor-data', sensorPayload($hive->id), ['X-API-Key' => 'test-api-key']);
+
+    $prediction = Prediction::first();
+
+    expect($prediction->model_version)->toBe('synthetic-flat-knn-k7-distance');
+    expect($prediction->warning_state)->toBe('critical');
+    expect($prediction->guardrail_action)->toBe('suppress');
+    expect($prediction->out_of_distribution)->toBeTrue();
+    expect($prediction->out_of_distribution_features[0]['feature'])->toBe('temp');
+    expect($prediction->raw_readiness_level)->toBe('ready');
+    expect($prediction->readiness_level)->toBe('approaching');
 });
 
 // ── Test 3: hri_summary created for hive + today ─────────────────────────

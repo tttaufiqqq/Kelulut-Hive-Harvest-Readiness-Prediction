@@ -10,12 +10,16 @@ return new class extends Migration
     public function up(): void
     {
         DB::transaction(function () {
+            $groupConcatExpression = DB::connection()->getDriverName() === 'sqlite'
+                ? 'GROUP_CONCAT(id) as ids'
+                : 'GROUP_CONCAT(id ORDER BY id) as ids';
+
             $duplicateGroups = DB::table('master_sensor_thresholds')
                 ->select(
                     'sensor_type',
                     'level',
                     DB::raw('MIN(id) as canonical_id'),
-                    DB::raw('GROUP_CONCAT(id ORDER BY id) as ids'),
+                    DB::raw($groupConcatExpression),
                     DB::raw('COUNT(*) as total'),
                 )
                 ->groupBy('sensor_type', 'level')
@@ -27,6 +31,7 @@ return new class extends Migration
                 $ids = collect(explode(',', (string) $group->ids))
                     ->map(fn (string $id) => (int) $id)
                     ->filter();
+                $ids = $ids->sort()->values();
 
                 $canonicalId = (int) $group->canonical_id;
                 $duplicateIds = $ids

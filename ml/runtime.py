@@ -373,6 +373,7 @@ def build_prediction_response(
     raw_label: str,
     confidence: float,
     feature_bounds: dict[str, dict[str, float]],
+    metadata: dict[str, Any],
 ) -> dict[str, Any]:
     out_of_distribution_features = detect_out_of_distribution(data, feature_bounds)
     threshold_matches = [
@@ -383,10 +384,26 @@ def build_prediction_response(
         out_of_distribution_features=out_of_distribution_features,
         threshold_matches=threshold_matches,
     )
+    warning_state = 'normal'
+    if (
+        guarded_prediction['guardrail_action'] in {'suppress', 'downgrade'}
+        or guarded_prediction['threshold_warning_level'] == 'critical'
+    ):
+        warning_state = 'critical'
+    elif (
+        guarded_prediction['guardrail_action'] == 'annotate'
+        or bool(out_of_distribution_features)
+        or guarded_prediction['threshold_warning_level'] == 'warning'
+    ):
+        warning_state = 'warning'
 
     return {
         **guarded_prediction,
         'confidence_score': round(float(confidence), 4),
+        'model_version': metadata.get('model_version'),
+        'model_family': metadata.get('model_family'),
+        'training_dataset': metadata.get('training_dataset'),
+        'warning_state': warning_state,
         'out_of_distribution': bool(out_of_distribution_features),
         'out_of_distribution_features': out_of_distribution_features,
         'threshold_matches': threshold_matches,

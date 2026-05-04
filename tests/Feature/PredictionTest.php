@@ -82,8 +82,19 @@ test('live predictions response includes enriched process payload', function () 
     Prediction::create([
         'sensor_log_id' => $sensorLog->id,
         'readiness_level' => 'nearly_ready',
+        'raw_readiness_level' => 'ready',
         'hri_value' => 0.78,
+        'raw_hri_value' => 1.0,
         'confidence_score' => 0.91,
+        'model_version' => 'synthetic-flat-knn-k7-distance',
+        'warning_state' => 'warning',
+        'prediction_warning' => 'Input is outside the training feature bounds for: temp.',
+        'guardrail_action' => 'downgrade',
+        'threshold_warning_level' => null,
+        'out_of_distribution' => true,
+        'out_of_distribution_features' => [
+            ['feature' => 'temp', 'value' => 34.2, 'min' => 25.3, 'max' => 33.6],
+        ],
         'prediction_timestamp' => now(),
     ]);
 
@@ -97,6 +108,11 @@ test('live predictions response includes enriched process payload', function () 
             ->where('predictions.0.device_identifier', 'NODE-001')
             ->where('predictions.0.sensor_values.temp', 33.5)
             ->where('predictions.0.sensor_values.mq2_value', 250)
+            ->where('predictions.0.model_version', 'synthetic-flat-knn-k7-distance')
+            ->where('predictions.0.warning_state', 'warning')
+            ->where('predictions.0.out_of_distribution', true)
+            ->where('predictions.0.raw_readiness_level', 'ready')
+            ->where('predictions.0.out_of_distribution_features.0.feature', 'temp')
             ->has('predictions.0.threshold_match_summaries', 1)
             ->where('predictions.0.threshold_match_summaries.0.sensor_type', 'temp')
             ->where('predictions.0.threshold_match_summaries.0.level', 'normal')

@@ -19,13 +19,29 @@ interface ThresholdMatchSummary {
     reading: number | null;
 }
 
+interface OutOfDistributionFeature {
+    feature: string;
+    value: number;
+    min: number;
+    max: number;
+}
+
 interface PredictionEntry {
     id: number;
     sensor_log_id: number | null;
     device_identifier: string | null;
     readiness_level: string;
+    raw_readiness_level: string | null;
     hri_value: number;
+    raw_hri_value: number | null;
     confidence_score: number;
+    model_version: string | null;
+    warning_state: string;
+    prediction_warning: string | null;
+    guardrail_action: string | null;
+    threshold_warning_level: string | null;
+    out_of_distribution: boolean;
+    out_of_distribution_features: OutOfDistributionFeature[];
     prediction_timestamp: string | null;
     prediction_timestamp_label: string | null;
     record_timestamp: string | null;
@@ -174,6 +190,113 @@ function getThresholdOverview(matches: ThresholdMatchSummary[]) {
     };
 }
 
+function getWarningStateLabel(state: string) {
+    const labels: Record<string, string> = {
+        normal: 'Normal trust',
+        warning: 'Low trust',
+        critical: 'Critical warning',
+    };
+
+    return labels[state] ?? 'Model warning';
+}
+
+function getWarningStateStyles(state: string) {
+    const styles: Record<string, string> = {
+        normal: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        warning: 'bg-amber-100 text-amber-800 border-amber-200',
+        critical: 'bg-rose-100 text-rose-700 border-rose-200',
+    };
+
+    return styles[state] ?? 'bg-stone-100 text-stone-700 border-stone-200';
+}
+
+function formatFeatureName(feature: string) {
+    const labels: Record<string, string> = {
+        mq2_value: 'MQ2',
+        mq3_value: 'MQ3',
+        mq5_value: 'MQ5',
+        mq135_value: 'MQ135',
+        temp: 'Temperature',
+        humidity: 'Humidity',
+    };
+
+    return labels[feature] ?? feature;
+}
+
+function hasPredictionTrustWarning(prediction: PredictionEntry) {
+    return (
+        prediction.warning_state !== 'normal' ||
+        prediction.out_of_distribution ||
+        prediction.prediction_warning !== null
+    );
+}
+
+function PredictionTrustNotice({
+    prediction,
+    className,
+}: {
+    prediction: PredictionEntry;
+    className?: string;
+}) {
+    if (!hasPredictionTrustWarning(prediction)) {
+        return null;
+    }
+
+    const changedDecision =
+        prediction.raw_readiness_level &&
+        prediction.raw_readiness_level !== prediction.readiness_level;
+    const oodSummary = prediction.out_of_distribution_features
+        .map((feature) => formatFeatureName(feature.feature))
+        .join(', ');
+
+    return (
+        <div
+            className={cn(
+                'rounded-[1.5rem] border px-4 py-4 shadow-sm',
+                getWarningStateStyles(prediction.warning_state),
+                className,
+            )}
+        >
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-current/20 bg-white/55 px-3 py-1 text-[11px] font-bold tracking-widest uppercase">
+                    {getWarningStateLabel(prediction.warning_state)}
+                </span>
+                {prediction.model_version && (
+                    <span className="text-xs font-semibold">
+                        Model {prediction.model_version}
+                    </span>
+                )}
+            </div>
+            {prediction.prediction_warning && (
+                <p className="mt-3 text-sm font-medium">
+                    {prediction.prediction_warning}
+                </p>
+            )}
+            <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
+                {changedDecision && (
+                    <span>
+                        Raw {getReadinessLabel(prediction.raw_readiness_level)}
+                        {' -> '}Guarded{' '}
+                        {getReadinessLabel(prediction.readiness_level)}
+                    </span>
+                )}
+                {prediction.out_of_distribution && oodSummary && (
+                    <span>OOD features: {oodSummary}</span>
+                )}
+                {prediction.guardrail_action &&
+                    prediction.guardrail_action !== 'none' && (
+                        <span>
+                            Action {prediction.guardrail_action.replaceAll(
+                                '_',
+                                ' ',
+                            )}
+                        </span>
+                    )}
+            </div>
+        </div>
+    );
+}
+
 function ReadinessBadge({
     level,
     className,
@@ -317,6 +440,10 @@ function LatestPredictionHero({
                         against sensor thresholds, and scored by the ML model
                         for harvest readiness.
                     </p>
+                    <PredictionTrustNotice
+                        prediction={prediction}
+                        className="border-white/45 bg-white/25 text-amber-950"
+                    />
                     <ProcessActionButton
                         onClick={onViewProcess}
                         className="border-white/45 bg-white/70 hover:bg-white"
@@ -354,6 +481,22 @@ function LatestPredictionHero({
                         </p>
                         <p className="mt-1 font-semibold text-amber-950">
                             {prediction.prediction_timestamp_label ?? 'N/A'}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
+                            Model Version
+                        </p>
+                        <p className="mt-1 font-semibold text-amber-950">
+                            {prediction.model_version ?? 'Unknown'}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
+                            Warning State
+                        </p>
+                        <p className="mt-1 font-semibold text-amber-950">
+                            {getWarningStateLabel(prediction.warning_state)}
                         </p>
                     </div>
                 </div>
@@ -695,7 +838,7 @@ function MlPredictionCard({ prediction }: { prediction: PredictionEntry }) {
             </div>
 
             <div className="rounded-[1.5rem] border border-amber-100 bg-gradient-to-br from-white to-amber-50/80 p-5">
-                <div className="grid gap-5 sm:grid-cols-3">
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
                     <div>
                         <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                             HRI Value
@@ -720,6 +863,22 @@ function MlPredictionCard({ prediction }: { prediction: PredictionEntry }) {
                             {prediction.prediction_timestamp_label ?? 'N/A'}
                         </p>
                     </div>
+                    <div>
+                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                            Model
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-amber-900">
+                            {prediction.model_version ?? 'Unknown'}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                            Trust State
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-amber-900">
+                            {getWarningStateLabel(prediction.warning_state)}
+                        </p>
+                    </div>
                 </div>
 
                 <div className="mt-5">
@@ -740,6 +899,8 @@ function MlPredictionCard({ prediction }: { prediction: PredictionEntry }) {
                     </div>
                 </div>
             </div>
+
+            <PredictionTrustNotice prediction={prediction} />
 
             <p className="text-sm text-amber-900/60">
                 This panel owns the final harvest readiness result. Thresholds
@@ -817,6 +978,22 @@ function PredictionHistory({
                                                     prediction.readiness_level
                                                 }
                                             />
+                                            {hasPredictionTrustWarning(
+                                                prediction,
+                                            ) && (
+                                                <span
+                                                    className={cn(
+                                                        'rounded-full border px-3 py-1 text-[11px] font-bold uppercase',
+                                                        getWarningStateStyles(
+                                                            prediction.warning_state,
+                                                        ),
+                                                    )}
+                                                >
+                                                    {getWarningStateLabel(
+                                                        prediction.warning_state,
+                                                    )}
+                                                </span>
+                                            )}
                                             <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
                                                 {prediction.device_identifier ??
                                                     'Unknown device'}
@@ -865,6 +1042,11 @@ function PredictionHistory({
                                                 ? `Highest threshold severity: ${thresholdOverview.highestLevel}`
                                                 : 'No threshold matches recorded'}
                                         </p>
+                                        {prediction.prediction_warning && (
+                                            <p className="mt-2 text-xs font-semibold text-amber-900/75">
+                                                {prediction.prediction_warning}
+                                            </p>
+                                        )}
                                         <ProcessActionButton
                                             onClick={() =>
                                                 onViewProcess(prediction.id)

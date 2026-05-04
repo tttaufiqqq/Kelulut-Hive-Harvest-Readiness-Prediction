@@ -1,4 +1,7 @@
 .venv/
 .idea/
 *.pkl
+!model.pkl
+!scaler.pkl
+artifacts/
 __pycache__/
