@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { MoreVertical, Plus, RefreshCw, Power, Edit2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { MoreVertical, Plus, RefreshCw, Power, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { Dropdown } from '@/components/core/dropdown';
@@ -17,7 +17,7 @@ type Props = {
 
 type ActiveModal =
     | { type: 'create' }
-    | { type: 'view'; user: User }
+    | { type: 'view'; index: number }
     | { type: 'edit'; user: User }
     | { type: 'toggle'; user: User }
     | { type: 'resend'; user: User }
@@ -55,6 +55,29 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
     const close = () => setActiveModal(null);
+
+    const viewIndex      = activeModal?.type === 'view' ? activeModal.index : null;
+    const viewBeekeeper  = viewIndex !== null ? beekeepers.data[viewIndex] : null;
+    const hasPrev        = viewIndex !== null && viewIndex > 0;
+    const hasNext        = viewIndex !== null && viewIndex < beekeepers.data.length - 1;
+
+    useEffect(() => {
+        if (viewIndex === null) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveModal(prev => prev?.type === 'view' && prev.index > 0
+                    ? { type: 'view', index: prev.index - 1 } : prev);
+            }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveModal(prev => prev?.type === 'view' && prev.index < beekeepers.data.length - 1
+                    ? { type: 'view', index: prev.index + 1 } : prev);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [viewIndex, beekeepers.data.length]);
 
     // Create form
     const createForm = useForm({ name: '', email: '', phone: '' });
@@ -211,8 +234,8 @@ return;
                                         </td>
                                     </tr>
                                 )}
-                                {beekeepers.data.map((user) => (
-                                    <tr key={user.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', user })}>
+                                {beekeepers.data.map((user, index) => (
+                                    <tr key={user.id} className="hover:bg-yellow-50/30 transition-colors cursor-pointer" onClick={() => setActiveModal({ type: 'view', index })}>
                                         <td className="px-6 py-4 font-medium text-amber-950">{user.name}</td>
                                         <td className="px-6 py-4 text-amber-900/70">{user.email}</td>
                                         <td className="px-6 py-4 text-amber-900/70 hidden md:table-cell">{user.phone ?? '—'}</td>
@@ -329,34 +352,54 @@ return;
             </Modal>
 
             {/* ── View Modal ─────────────────────────────────────────── */}
-            {activeModal?.type === 'view' && (
+            {activeModal?.type === 'view' && viewBeekeeper && (
                 <Modal isOpen onClose={close} title="Beekeeper Details" maxWidth="lg">
                     <div className="space-y-4">
+                        <div className="flex items-center justify-end gap-1 -mt-1 mb-1">
+                            <button
+                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index > 0 ? { type: 'view', index: prev.index - 1 } : prev)}
+                                disabled={!hasPrev}
+                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-4 h-4 text-amber-900" />
+                            </button>
+                            <span className="text-xs text-amber-900/40 font-bold tabular-nums min-w-[3rem] text-center">
+                                {viewIndex! + 1} / {beekeepers.data.length}
+                            </span>
+                            <button
+                                onClick={() => setActiveModal(prev => prev?.type === 'view' && prev.index < beekeepers.data.length - 1 ? { type: 'view', index: prev.index + 1 } : prev)}
+                                disabled={!hasNext}
+                                className="p-1.5 rounded-xl transition-colors hover:bg-yellow-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                            >
+                                <ChevronRight className="w-4 h-4 text-amber-900" />
+                            </button>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Name</p>
-                                <p className="font-medium text-amber-950">{activeModal.user.name}</p>
+                                <p className="font-medium text-amber-950">{viewBeekeeper.name}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Status</p>
-                                <StatusBadge status={activeModal.user.status ?? 'active'} />
+                                <StatusBadge status={viewBeekeeper.status ?? 'active'} />
                             </div>
                             <div className="min-w-0">
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Email</p>
-                                <p className="font-medium text-amber-950 break-all">{activeModal.user.email}</p>
+                                <p className="font-medium text-amber-950 break-all">{viewBeekeeper.email}</p>
                             </div>
                             <div className="min-w-0">
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Phone</p>
-                                <p className="font-medium text-amber-950">{activeModal.user.phone ?? '—'}</p>
+                                <p className="font-medium text-amber-950">{viewBeekeeper.phone ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Member Since</p>
-                                <p className="font-medium text-amber-950">{new Date(activeModal.user.created_at).toLocaleDateString()}</p>
+                                <p className="font-medium text-amber-950">{new Date(viewBeekeeper.created_at).toLocaleDateString()}</p>
                             </div>
                         </div>
+                        <p className="text-[10px] text-amber-900/25 text-center uppercase tracking-widest">Use arrow keys to navigate</p>
                         <div className="flex gap-3 pt-2">
                             <Button type="button" variant="ghost" onClick={close} className="flex-1">Close</Button>
-                            <Button type="button" variant="outline" onClick={() => openEdit(activeModal.user)} className="flex-1">Edit</Button>
+                            <Button type="button" variant="outline" onClick={() => openEdit(viewBeekeeper!)} className="flex-1">Edit</Button>
                         </div>
                     </div>
                 </Modal>
