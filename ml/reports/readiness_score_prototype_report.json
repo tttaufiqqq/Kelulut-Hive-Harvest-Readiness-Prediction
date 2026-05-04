@@ -1,0 +1,85 @@
+{
+  "regression_results": [
+    {
+      "candidate": "knn_regressor_k5_distance",
+      "cv_mae_mean": 0.0375,
+      "cv_rmse_mean": 0.0521,
+      "holdout_mae": 0.0392,
+      "holdout_rmse": 0.055,
+      "holdout_label_macro_f1": 0.8434,
+      "stress_optimistic_rate": 0.045,
+      "stress_ready_rate": 0.0017,
+      "timeseries_mean_step_delta": 0.0293
+    },
+    {
+      "candidate": "knn_regressor_k7_distance",
+      "cv_mae_mean": 0.0381,
+      "cv_rmse_mean": 0.0526,
+      "holdout_mae": 0.0391,
+      "holdout_rmse": 0.0546,
+      "holdout_label_macro_f1": 0.8188,
+      "stress_optimistic_rate": 0.0533,
+      "stress_ready_rate": 0.0017,
+      "timeseries_mean_step_delta": 0.0287
+    },
+    {
+      "candidate": "random_forest_regressor",
+      "cv_mae_mean": 0.0428,
+      "cv_rmse_mean": 0.0577,
+      "holdout_mae": 0.0429,
+      "holdout_rmse": 0.0599,
+      "holdout_label_macro_f1": 0.809,
+      "stress_optimistic_rate": 0.0617,
+      "stress_ready_rate": 0.0,
+      "timeseries_mean_step_delta": 0.0322
+    },
+    {
+      "candidate": "gradient_boosting_regressor",
+      "cv_mae_mean": 0.0506,
+      "cv_rmse_mean": 0.0658,
+      "holdout_mae": 0.0507,
+      "holdout_rmse": 0.0644,
+      "holdout_label_macro_f1": 0.7626,
+      "stress_optimistic_rate": 0.0567,
+      "stress_ready_rate": 0.0,
+      "timeseries_mean_step_delta": 0.0336
+    }
+  ],
+  "classification_baselines": [
+    {
+      "candidate": "knn_classifier_k7_distance",
+      "cv_macro_f1_mean": 0.8581,
+      "holdout_label_macro_f1": 0.8405,
+      "stress_optimistic_rate": 0.06,
+      "stress_ready_rate": 0.01,
+      "timeseries_mean_step_delta": 0.0283
+    },
+    {
+      "candidate": "random_forest_classifier",
+      "cv_macro_f1_mean": 0.8359,
+      "holdout_label_macro_f1": 0.8284,
+      "stress_optimistic_rate": 0.06,
+      "stress_ready_rate": 0.0017,
+      "timeseries_mean_step_delta": 0.0325
+    }
+  ],
+  "recommended_regressor": {
+    "candidate": "knn_regressor_k5_distance",
+    "cv_mae_mean": 0.0375,
+    "cv_rmse_mean": 0.0521,
+    "holdout_mae": 0.0392,
+    "holdout_rmse": 0.055,
+    "holdout_label_macro_f1": 0.8434,
+    "stress_optimistic_rate": 0.045,
+    "stress_ready_rate": 0.0017,
+    "timeseries_mean_step_delta": 0.0293
+  },
+  "recommended_classifier": {
+    "candidate": "knn_classifier_k7_distance",
+    "cv_macro_f1_mean": 0.8581,
+    "holdout_label_macro_f1": 0.8405,
+    "stress_optimistic_rate": 0.06,
+    "stress_ready_rate": 0.01,
+    "timeseries_mean_step_delta": 0.0283
+  }
+}
