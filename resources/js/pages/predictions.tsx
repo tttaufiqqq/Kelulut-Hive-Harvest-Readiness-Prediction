@@ -385,7 +385,7 @@ function LatestPredictionHero({
                 </div>
                 <div>
                     <p className="text-[10px] font-bold tracking-wider text-amber-950/45 uppercase">
-                        Threshold Matches
+                        Threshold Rules Matched
                     </p>
                     <p className="text-3xl font-black text-amber-950">
                         {prediction.threshold_match_summaries.length}
@@ -845,7 +845,7 @@ function PredictionHistory({
                                                 %
                                             </span>
                                             <span>
-                                                Thresholds{' '}
+                                                Rules matched{' '}
                                                 {
                                                     prediction
                                                         .threshold_match_summaries
@@ -981,7 +981,7 @@ function ProcessSection({
     return (
         <motion.section
             className={cn(
-                'rounded-[1.75rem] border border-amber-100 bg-white p-5 shadow-sm',
+                'rounded-[1.75rem] border border-amber-100 bg-white p-5 shadow-sm xl:self-start',
                 className,
             )}
             initial={{ opacity: 0, y: 14 }}
@@ -1011,7 +1011,7 @@ function PredictionProcessModal({
             isOpen={isOpen}
             onClose={onClose}
             title="ML Process Walkthrough"
-            maxWidth="2xl"
+            maxWidth="4xl"
         >
             {prediction && (
                 <div className="space-y-5">
@@ -1071,7 +1071,7 @@ function PredictionProcessModal({
                         <SensorSnapshot prediction={prediction} />
                     </ProcessSection>
 
-                    <div className="grid gap-5 xl:grid-cols-2">
+                    <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
                         <ProcessSection
                             eyebrow="Step 2"
                             title="Threshold interpretation"
@@ -1196,19 +1196,19 @@ function PredictionProcessModal({
                         </ProcessSection>
                     </div>
 
-                    <div className="grid gap-5 xl:grid-cols-2">
+                    <div className="grid gap-5 xl:grid-cols-2 xl:items-stretch">
                         <ProcessSection
                             eyebrow="Step 4"
                             title="ML response returned"
-                            className="border-amber-200 bg-amber-50/60"
+                            className="h-full border-amber-200 bg-amber-50/60"
                         >
                             <div className="space-y-4">
                                 <p className="text-sm text-amber-900/60">
                                     This is the model output returned by the ML
                                     service for the stored reading.
                                 </p>
-                                <div className="grid gap-3 sm:grid-cols-3">
-                                    <div className="rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
+                                <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                                    <div className="min-w-0 rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
                                         <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                                             Readiness
                                         </p>
@@ -1218,7 +1218,7 @@ function PredictionProcessModal({
                                             )}
                                         </p>
                                     </div>
-                                    <div className="rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
+                                    <div className="min-w-0 rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
                                         <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                                             HRI value
                                         </p>
@@ -1229,7 +1229,7 @@ function PredictionProcessModal({
                                             %
                                         </p>
                                     </div>
-                                    <div className="rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
+                                    <div className="min-w-0 rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
                                         <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                                             Confidence
                                         </p>
@@ -1248,7 +1248,7 @@ function PredictionProcessModal({
                         <ProcessSection
                             eyebrow="Step 5"
                             title="Final stored result"
-                            className="border-amber-200 bg-white"
+                            className="h-full border-amber-200 bg-white"
                         >
                             <div className="space-y-4">
                                 <p className="text-sm text-amber-900/60">
@@ -1265,8 +1265,8 @@ function PredictionProcessModal({
                                             Prediction #{prediction.id}
                                         </span>
                                     </div>
-                                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                                        <div>
+                                    <div className="mt-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+                                        <div className="min-w-0">
                                             <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                                                 HRI value
                                             </p>
@@ -1277,7 +1277,7 @@ function PredictionProcessModal({
                                                 %
                                             </p>
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                                                 Confidence
                                             </p>
@@ -1289,7 +1289,7 @@ function PredictionProcessModal({
                                                 %
                                             </p>
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                                                 Stored at
                                             </p>
