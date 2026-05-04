@@ -11,7 +11,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { Dropdown } from '@/components/core/dropdown';
-import { Alert } from '@/components/core/feedback';
+import { FlashAlerts } from '@/components/core/flash-alerts';
+import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Input } from '@/components/core/input';
 import { Modal } from '@/components/core/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
@@ -37,9 +38,7 @@ type ActiveModal =
 type SiteFormData = { name: string; description: string };
 
 export default function SitesIndex({ sites }: PageProps) {
-    const { props } = usePage<{
-        flash?: { success?: string; error?: string };
-    }>();
+    const { props } = usePage<{ flash?: FlashMessageBag }>();
     const flash = props.flash;
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
@@ -138,10 +137,7 @@ export default function SitesIndex({ sites }: PageProps) {
             <Head title="Sites — Admin" />
 
             <div className="space-y-6">
-                {flash?.success && (
-                    <Alert variant="success">{flash.success}</Alert>
-                )}
-                {flash?.error && <Alert variant="error">{flash.error}</Alert>}
+                <FlashAlerts key={flash?.id ?? 'site-flash'} flash={flash} />
 
                 {/* Header */}
                 <div className="flex items-center justify-between">

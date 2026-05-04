@@ -9,7 +9,8 @@ import {
 import { useRef, useState } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
-import { Alert } from '@/components/core/feedback';
+import { FlashAlerts } from '@/components/core/flash-alerts';
+import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Modal } from '@/components/core/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
 
@@ -19,9 +20,7 @@ type Props = {
 };
 
 export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
-    const { props } = usePage<{
-        flash?: { success?: string; error?: string };
-    }>();
+    const { props } = usePage<{ flash?: FlashMessageBag }>();
     const flash = props.flash;
 
     const fileRef = useRef<HTMLInputElement>(null);
@@ -93,10 +92,7 @@ export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
                     </p>
                 </div>
 
-                {flash?.success && (
-                    <Alert variant="success">{flash.success}</Alert>
-                )}
-                {flash?.error && <Alert variant="error">{flash.error}</Alert>}
+                <FlashAlerts key={flash?.id ?? 'thesis-flash'} flash={flash} />
 
                 {/* Current thesis status */}
                 {thesisUrl ? (

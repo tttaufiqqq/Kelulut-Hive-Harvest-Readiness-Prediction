@@ -14,7 +14,9 @@ import { motion } from 'motion/react';
 import { useState } from 'react';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Card } from '@/components/core/card';
-import { Alert, Progress } from '@/components/core/feedback';
+import { Progress } from '@/components/core/feedback';
+import { FlashAlerts } from '@/components/core/flash-alerts';
+import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { cn } from '@/lib/utils';
@@ -228,9 +230,7 @@ function ReadinessBadge({
 }
 
 export default function Dashboard({ hives }: Props) {
-    const { props } = usePage<{
-        flash?: { success?: string; error?: string };
-    }>();
+    const { props } = usePage<{ flash?: FlashMessageBag }>();
     const flash = props.flash;
 
     const [selectedHive, setSelectedHive] = useState<HiveCard | null>(
@@ -256,10 +256,10 @@ export default function Dashboard({ hives }: Props) {
                     <BeekeeperTabs active="dashboard" />
                 </div>
 
-                {flash?.success && (
-                    <Alert variant="success">{flash.success}</Alert>
-                )}
-                {flash?.error && <Alert variant="error">{flash.error}</Alert>}
+                <FlashAlerts
+                    key={flash?.id ?? 'dashboard-flash'}
+                    flash={flash}
+                />
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>

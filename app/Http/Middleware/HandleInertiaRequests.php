@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -45,6 +46,9 @@ class HandleInertiaRequests extends Middleware
                 ) : null,
             ],
             'flash' => [
+                'id' => fn () => $request->session()->has('success') || $request->session()->has('error')
+                    ? Str::uuid()->toString()
+                    : null,
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],

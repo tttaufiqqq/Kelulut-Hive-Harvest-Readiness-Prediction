@@ -13,7 +13,8 @@ import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
-import { Alert } from '@/components/core/feedback';
+import { FlashAlerts } from '@/components/core/flash-alerts';
+import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Modal } from '@/components/core/modal';
 import { MultiSelectField } from '@/components/core/multi-select-field';
 import { Breadcrumbs } from '@/components/core/navigation';
@@ -162,9 +163,7 @@ export default function InspectionsIndex({
     floraTypes,
     filters,
 }: Props) {
-    const { props } = usePage<{
-        flash?: { success?: string; error?: string };
-    }>();
+    const { props } = usePage<{ flash?: FlashMessageBag }>();
     const flash = props.flash;
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
@@ -333,10 +332,10 @@ export default function InspectionsIndex({
                     <BeekeeperTabs active="inspections" />
                 </div>
 
-                {flash?.success && (
-                    <Alert variant="success">{flash.success}</Alert>
-                )}
-                {flash?.error && <Alert variant="error">{flash.error}</Alert>}
+                <FlashAlerts
+                    key={flash?.id ?? 'inspection-flash'}
+                    flash={flash}
+                />
 
                 {/* Header + filter */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

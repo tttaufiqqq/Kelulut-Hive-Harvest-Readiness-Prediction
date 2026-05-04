@@ -13,7 +13,8 @@ import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
-import { Alert } from '@/components/core/feedback';
+import { FlashAlerts } from '@/components/core/flash-alerts';
+import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { NumberInput } from '@/components/core/number-input';
@@ -106,9 +107,7 @@ export default function HarvestsIndex({
     flavors,
     filters,
 }: Props) {
-    const { props } = usePage<{
-        flash?: { success?: string; error?: string };
-    }>();
+    const { props } = usePage<{ flash?: FlashMessageBag }>();
     const flash = props.flash;
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
@@ -238,10 +237,7 @@ export default function HarvestsIndex({
                     <BeekeeperTabs active="harvests" />
                 </div>
 
-                {flash?.success && (
-                    <Alert variant="success">{flash.success}</Alert>
-                )}
-                {flash?.error && <Alert variant="error">{flash.error}</Alert>}
+                <FlashAlerts key={flash?.id ?? 'harvest-flash'} flash={flash} />
 
                 {/* Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
