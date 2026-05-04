@@ -78,7 +78,7 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
             <button
                 onClick={() => setOpen(o => !o)}
                 className={cn(
-                    'flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-semibold transition-colors',
+                    'flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-semibold whitespace-nowrap transition-colors',
                     value
                         ? 'bg-yellow-400/20 border-yellow-400 text-amber-900'
                         : 'bg-white border-yellow-200 text-amber-900/60 hover:bg-yellow-50/50',

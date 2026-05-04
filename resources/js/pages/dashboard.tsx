@@ -394,7 +394,7 @@ export default function Dashboard({ hives }: Props) {
                             transition={{ delay: 0.1 }}
                             className="lg:col-span-7 lg:col-start-6 lg:row-start-3"
                         >
-                            <Card className="flex items-center justify-between gap-4">
+                            <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-xs font-bold uppercase tracking-widest text-amber-900/40 mb-1">Latest Prediction</p>
                                     <ReadinessBadge level={selectedHive.readiness_level} />
@@ -406,7 +406,7 @@ export default function Dashboard({ hives }: Props) {
                                 </div>
                                 <Link
                                     href={route('predictions.live', { hive: selectedHive.id })}
-                                    className="shrink-0 flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 rounded-full text-sm font-bold transition-colors"
+                                    className="self-start sm:self-auto shrink-0 flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 rounded-full text-sm font-bold transition-colors"
                                 >
                                     <Activity className="w-4 h-4" />
                                     View Live Predictions

@@ -180,9 +180,9 @@ function SensorChart({ data, selectedDate, onDateChange }: {
         <Card>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <p className="font-bold text-amber-900">Sensor Readings</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                     <DatePicker value={selectedDate} onChange={onDateChange} />
-                    <div className="w-52">
+                    <div className="flex-1 min-w-0">
                         <SelectField
                             value={group}
                             onChange={setGroup}
