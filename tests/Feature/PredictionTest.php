@@ -27,6 +27,20 @@ test('beekeeper can view live predictions for own hive', function () {
         ->assertOk();
 });
 
+test('live predictions response supports empty prediction state', function () {
+    $beekeeper = User::factory()->create();
+    $beekeeper->assignRole('beekeeper');
+    $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
+
+    $this->actingAs($beekeeper)
+        ->get(route('predictions.live', $hive))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('predictions')
+            ->where('hive.id', $hive->id)
+            ->has('predictions', 0)
+        );
+});
+
 test('live predictions response includes enriched process payload', function () {
     $beekeeper = User::factory()->create();
     $beekeeper->assignRole('beekeeper');
@@ -87,6 +101,66 @@ test('live predictions response includes enriched process payload', function () 
             ->where('predictions.0.threshold_match_summaries.0.sensor_type', 'temp')
             ->where('predictions.0.threshold_match_summaries.0.level', 'normal')
             ->where('predictions.0.threshold_match_summaries.0.reading', 33.5)
+        );
+});
+
+test('live predictions response returns the newest results first', function () {
+    $beekeeper = User::factory()->create();
+    $beekeeper->assignRole('beekeeper');
+    $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
+    $node = IotNode::create([
+        'hive_id' => $hive->id,
+        'device_id' => 'NODE-001',
+        'device_status' => 'active',
+    ]);
+
+    $olderLog = SensorLog::create([
+        'hive_id' => $hive->id,
+        'device_id' => $node->id,
+        'temp' => 32.8,
+        'humidity' => 68.0,
+        'mq2_value' => 240,
+        'mq3_value' => 190,
+        'mq5_value' => 170,
+        'mq135_value' => 210,
+        'record_timestamp' => now()->subMinutes(5),
+    ]);
+
+    $newerLog = SensorLog::create([
+        'hive_id' => $hive->id,
+        'device_id' => $node->id,
+        'temp' => 34.1,
+        'humidity' => 71.0,
+        'mq2_value' => 255,
+        'mq3_value' => 205,
+        'mq5_value' => 185,
+        'mq135_value' => 225,
+        'record_timestamp' => now()->subMinute(),
+    ]);
+
+    $olderPrediction = Prediction::create([
+        'sensor_log_id' => $olderLog->id,
+        'readiness_level' => 'approaching',
+        'hri_value' => 0.61,
+        'confidence_score' => 0.74,
+        'prediction_timestamp' => now()->subMinutes(4),
+    ]);
+
+    $newerPrediction = Prediction::create([
+        'sensor_log_id' => $newerLog->id,
+        'readiness_level' => 'nearly_ready',
+        'hri_value' => 0.82,
+        'confidence_score' => 0.9,
+        'prediction_timestamp' => now(),
+    ]);
+
+    $this->actingAs($beekeeper)
+        ->get(route('predictions.live', $hive))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('predictions')
+            ->has('predictions', 2)
+            ->where('predictions.0.id', $newerPrediction->id)
+            ->where('predictions.1.id', $olderPrediction->id)
         );
 });
 
