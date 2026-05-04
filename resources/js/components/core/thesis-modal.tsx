@@ -45,34 +45,38 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                         <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-400" />
 
                         {/* Header */}
-                        <div className="flex items-center justify-between px-6 pt-7 pb-4 border-b border-yellow-100 shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-yellow-100 p-2.5 rounded-2xl">
-                                    <FileText className="w-5 h-5 text-yellow-700" />
+                        <div className="shrink-0 border-b border-yellow-100 px-5 pt-6 pb-4 sm:px-6 sm:pt-7">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex min-w-0 items-start gap-3">
+                                    <div className="shrink-0 rounded-2xl bg-yellow-100 p-2.5">
+                                        <FileText className="h-5 w-5 text-yellow-700" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h2 className="text-base leading-tight font-black uppercase tracking-tight text-amber-950 sm:text-lg">
+                                            Research Thesis
+                                        </h2>
+                                        <p className="mt-1 text-xs leading-relaxed font-medium text-amber-900/50 sm:text-sm">
+                                            BuzzyHive 2.0 — FYP Report
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h2 className="text-lg font-black uppercase tracking-tighter text-amber-950">
-                                        Research Thesis
-                                    </h2>
-                                    <p className="text-xs text-amber-900/50 font-medium">BuzzyHive 2.0 — FYP Report</p>
-                                </div>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                                <a
-                                    href={thesisUrl}
-                                    download
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-950 font-bold text-sm rounded-full transition-colors"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    Download
-                                </a>
-                                <button
-                                    onClick={onClose}
-                                    className="p-2 hover:bg-yellow-100 rounded-full transition-colors text-amber-900/50 hover:text-amber-900"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
+                                <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-shrink-0">
+                                    <a
+                                        href={thesisUrl}
+                                        download
+                                        className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-yellow-400 px-4 py-2 text-sm font-bold text-yellow-950 transition-colors hover:bg-yellow-500 sm:flex-none"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Download
+                                    </a>
+                                    <button
+                                        onClick={onClose}
+                                        className="rounded-full p-2 text-amber-900/50 transition-colors hover:bg-yellow-100 hover:text-amber-900"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

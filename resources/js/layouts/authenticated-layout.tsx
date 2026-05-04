@@ -49,7 +49,7 @@ export function AuthenticatedLayout({ header = null, children }: AuthenticatedLa
         <div className="min-h-screen bg-[#FFFBEB] text-amber-950 font-sans selection:bg-yellow-200 pb-20 md:pb-0">
 
             {/* ── Top App Bar ─────────────────────────────────────────────── */}
-            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-yellow-100 px-6 py-4">
+            <header className="sticky top-0 z-50 border-b border-yellow-100 bg-white/80 px-4 py-3 backdrop-blur-md sm:px-6 sm:py-4">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
 
                     {/* Logo */}
@@ -66,9 +66,9 @@ export function AuthenticatedLayout({ header = null, children }: AuthenticatedLa
                     <div className="flex items-center gap-4">
                         <Dropdown
                             trigger={
-                                <button className="flex items-center gap-2 p-1 pr-3 hover:bg-yellow-100 rounded-full transition-colors border border-yellow-100">
-                                    <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
-                                        <User className="w-4 h-4 text-yellow-950" />
+                                <button className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-100 p-1 transition-colors hover:bg-yellow-100 sm:h-auto sm:w-auto sm:justify-start sm:gap-2 sm:pr-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400">
+                                        <User className="h-4 w-4 text-yellow-950" />
                                     </div>
                                     <span className="text-sm font-bold text-amber-900 hidden sm:block">
                                         {user.name}
