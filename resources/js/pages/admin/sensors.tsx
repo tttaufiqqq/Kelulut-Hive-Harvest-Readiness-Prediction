@@ -105,7 +105,7 @@ function ArcGauge({ value, max, color, noData = false }: { value: number; max: n
 }
 
 // ── ProgressBar ──────────────────────────────────────────────────────────
-function ProgressBar({ value, color }: { value: number; color: string }) {
+function ProgressBar({ value, color, noData = false }: { value: number; color: string; noData?: boolean }) {
     const [displayValue, setDisplayValue] = useState(0);
     const mounted = useRef(false);
 
@@ -120,16 +120,22 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
     }, [value]);
 
     return (
-        <div className="w-full h-3 bg-amber-100 rounded-full overflow-hidden my-4">
+        <>
             <div
-                className="h-full rounded-full"
-                style={{
-                    width: `${Math.min(displayValue, 100)}%`,
-                    backgroundColor: color,
-                    transition: 'width 0.7s ease-out, background-color 0.4s ease',
-                }}
-            />
-        </div>
+                className="w-full h-3 rounded-full overflow-hidden my-4"
+                style={{ backgroundColor: noData ? '#D1D5DB' : '#FEF3C7' }}
+            >
+                <div
+                    className="h-full rounded-full"
+                    style={{
+                        width: noData ? '0%' : `${Math.min(displayValue, 100)}%`,
+                        backgroundColor: color,
+                        transition: 'width 0.7s ease-out, background-color 0.4s ease',
+                    }}
+                />
+            </div>
+            {noData && <p className="text-xs text-gray-400 text-center -mt-2 mb-1">--</p>}
+        </>
     );
 }
 
@@ -402,6 +408,7 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
                                 <ProgressBar
                                     value={latest?.humidity ?? 0}
                                     color={latest ? humidColor(latest.humidity) : '#FEF3C7'}
+                                    noData={!latest}
                                 />
                                 {latest && <StatusBadge color={humidColor(latest.humidity)} />}
                                 <SensorLine data={history} dataKey="humidity" />
