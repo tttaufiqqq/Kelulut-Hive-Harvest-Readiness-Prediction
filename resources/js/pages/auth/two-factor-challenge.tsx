@@ -87,14 +87,17 @@ export default function TwoFactorChallenge() {
                                         onChange={(value) => setCode(value)}
                                         disabled={processing}
                                         pattern={REGEXP_ONLY_DIGITS}
+                                        containerClassName="gap-3"
+                                        className="disabled:opacity-50"
                                     >
-                                        <InputOTPGroup>
+                                        <InputOTPGroup className="gap-3">
                                             {Array.from(
                                                 { length: OTP_MAX_LENGTH },
                                                 (_, index) => (
                                                     <InputOTPSlot
                                                         key={index}
                                                         index={index}
+                                                        className="h-14 w-14 rounded-2xl border-2 border-amber-100 bg-white text-xl font-bold text-amber-950 shadow-none first:rounded-2xl first:border-l-2 last:rounded-2xl focus-within:border-yellow-400 data-[active=true]:border-yellow-400 data-[active=true]:ring-0"
                                                     />
                                                 ),
                                             )}
