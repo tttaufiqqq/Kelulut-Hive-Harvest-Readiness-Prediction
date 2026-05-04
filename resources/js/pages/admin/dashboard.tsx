@@ -68,6 +68,14 @@ const READINESS_LABEL: Record<HiveData['status'], string> = {
     no_data: 'No Data Today',
 };
 
+const STATUS_LABEL: Record<HiveData['status'], string> = {
+    ready:   'Ready',
+    growing: 'Growing',
+    alert:   'Alert',
+    offline: 'Offline',
+    no_data: 'No Data',
+};
+
 // ── Sensor warning thresholds ──────────────────────────────────────────
 const WARN_TEMP_ABOVE  = 35;   // °C
 const WARN_HUMID_ABOVE = 85;   // %
@@ -178,23 +186,23 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                         <p className="text-sm text-amber-900/40 text-center py-6 px-4">No hives registered yet.</p>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[640px] text-sm">
+                            <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-yellow-100">
                                         <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">#</th>
                                         <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">Hive</th>
-                                        <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">Beekeeper</th>
+                                        <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden sm:table-cell">Beekeeper</th>
                                         <th className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">Species</th>
-                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">
+                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">
                                             <Thermometer className="w-3 h-3 inline mr-1" />Temp
                                         </th>
-                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">
+                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">
                                             <Droplets className="w-3 h-3 inline mr-1" />Humid
                                         </th>
-                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">
+                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">
                                             <Wind className="w-3 h-3 inline mr-1" />MQ135
                                         </th>
-                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">HRI</th>
+                                        <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">HRI</th>
                                         <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40">Status</th>
                                         <th className="text-center py-2 px-3 text-xs font-bold uppercase tracking-widest text-amber-900/40 hidden md:table-cell">Last Reading</th>
                                     </tr>
@@ -208,20 +216,20 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                         >
                                             <td className="py-3 px-3 text-xs font-bold text-amber-900/40 tabular-nums">{index + 1}</td>
                                             <td className="py-3 px-3 font-bold text-amber-900">{hive.hive_name}</td>
-                                            <td className="py-3 px-3 text-amber-800">{hive.beekeeper}</td>
+                                            <td className="py-3 px-3 text-amber-800 hidden sm:table-cell">{hive.beekeeper}</td>
                                             <td className="py-3 px-3 text-amber-700 italic hidden md:table-cell text-xs">{hive.species}</td>
-                                            <td className="py-3 px-3 text-center text-amber-800">
+                                            <td className="py-3 px-3 text-center text-amber-800 hidden md:table-cell">
                                                 {hive.temp > 0 ? `${hive.temp}°C` : '—'}
                                             </td>
-                                            <td className="py-3 px-3 text-center text-amber-800">
+                                            <td className="py-3 px-3 text-center text-amber-800 hidden md:table-cell">
                                                 {hive.humidity > 0 ? `${hive.humidity}%` : '—'}
                                             </td>
-                                            <td className="py-3 px-3 text-center">
+                                            <td className="py-3 px-3 text-center hidden md:table-cell">
                                                 <span className={hive.co2 > WARN_CO2_ABOVE ? 'text-red-600 font-bold' : 'text-amber-800'}>
                                                     {hive.co2 > 0 ? hive.co2 : '—'}
                                                 </span>
                                             </td>
-                                            <td className="py-3 px-3 text-center">
+                                            <td className="py-3 px-3 text-center hidden md:table-cell">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <div className="w-16 h-1.5 bg-yellow-100 rounded-full overflow-hidden">
                                                         <div
@@ -233,8 +241,8 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                                 </div>
                                             </td>
                                             <td className="py-3 px-3 text-center">
-                                                <span className={`px-2 py-1 rounded-lg text-xs font-bold capitalize ${STATUS_BADGE[hive.status]}`}>
-                                                    {hive.status}
+                                                <span className={`px-2 py-1 rounded-lg text-xs font-bold ${STATUS_BADGE[hive.status]}`}>
+                                                    {STATUS_LABEL[hive.status]}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-3 text-center text-xs text-amber-900/50 hidden md:table-cell">
@@ -333,8 +341,8 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                             {/* Navigation + status row */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <span className={`px-3 py-1 rounded-lg text-xs font-bold capitalize ${STATUS_BADGE[hive.status]}`}>
-                                        {hive.status}
+                                    <span className={`px-3 py-1 rounded-lg text-xs font-bold ${STATUS_BADGE[hive.status]}`}>
+                                        {STATUS_LABEL[hive.status]}
                                     </span>
                                     <span className="text-xs text-amber-900/50">{READINESS_LABEL[hive.status]}</span>
                                 </div>
