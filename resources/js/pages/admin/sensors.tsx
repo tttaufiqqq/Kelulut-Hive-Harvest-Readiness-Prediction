@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { Thermometer, Droplets, Flame, ChevronDown, Check } from 'lucide-react';
+import { Thermometer, Droplets, Flame, ChevronDown, Check, AlertCircle } from 'lucide-react';
 import { DatePicker } from '@/components/core/date-picker';
 import { ScrollArea } from '@/components/core/scroll-area';
 import { useState, useRef, useEffect } from 'react';
@@ -32,12 +32,13 @@ type HistoryPoint = {
 };
 
 type Props = {
-    hives:    Hive[];
-    selected: number;
-    window:   '1h' | '6h' | '24h';
-    date:     string | null;
-    latest:   LatestReading;
-    history:  HistoryPoint[];
+    hives:     Hive[];
+    selected:  number;
+    window:    '1h' | '6h' | '24h';
+    date:      string | null;
+    latest:    LatestReading;
+    history:   HistoryPoint[];
+    last_seen: string | null;
 };
 
 // ── ArcGauge ────────────────────────────────────────────────────────────
@@ -277,11 +278,15 @@ function HiveDropdown({ hives, selected, onSelect }: {
 }
 
 // ── AdminSensors ─────────────────────────────────────────────────────────
-export default function AdminSensors({ hives, selected, window, date, latest, history }: Props) {
+export default function AdminSensors({ hives, selected, window, date, latest, history, last_seen }: Props) {
     const navigate = (params: Record<string, string | number | null>) =>
         router.get(route('admin.sensors.index'), { hive_id: selected, window, date: date ?? '', ...params });
 
     const WINDOWS: ('1h' | '6h' | '24h')[] = ['1h', '6h', '24h'];
+
+    const nudgeWindows = latest === null
+        ? WINDOWS.filter(w => WINDOWS.indexOf(w) > WINDOWS.indexOf(window))
+        : [];
 
     // Live polling — reload latest + history every 5s, pause when tab hidden
     useEffect(() => {
@@ -306,13 +311,22 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
                             selected={selected}
                             onSelect={id => navigate({ hive_id: id })}
                         />
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-xl">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                            </span>
-                            <span className="text-xs font-bold text-emerald-700">Live</span>
-                        </div>
+                        {latest !== null ? (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-xl">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                                </span>
+                                <span className="text-xs font-bold text-emerald-700">Live</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-xl">
+                                <span className="w-2 h-2 rounded-full bg-gray-400" />
+                                <span className="text-xs font-bold text-gray-500">
+                                    No Data{last_seen ? ` | Last seen ${last_seen}` : ''}
+                                </span>
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         {/* Date filter */}
