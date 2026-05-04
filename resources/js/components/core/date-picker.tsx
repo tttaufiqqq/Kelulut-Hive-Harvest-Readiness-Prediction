@@ -4,14 +4,15 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 interface DatePickerProps {
-    value:     string | null;   // Y-m-d format
-    onChange:  (date: string | null) => void;
-    className?: string;
+    value:         string | null;   // Y-m-d format
+    onChange:      (date: string | null) => void;
+    defaultValue?: string;          // when value === defaultValue, hide clear button
+    className?:    string;
 }
 
 const DAY_HEADERS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-export function DatePicker({ value, onChange, className }: DatePickerProps) {
+export function DatePicker({ value, onChange, defaultValue, className }: DatePickerProps) {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
@@ -89,7 +90,7 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
             </button>
 
             {/* ── Clear badge ── */}
-            {value && (
+            {value && value !== defaultValue && (
                 <button
                     onClick={() => onChange(null)}
                     className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-900 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors"
