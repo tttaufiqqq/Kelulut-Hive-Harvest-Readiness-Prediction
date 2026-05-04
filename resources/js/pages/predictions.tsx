@@ -377,6 +377,8 @@ function PredictionProcessPanel({
 }: {
     prediction: PredictionEntry;
 }) {
+    const endStepIndex = PROCESS_STEPS.length - 1;
+
     return (
         <Card className="space-y-5 border border-amber-100/90 bg-white/95">
             <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
@@ -395,25 +397,133 @@ function PredictionProcessPanel({
                 </p>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {PROCESS_STEPS.map((step, index) => (
-                    <div
-                        key={step.title}
-                        className="rounded-[1.5rem] border border-amber-100 bg-amber-50/70 p-4"
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-black text-amber-900 shadow-sm">
-                                0{index + 1}
-                            </span>
-                            <p className="text-sm font-bold text-amber-900">
-                                {step.title}
-                            </p>
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-amber-900/60">
-                            {step.description}
-                        </p>
-                    </div>
-                ))}
+            <div className="rounded-[2rem] border border-amber-100 bg-gradient-to-br from-amber-50/85 via-white to-amber-50/60 p-4 sm:p-5">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(6,minmax(0,1fr))] xl:gap-0">
+                    {PROCESS_STEPS.map((step, index) => {
+                        const isEndStep = index === endStepIndex;
+
+                        return (
+                            <div
+                                key={step.title}
+                                className="flex items-stretch xl:min-w-0 xl:items-center"
+                            >
+                                <motion.div
+                                    className={cn(
+                                        'relative flex-1 rounded-[1.5rem] border border-amber-100 bg-white/90 p-4 shadow-[0_18px_30px_-28px_rgba(120,53,15,0.7)]',
+                                        isEndStep &&
+                                            'border-amber-200 bg-amber-50/90',
+                                    )}
+                                    initial={{ opacity: 0, y: 16 }}
+                                    animate={
+                                        isEndStep
+                                            ? {
+                                                  opacity: 1,
+                                                  y: 0,
+                                                  boxShadow: [
+                                                      '0 18px 30px -28px rgba(120,53,15,0.45)',
+                                                      '0 24px 38px -28px rgba(217,119,6,0.45)',
+                                                      '0 18px 30px -28px rgba(120,53,15,0.45)',
+                                                  ],
+                                              }
+                                            : { opacity: 1, y: 0 }
+                                    }
+                                    transition={
+                                        isEndStep
+                                            ? {
+                                                  opacity: {
+                                                      duration: 0.35,
+                                                      delay: index * 0.08,
+                                                      ease: 'easeOut',
+                                                  },
+                                                  y: {
+                                                      duration: 0.35,
+                                                      delay: index * 0.08,
+                                                      ease: 'easeOut',
+                                                  },
+                                                  boxShadow: {
+                                                      duration: 2.6,
+                                                      repeat: Infinity,
+                                                      ease: 'easeInOut',
+                                                  },
+                                              }
+                                            : {
+                                                  duration: 0.35,
+                                                  delay: index * 0.08,
+                                                  ease: 'easeOut',
+                                              }
+                                    }
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span
+                                            className={cn(
+                                                'flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-xs font-black text-amber-900',
+                                                isEndStep &&
+                                                    'bg-amber-900 text-amber-50',
+                                            )}
+                                        >
+                                            0{index + 1}
+                                        </span>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-amber-900">
+                                                {step.title}
+                                            </p>
+                                            <p className="mt-1 text-xs font-semibold tracking-widest text-amber-900/40 uppercase">
+                                                {isEndStep
+                                                    ? 'Stored output'
+                                                    : 'Pipeline step'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <p className="mt-3 text-sm leading-6 text-amber-900/60">
+                                        {step.description}
+                                    </p>
+
+                                    {isEndStep && (
+                                        <div className="mt-4 rounded-[1rem] border border-amber-200 bg-amber-100/70 px-3 py-2">
+                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/45 uppercase">
+                                                Final ML result
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-amber-900">
+                                                {getReadinessLabel(
+                                                    prediction.readiness_level,
+                                                )}{' '}
+                                                ·{' '}
+                                                {Math.round(
+                                                    prediction.confidence_score *
+                                                        100,
+                                                )}
+                                                % confidence
+                                            </p>
+                                        </div>
+                                    )}
+                                </motion.div>
+
+                                {index < endStepIndex && (
+                                    <div className="hidden xl:flex xl:w-8 xl:items-center xl:justify-center">
+                                        <motion.div
+                                            className="h-[2px] w-full rounded-full bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200"
+                                            initial={{
+                                                opacity: 0,
+                                                scaleX: 0.6,
+                                            }}
+                                            animate={{
+                                                opacity: [0.55, 1, 0.55],
+                                                scaleX: 1,
+                                            }}
+                                            transition={{
+                                                duration: 1.8,
+                                                delay: index * 0.1,
+                                                repeat: Infinity,
+                                                ease: 'easeInOut',
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className="grid gap-4 rounded-[1.5rem] border border-dashed border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-900/65 lg:grid-cols-2">
