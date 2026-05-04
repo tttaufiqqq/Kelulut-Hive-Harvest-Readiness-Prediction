@@ -77,21 +77,17 @@ export default function Predictions({ hive, predictions }: Props) {
                             <ArrowLeft className="w-4 h-4" />
                         </Link>
                         <div className="flex-1">
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-2xl font-black text-amber-900">Live Predictions</h1>
-                                {/* Blinking live dot */}
-                                <div className="flex items-center gap-1.5">
-                                    <motion.div
-                                        className="w-2 h-2 rounded-full bg-emerald-500"
-                                        animate={{ opacity: [1, 0.3, 1] }}
-                                        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-                                    />
-                                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
-                                        Live — refreshes every 10s
-                                    </span>
-                                </div>
+                            <h1 className="text-2xl font-black text-amber-900">Live Predictions</h1>
+                            <div className="flex items-center gap-2 mt-1">
+                                <motion.div
+                                    className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"
+                                    animate={{ opacity: [1, 0.3, 1] }}
+                                    transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                                />
+                                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider whitespace-nowrap">Live</span>
+                                <span className="text-amber-900/20">·</span>
+                                <p className="text-amber-700 text-sm truncate">{hive.name} — ML Harvest Readiness</p>
                             </div>
-                            <p className="text-amber-700 text-sm mt-1">{hive.name} — ML Harvest Readiness</p>
                         </div>
                     </div>
                 </div>
