@@ -1,0 +1,1496 @@
+{
+  "sklearn_version": "1.8.0",
+  "features": [
+    "mq2_value",
+    "mq3_value",
+    "mq5_value",
+    "mq135_value",
+    "temp",
+    "humidity"
+  ],
+  "class_order": [
+    "not_ready",
+    "approaching",
+    "nearly_ready",
+    "ready"
+  ],
+  "stress_test_dataset": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\datasets\\synthetic_readiness_stress_test_v1.csv",
+  "datasets": {
+    "legacy": {
+      "summary": {
+        "path": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\dataset.csv",
+        "rows": 200,
+        "class_counts": {
+          "not_ready": 50,
+          "approaching": 50,
+          "nearly_ready": 50,
+          "ready": 50
+        },
+        "feature_bounds": {
+          "mq2_value": {
+            "min": 37.0,
+            "max": 167.0
+          },
+          "mq3_value": {
+            "min": 30.0,
+            "max": 185.0
+          },
+          "mq5_value": {
+            "min": 99.0,
+            "max": 253.0
+          },
+          "mq135_value": {
+            "min": 148.0,
+            "max": 293.0
+          },
+          "temp": {
+            "min": 25.3,
+            "max": 33.6
+          },
+          "humidity": {
+            "min": 60.4,
+            "max": 81.8
+          }
+        }
+      },
+      "results": [
+        {
+          "candidate": "knn_k3_uniform",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 3,
+            "weights": "uniform"
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.9933,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.9517,
+          "stress_optimistic_rate": 1.0
+        },
+        {
+          "candidate": "knn_k5_uniform",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 5,
+            "weights": "uniform"
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.9913,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.9517,
+          "stress_optimistic_rate": 1.0
+        },
+        {
+          "candidate": "knn_k7_uniform",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 7,
+            "weights": "uniform"
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.9829,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.9517,
+          "stress_optimistic_rate": 1.0
+        },
+        {
+          "candidate": "knn_k3_distance",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 3,
+            "weights": "distance"
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.9935,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.9517,
+          "stress_optimistic_rate": 1.0
+        },
+        {
+          "candidate": "knn_k5_distance",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 5,
+            "weights": "distance"
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.9915,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.9517,
+          "stress_optimistic_rate": 1.0
+        },
+        {
+          "candidate": "knn_k7_distance",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 7,
+            "weights": "distance"
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.9836,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.9517,
+          "stress_optimistic_rate": 1.0
+        },
+        {
+          "candidate": "logistic_regression",
+          "family": "logistic_regression",
+          "params": {
+            "max_iter": 2000,
+            "random_state": 42,
+            "solver": "lbfgs"
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.9065,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.9417,
+          "stress_optimistic_rate": 1.0
+        },
+        {
+          "candidate": "random_forest",
+          "family": "random_forest",
+          "params": {
+            "n_estimators": 300,
+            "random_state": 42,
+            "min_samples_leaf": 1
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.8046,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.8767,
+          "stress_optimistic_rate": 0.9967
+        }
+      ],
+      "best_macro_f1_candidate": {
+        "candidate": "random_forest",
+        "family": "random_forest",
+        "params": {
+          "n_estimators": 300,
+          "random_state": 42,
+          "min_samples_leaf": 1
+        },
+        "cv_macro_f1_mean": 1.0,
+        "cv_macro_f1_std": 0.0,
+        "cv_precision_macro_mean": 1.0,
+        "cv_recall_macro_mean": 1.0,
+        "holdout_accuracy": 1.0,
+        "holdout_confusion_matrix": {
+          "not_ready": {
+            "not_ready": 10,
+            "approaching": 0,
+            "nearly_ready": 0,
+            "ready": 0
+          },
+          "approaching": {
+            "not_ready": 0,
+            "approaching": 10,
+            "nearly_ready": 0,
+            "ready": 0
+          },
+          "nearly_ready": {
+            "not_ready": 0,
+            "approaching": 0,
+            "nearly_ready": 10,
+            "ready": 0
+          },
+          "ready": {
+            "not_ready": 0,
+            "approaching": 0,
+            "nearly_ready": 0,
+            "ready": 10
+          }
+        },
+        "holdout_per_class": {
+          "not_ready": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0,
+            "support": 10
+          },
+          "approaching": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0,
+            "support": 10
+          },
+          "nearly_ready": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0,
+            "support": 10
+          },
+          "ready": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0,
+            "support": 10
+          }
+        },
+        "stress_mean_max_probability": 0.8046,
+        "stress_p95_max_probability": 1.0,
+        "stress_ready_rate": 0.8767,
+        "stress_optimistic_rate": 0.9967
+      },
+      "recommended_candidate": {
+        "deployment_blocked": true,
+        "stress_optimism_threshold": 0.15,
+        "reason": "All candidates remained too optimistic on the stress dataset, so deployment should stay blocked.",
+        "candidate": {
+          "candidate": "random_forest",
+          "family": "random_forest",
+          "params": {
+            "n_estimators": 300,
+            "random_state": 42,
+            "min_samples_leaf": 1
+          },
+          "cv_macro_f1_mean": 1.0,
+          "cv_macro_f1_std": 0.0,
+          "cv_precision_macro_mean": 1.0,
+          "cv_recall_macro_mean": 1.0,
+          "holdout_accuracy": 1.0,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 10,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 0,
+              "approaching": 10,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 10,
+              "ready": 0
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 0,
+              "ready": 10
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "approaching": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "nearly_ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            },
+            "ready": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1_score": 1.0,
+              "support": 10
+            }
+          },
+          "stress_mean_max_probability": 0.8046,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.8767,
+          "stress_optimistic_rate": 0.9967
+        }
+      }
+    },
+    "synthetic_flat": {
+      "summary": {
+        "path": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\datasets\\synthetic_readiness_training_flat_v1.csv",
+        "rows": 1600,
+        "class_counts": {
+          "not_ready": 400,
+          "approaching": 400,
+          "nearly_ready": 400,
+          "ready": 400
+        },
+        "feature_bounds": {
+          "mq2_value": {
+            "min": 44.0,
+            "max": 245.0
+          },
+          "mq3_value": {
+            "min": 53.0,
+            "max": 243.0
+          },
+          "mq5_value": {
+            "min": 103.0,
+            "max": 320.0
+          },
+          "mq135_value": {
+            "min": 156.0,
+            "max": 380.0
+          },
+          "temp": {
+            "min": 26.27,
+            "max": 38.49
+          },
+          "humidity": {
+            "min": 47.89,
+            "max": 95.0
+          }
+        }
+      },
+      "results": [
+        {
+          "candidate": "knn_k3_uniform",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 3,
+            "weights": "uniform"
+          },
+          "cv_macro_f1_mean": 0.8426,
+          "cv_macro_f1_std": 0.0199,
+          "cv_precision_macro_mean": 0.8437,
+          "cv_recall_macro_mean": 0.8431,
+          "holdout_accuracy": 0.8281,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 72,
+              "approaching": 8,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 4,
+              "approaching": 62,
+              "nearly_ready": 14,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 8,
+              "nearly_ready": 62,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 11,
+              "ready": 69
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9474,
+              "recall": 0.9,
+              "f1_score": 0.9231,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.7949,
+              "recall": 0.775,
+              "f1_score": 0.7848,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7126,
+              "recall": 0.775,
+              "f1_score": 0.7425,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8734,
+              "recall": 0.8625,
+              "f1_score": 0.8679,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.85,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.0033,
+          "stress_optimistic_rate": 0.0467
+        },
+        {
+          "candidate": "knn_k5_uniform",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 5,
+            "weights": "uniform"
+          },
+          "cv_macro_f1_mean": 0.8521,
+          "cv_macro_f1_std": 0.0236,
+          "cv_precision_macro_mean": 0.8534,
+          "cv_recall_macro_mean": 0.8525,
+          "holdout_accuracy": 0.8469,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 73,
+              "approaching": 7,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 4,
+              "approaching": 65,
+              "nearly_ready": 11,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 8,
+              "nearly_ready": 62,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 9,
+              "ready": 71
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9481,
+              "recall": 0.9125,
+              "f1_score": 0.9299,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.8125,
+              "recall": 0.8125,
+              "f1_score": 0.8125,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7561,
+              "recall": 0.775,
+              "f1_score": 0.7654,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8765,
+              "recall": 0.8875,
+              "f1_score": 0.882,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.8173,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.0067,
+          "stress_optimistic_rate": 0.0567
+        },
+        {
+          "candidate": "knn_k7_uniform",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 7,
+            "weights": "uniform"
+          },
+          "cv_macro_f1_mean": 0.856,
+          "cv_macro_f1_std": 0.0251,
+          "cv_precision_macro_mean": 0.8579,
+          "cv_recall_macro_mean": 0.8562,
+          "holdout_accuracy": 0.8281,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 76,
+              "approaching": 4,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 7,
+              "approaching": 59,
+              "nearly_ready": 14,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 13,
+              "nearly_ready": 57,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 7,
+              "ready": 73
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9157,
+              "recall": 0.95,
+              "f1_score": 0.9325,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.7763,
+              "recall": 0.7375,
+              "f1_score": 0.7564,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7308,
+              "recall": 0.7125,
+              "f1_score": 0.7215,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8795,
+              "recall": 0.9125,
+              "f1_score": 0.8957,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.8071,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.01,
+          "stress_optimistic_rate": 0.0583
+        },
+        {
+          "candidate": "knn_k3_distance",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 3,
+            "weights": "distance"
+          },
+          "cv_macro_f1_mean": 0.8407,
+          "cv_macro_f1_std": 0.0202,
+          "cv_precision_macro_mean": 0.8417,
+          "cv_recall_macro_mean": 0.8413,
+          "holdout_accuracy": 0.8281,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 72,
+              "approaching": 8,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 4,
+              "approaching": 62,
+              "nearly_ready": 14,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 8,
+              "nearly_ready": 62,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 11,
+              "ready": 69
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9474,
+              "recall": 0.9,
+              "f1_score": 0.9231,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.7949,
+              "recall": 0.775,
+              "f1_score": 0.7848,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7126,
+              "recall": 0.775,
+              "f1_score": 0.7425,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8734,
+              "recall": 0.8625,
+              "f1_score": 0.8679,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.8514,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.005,
+          "stress_optimistic_rate": 0.0517
+        },
+        {
+          "candidate": "knn_k5_distance",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 5,
+            "weights": "distance"
+          },
+          "cv_macro_f1_mean": 0.8513,
+          "cv_macro_f1_std": 0.0221,
+          "cv_precision_macro_mean": 0.8525,
+          "cv_recall_macro_mean": 0.8519,
+          "holdout_accuracy": 0.8469,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 73,
+              "approaching": 7,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 4,
+              "approaching": 65,
+              "nearly_ready": 11,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 8,
+              "nearly_ready": 62,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 9,
+              "ready": 71
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9481,
+              "recall": 0.9125,
+              "f1_score": 0.9299,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.8125,
+              "recall": 0.8125,
+              "f1_score": 0.8125,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7561,
+              "recall": 0.775,
+              "f1_score": 0.7654,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8765,
+              "recall": 0.8875,
+              "f1_score": 0.882,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.8184,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.0067,
+          "stress_optimistic_rate": 0.0583
+        },
+        {
+          "candidate": "knn_k7_distance",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 7,
+            "weights": "distance"
+          },
+          "cv_macro_f1_mean": 0.8581,
+          "cv_macro_f1_std": 0.023,
+          "cv_precision_macro_mean": 0.8599,
+          "cv_recall_macro_mean": 0.8588,
+          "holdout_accuracy": 0.8406,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 74,
+              "approaching": 6,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 4,
+              "approaching": 63,
+              "nearly_ready": 13,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 11,
+              "nearly_ready": 59,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 7,
+              "ready": 73
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9487,
+              "recall": 0.925,
+              "f1_score": 0.9367,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.7875,
+              "recall": 0.7875,
+              "f1_score": 0.7875,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7468,
+              "recall": 0.7375,
+              "f1_score": 0.7421,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8795,
+              "recall": 0.9125,
+              "f1_score": 0.8957,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.8091,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.01,
+          "stress_optimistic_rate": 0.06
+        },
+        {
+          "candidate": "logistic_regression",
+          "family": "logistic_regression",
+          "params": {
+            "max_iter": 2000,
+            "random_state": 42,
+            "solver": "lbfgs"
+          },
+          "cv_macro_f1_mean": 0.5939,
+          "cv_macro_f1_std": 0.0253,
+          "cv_precision_macro_mean": 0.5907,
+          "cv_recall_macro_mean": 0.6044,
+          "holdout_accuracy": 0.6,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 66,
+              "approaching": 11,
+              "nearly_ready": 2,
+              "ready": 1
+            },
+            "approaching": {
+              "not_ready": 21,
+              "approaching": 27,
+              "nearly_ready": 24,
+              "ready": 8
+            },
+            "nearly_ready": {
+              "not_ready": 11,
+              "approaching": 17,
+              "nearly_ready": 30,
+              "ready": 22
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 5,
+              "nearly_ready": 6,
+              "ready": 69
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.6735,
+              "recall": 0.825,
+              "f1_score": 0.7416,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.45,
+              "recall": 0.3375,
+              "f1_score": 0.3857,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.4839,
+              "recall": 0.375,
+              "f1_score": 0.4225,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.69,
+              "recall": 0.8625,
+              "f1_score": 0.7667,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.6437,
+          "stress_p95_max_probability": 0.9705,
+          "stress_ready_rate": 0.2767,
+          "stress_optimistic_rate": 0.29
+        },
+        {
+          "candidate": "random_forest",
+          "family": "random_forest",
+          "params": {
+            "n_estimators": 300,
+            "random_state": 42,
+            "min_samples_leaf": 1
+          },
+          "cv_macro_f1_mean": 0.8359,
+          "cv_macro_f1_std": 0.0231,
+          "cv_precision_macro_mean": 0.8362,
+          "cv_recall_macro_mean": 0.8363,
+          "holdout_accuracy": 0.8281,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 73,
+              "approaching": 7,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 4,
+              "approaching": 67,
+              "nearly_ready": 9,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 14,
+              "nearly_ready": 56,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 11,
+              "ready": 69
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9481,
+              "recall": 0.9125,
+              "f1_score": 0.9299,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.7614,
+              "recall": 0.8375,
+              "f1_score": 0.7976,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7368,
+              "recall": 0.7,
+              "f1_score": 0.7179,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8734,
+              "recall": 0.8625,
+              "f1_score": 0.8679,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.5791,
+          "stress_p95_max_probability": 0.81,
+          "stress_ready_rate": 0.0017,
+          "stress_optimistic_rate": 0.06
+        }
+      ],
+      "best_macro_f1_candidate": {
+        "candidate": "knn_k7_distance",
+        "family": "knn",
+        "params": {
+          "n_neighbors": 7,
+          "weights": "distance"
+        },
+        "cv_macro_f1_mean": 0.8581,
+        "cv_macro_f1_std": 0.023,
+        "cv_precision_macro_mean": 0.8599,
+        "cv_recall_macro_mean": 0.8588,
+        "holdout_accuracy": 0.8406,
+        "holdout_confusion_matrix": {
+          "not_ready": {
+            "not_ready": 74,
+            "approaching": 6,
+            "nearly_ready": 0,
+            "ready": 0
+          },
+          "approaching": {
+            "not_ready": 4,
+            "approaching": 63,
+            "nearly_ready": 13,
+            "ready": 0
+          },
+          "nearly_ready": {
+            "not_ready": 0,
+            "approaching": 11,
+            "nearly_ready": 59,
+            "ready": 10
+          },
+          "ready": {
+            "not_ready": 0,
+            "approaching": 0,
+            "nearly_ready": 7,
+            "ready": 73
+          }
+        },
+        "holdout_per_class": {
+          "not_ready": {
+            "precision": 0.9487,
+            "recall": 0.925,
+            "f1_score": 0.9367,
+            "support": 80
+          },
+          "approaching": {
+            "precision": 0.7875,
+            "recall": 0.7875,
+            "f1_score": 0.7875,
+            "support": 80
+          },
+          "nearly_ready": {
+            "precision": 0.7468,
+            "recall": 0.7375,
+            "f1_score": 0.7421,
+            "support": 80
+          },
+          "ready": {
+            "precision": 0.8795,
+            "recall": 0.9125,
+            "f1_score": 0.8957,
+            "support": 80
+          }
+        },
+        "stress_mean_max_probability": 0.8091,
+        "stress_p95_max_probability": 1.0,
+        "stress_ready_rate": 0.01,
+        "stress_optimistic_rate": 0.06
+      },
+      "recommended_candidate": {
+        "deployment_blocked": false,
+        "stress_optimism_threshold": 0.15,
+        "reason": "At least one candidate stayed below the stress optimism safety threshold.",
+        "candidate": {
+          "candidate": "knn_k7_distance",
+          "family": "knn",
+          "params": {
+            "n_neighbors": 7,
+            "weights": "distance"
+          },
+          "cv_macro_f1_mean": 0.8581,
+          "cv_macro_f1_std": 0.023,
+          "cv_precision_macro_mean": 0.8599,
+          "cv_recall_macro_mean": 0.8588,
+          "holdout_accuracy": 0.8406,
+          "holdout_confusion_matrix": {
+            "not_ready": {
+              "not_ready": 74,
+              "approaching": 6,
+              "nearly_ready": 0,
+              "ready": 0
+            },
+            "approaching": {
+              "not_ready": 4,
+              "approaching": 63,
+              "nearly_ready": 13,
+              "ready": 0
+            },
+            "nearly_ready": {
+              "not_ready": 0,
+              "approaching": 11,
+              "nearly_ready": 59,
+              "ready": 10
+            },
+            "ready": {
+              "not_ready": 0,
+              "approaching": 0,
+              "nearly_ready": 7,
+              "ready": 73
+            }
+          },
+          "holdout_per_class": {
+            "not_ready": {
+              "precision": 0.9487,
+              "recall": 0.925,
+              "f1_score": 0.9367,
+              "support": 80
+            },
+            "approaching": {
+              "precision": 0.7875,
+              "recall": 0.7875,
+              "f1_score": 0.7875,
+              "support": 80
+            },
+            "nearly_ready": {
+              "precision": 0.7468,
+              "recall": 0.7375,
+              "f1_score": 0.7421,
+              "support": 80
+            },
+            "ready": {
+              "precision": 0.8795,
+              "recall": 0.9125,
+              "f1_score": 0.8957,
+              "support": 80
+            }
+          },
+          "stress_mean_max_probability": 0.8091,
+          "stress_p95_max_probability": 1.0,
+          "stress_ready_rate": 0.01,
+          "stress_optimistic_rate": 0.06
+        }
+      }
+    }
+  }
+}
