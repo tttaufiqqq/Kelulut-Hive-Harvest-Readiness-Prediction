@@ -165,6 +165,7 @@ function SensorChart({ data, selectedDate, onDateChange }: {
     selectedDate: string;
     onDateChange: (date: string | null) => void;
 }) {
+    const todayYMD = new Date().toISOString().slice(0, 10);
     const [mounted, setMounted] = useState(false);
     const [group, setGroup] = useState('all');
 
@@ -181,7 +182,7 @@ function SensorChart({ data, selectedDate, onDateChange }: {
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <p className="font-bold text-amber-900">Sensor Readings</p>
                 <div className="flex items-center gap-2 min-w-0">
-                    <DatePicker value={selectedDate} onChange={onDateChange} />
+                    <DatePicker value={selectedDate} onChange={onDateChange} defaultValue={todayYMD} />
                     <div className="flex-1 min-w-0">
                         <SelectField
                             value={group}
