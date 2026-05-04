@@ -1,0 +1,313 @@
+{
+  "datasets": [
+    {
+      "name": "legacy_baseline",
+      "path": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\dataset.csv",
+      "source_type": "synthetic_legacy",
+      "intended_role": "archived baseline comparison only",
+      "label_provenance": "notebook-generated Gaussian anchors per class",
+      "rows": 200,
+      "label_counts": {
+        "approaching": 50,
+        "not_ready": 50,
+        "ready": 50,
+        "nearly_ready": 50
+      },
+      "feature_bounds": {
+        "mq2_value": {
+          "min": 37.0,
+          "max": 167.0
+        },
+        "mq3_value": {
+          "min": 30.0,
+          "max": 185.0
+        },
+        "mq5_value": {
+          "min": 99.0,
+          "max": 253.0
+        },
+        "mq135_value": {
+          "min": 148.0,
+          "max": 293.0
+        },
+        "temp": {
+          "min": 25.3,
+          "max": 33.6
+        },
+        "humidity": {
+          "min": 60.4,
+          "max": 81.8
+        }
+      }
+    },
+    {
+      "name": "synthetic_balanced_v1",
+      "path": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\datasets\\synthetic_readiness_balanced_v1.csv",
+      "source_type": "synthetic_balanced",
+      "intended_role": "fair prototyping and class-balanced evaluation",
+      "label_provenance": "synthetic readiness rules from latent maturity and stress variables",
+      "rows": 1600,
+      "label_counts": {
+        "not_ready": 400,
+        "ready": 400,
+        "nearly_ready": 400,
+        "approaching": 400
+      },
+      "feature_bounds": {
+        "mq2_value": {
+          "min": 44.0,
+          "max": 245.0
+        },
+        "mq3_value": {
+          "min": 53.0,
+          "max": 243.0
+        },
+        "mq5_value": {
+          "min": 103.0,
+          "max": 320.0
+        },
+        "mq135_value": {
+          "min": 156.0,
+          "max": 380.0
+        },
+        "temp": {
+          "min": 26.27,
+          "max": 38.49
+        },
+        "humidity": {
+          "min": 47.89,
+          "max": 95.0
+        }
+      }
+    },
+    {
+      "name": "synthetic_training_flat_v1",
+      "path": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\datasets\\synthetic_readiness_training_flat_v1.csv",
+      "source_type": "synthetic_training",
+      "intended_role": "API-compatible retraining experiments",
+      "label_provenance": "flattened export of the balanced synthetic dataset",
+      "rows": 1600,
+      "label_counts": {
+        "not_ready": 400,
+        "ready": 400,
+        "nearly_ready": 400,
+        "approaching": 400
+      },
+      "feature_bounds": {
+        "mq2_value": {
+          "min": 44.0,
+          "max": 245.0
+        },
+        "mq3_value": {
+          "min": 53.0,
+          "max": 243.0
+        },
+        "mq5_value": {
+          "min": 103.0,
+          "max": 320.0
+        },
+        "mq135_value": {
+          "min": 156.0,
+          "max": 380.0
+        },
+        "temp": {
+          "min": 26.27,
+          "max": 38.49
+        },
+        "humidity": {
+          "min": 47.89,
+          "max": 95.0
+        }
+      }
+    },
+    {
+      "name": "synthetic_timeseries_v1",
+      "path": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\datasets\\synthetic_readiness_timeseries_v1.csv",
+      "source_type": "synthetic_timeseries",
+      "intended_role": "sequence stability, drift, and UI playback checks",
+      "label_provenance": "synthetic readiness rules with time continuity",
+      "rows": 4493,
+      "label_counts": {
+        "not_ready": 921,
+        "approaching": 1720,
+        "nearly_ready": 898,
+        "ready": 954
+      },
+      "feature_bounds": {
+        "mq2_value": {
+          "min": 44.0,
+          "max": 245.0
+        },
+        "mq3_value": {
+          "min": 53.0,
+          "max": 249.0
+        },
+        "mq5_value": {
+          "min": 103.0,
+          "max": 320.0
+        },
+        "mq135_value": {
+          "min": 156.0,
+          "max": 380.0
+        },
+        "temp": {
+          "min": 26.24,
+          "max": 38.5
+        },
+        "humidity": {
+          "min": 46.77,
+          "max": 95.0
+        }
+      }
+    },
+    {
+      "name": "synthetic_stress_test_v1",
+      "path": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\datasets\\synthetic_readiness_stress_test_v1.csv",
+      "source_type": "synthetic_stress_test",
+      "intended_role": "OOD, anomaly, and safety validation only",
+      "label_provenance": "synthetic stress scenarios and explicit outlier cases",
+      "rows": 600,
+      "label_counts": {
+        "approaching": 271,
+        "not_ready": 314,
+        "nearly_ready": 15
+      },
+      "feature_bounds": {
+        "mq2_value": {
+          "min": 53.0,
+          "max": 405.0
+        },
+        "mq3_value": {
+          "min": 48.0,
+          "max": 430.0
+        },
+        "mq5_value": {
+          "min": 121.0,
+          "max": 560.0
+        },
+        "mq135_value": {
+          "min": 160.0,
+          "max": 640.0
+        },
+        "temp": {
+          "min": 21.31,
+          "max": 44.0
+        },
+        "humidity": {
+          "min": 32.08,
+          "max": 100.0
+        }
+      }
+    }
+  ],
+  "reference_ranges": [
+    {
+      "name": "repo_seeded_live_like_sensor_logs",
+      "source_type": "development_seed_data",
+      "reference": "database/seeders/SensorLogSeeder.php",
+      "intended_role": "UI/demo realism and live-like range comparison only",
+      "feature_bounds": {
+        "mq2_value": {
+          "min": 160.0,
+          "max": 450.0
+        },
+        "mq3_value": {
+          "min": 160.0,
+          "max": 450.0
+        },
+        "mq5_value": {
+          "min": 160.0,
+          "max": 450.0
+        },
+        "mq135_value": {
+          "min": 160.0,
+          "max": 450.0
+        },
+        "temp": {
+          "min": 31.2,
+          "max": 36.8
+        },
+        "humidity": {
+          "min": 65.2,
+          "max": 76.8
+        }
+      },
+      "notes": "These are generated development values, not validated harvest-readiness labels."
+    },
+    {
+      "name": "sensor_ingest_validation_limits",
+      "source_type": "api_acceptance_range",
+      "reference": "app/Http/Controllers/SensorController.php",
+      "intended_role": "hard API bounds for accepted live payloads",
+      "feature_bounds": {
+        "mq2_value": {
+          "min": 0.0,
+          "max": 4095.0
+        },
+        "mq3_value": {
+          "min": 0.0,
+          "max": 4095.0
+        },
+        "mq5_value": {
+          "min": 0.0,
+          "max": 4095.0
+        },
+        "mq135_value": {
+          "min": 0.0,
+          "max": 4095.0
+        },
+        "temp": {
+          "min": -10.0,
+          "max": 60.0
+        },
+        "humidity": {
+          "min": 0.0,
+          "max": 100.0
+        }
+      },
+      "notes": "These are acceptance limits, not evidence-backed training ranges."
+    }
+  ],
+  "live_like_comparisons": {
+    "legacy_baseline": {
+      "mq2_value": "under-covers upper live-like range",
+      "mq3_value": "under-covers upper live-like range",
+      "mq5_value": "under-covers upper live-like range",
+      "mq135_value": "under-covers upper live-like range",
+      "temp": "under-covers upper live-like range",
+      "humidity": "covers or exceeds seeded live-like upper range"
+    },
+    "synthetic_balanced_v1": {
+      "mq2_value": "under-covers upper live-like range",
+      "mq3_value": "under-covers upper live-like range",
+      "mq5_value": "under-covers upper live-like range",
+      "mq135_value": "under-covers upper live-like range",
+      "temp": "covers or exceeds seeded live-like upper range",
+      "humidity": "covers or exceeds seeded live-like upper range"
+    },
+    "synthetic_training_flat_v1": {
+      "mq2_value": "under-covers upper live-like range",
+      "mq3_value": "under-covers upper live-like range",
+      "mq5_value": "under-covers upper live-like range",
+      "mq135_value": "under-covers upper live-like range",
+      "temp": "covers or exceeds seeded live-like upper range",
+      "humidity": "covers or exceeds seeded live-like upper range"
+    },
+    "synthetic_timeseries_v1": {
+      "mq2_value": "under-covers upper live-like range",
+      "mq3_value": "under-covers upper live-like range",
+      "mq5_value": "under-covers upper live-like range",
+      "mq135_value": "under-covers upper live-like range",
+      "temp": "covers or exceeds seeded live-like upper range",
+      "humidity": "covers or exceeds seeded live-like upper range"
+    },
+    "synthetic_stress_test_v1": {
+      "mq2_value": "under-covers upper live-like range",
+      "mq3_value": "under-covers upper live-like range",
+      "mq5_value": "covers or exceeds seeded live-like upper range",
+      "mq135_value": "covers or exceeds seeded live-like upper range",
+      "temp": "covers or exceeds seeded live-like upper range",
+      "humidity": "covers or exceeds seeded live-like upper range"
+    }
+  }
+}
