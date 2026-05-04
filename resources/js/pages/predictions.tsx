@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/core/card';
+import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { cn } from '@/lib/utils';
@@ -193,6 +194,27 @@ function ReadinessBadge({
     );
 }
 
+function ProcessActionButton({
+    onClick,
+    className,
+}: {
+    onClick: () => void;
+    className?: string;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                'inline-flex items-center justify-center rounded-full border border-amber-200 bg-white/85 px-4 py-2 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-100',
+                className,
+            )}
+        >
+            View ML Process
+        </button>
+    );
+}
+
 function PredictionHeader({ hive }: Pick<Props, 'hive'>) {
     return (
         <div className="flex flex-col gap-2">
@@ -239,7 +261,13 @@ function PredictionHeader({ hive }: Pick<Props, 'hive'>) {
     );
 }
 
-function LatestPredictionHero({ prediction }: { prediction: PredictionEntry }) {
+function LatestPredictionHero({
+    prediction,
+    onViewProcess,
+}: {
+    prediction: PredictionEntry;
+    onViewProcess: () => void;
+}) {
     const confidencePct = Math.round(prediction.confidence_score * 100);
     const hriPct = Math.round(prediction.hri_value * 100);
 
@@ -289,6 +317,10 @@ function LatestPredictionHero({ prediction }: { prediction: PredictionEntry }) {
                         against sensor thresholds, and scored by the ML model
                         for harvest readiness.
                     </p>
+                    <ProcessActionButton
+                        onClick={onViewProcess}
+                        className="border-white/45 bg-white/70 hover:bg-white"
+                    />
                 </div>
 
                 <div className="grid gap-3 rounded-[2rem] border border-white/20 bg-white/12 p-4 text-sm text-amber-950/75 sm:grid-cols-2 lg:min-w-[320px]">
@@ -747,7 +779,12 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
     );
 }
 
-function PredictionHistory({ predictions }: Pick<Props, 'predictions'>) {
+function PredictionHistory({
+    predictions,
+    onViewProcess,
+}: Pick<Props, 'predictions'> & {
+    onViewProcess: (predictionId: number) => void;
+}) {
     return (
         <div className="space-y-3">
             <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
@@ -828,6 +865,12 @@ function PredictionHistory({ predictions }: Pick<Props, 'predictions'>) {
                                                 ? `Highest threshold severity: ${thresholdOverview.highestLevel}`
                                                 : 'No threshold matches recorded'}
                                         </p>
+                                        <ProcessActionButton
+                                            onClick={() =>
+                                                onViewProcess(prediction.id)
+                                            }
+                                            className="mt-3 w-full bg-white"
+                                        />
                                     </div>
                                 </div>
 
@@ -853,8 +896,357 @@ function EmptyPredictionState() {
     );
 }
 
+function ProcessSection({
+    eyebrow,
+    title,
+    children,
+    className,
+}: {
+    eyebrow: string;
+    title: string;
+    children: React.ReactNode;
+    className?: string;
+}) {
+    return (
+        <motion.section
+            className={cn(
+                'rounded-[1.75rem] border border-amber-100 bg-white p-5 shadow-sm',
+                className,
+            )}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+            <p className="text-[10px] font-black tracking-widest text-amber-900/40 uppercase">
+                {eyebrow}
+            </p>
+            <h3 className="mt-2 text-lg font-bold text-amber-900">{title}</h3>
+            <div className="mt-4">{children}</div>
+        </motion.section>
+    );
+}
+
+function PredictionProcessModal({
+    prediction,
+    onClose,
+}: {
+    prediction: PredictionEntry | null;
+    onClose: () => void;
+}) {
+    const isOpen = prediction !== null;
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="ML Process Walkthrough"
+            maxWidth="2xl"
+        >
+            {prediction && (
+                <div className="space-y-5">
+                    <motion.div
+                        className="rounded-[1.75rem] border border-amber-100 bg-gradient-to-br from-amber-50 via-white to-amber-50/70 p-5"
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                    >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <p className="text-[10px] font-black tracking-widest text-amber-900/40 uppercase">
+                                    Reading Summary
+                                </p>
+                                <div className="mt-3 flex flex-wrap items-center gap-3">
+                                    <ReadinessBadge
+                                        level={prediction.readiness_level}
+                                    />
+                                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-amber-800 shadow-sm">
+                                        {prediction.device_identifier ??
+                                            'Unknown device'}
+                                    </span>
+                                    <span className="text-sm font-semibold text-amber-900/65">
+                                        Sensor log #
+                                        {prediction.sensor_log_id ?? 'N/A'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-3 text-sm text-amber-900/70 sm:grid-cols-2">
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Captured
+                                    </p>
+                                    <p className="mt-1 font-semibold text-amber-900">
+                                        {prediction.record_timestamp_label ??
+                                            'N/A'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Stored
+                                    </p>
+                                    <p className="mt-1 font-semibold text-amber-900">
+                                        {prediction.prediction_timestamp_label ??
+                                            'N/A'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    <ProcessSection
+                        eyebrow="Step 1"
+                        title="Raw IoT input stored for this hive"
+                    >
+                        <SensorSnapshot prediction={prediction} />
+                    </ProcessSection>
+
+                    <div className="grid gap-5 xl:grid-cols-2">
+                        <ProcessSection
+                            eyebrow="Step 2"
+                            title="Threshold interpretation"
+                        >
+                            <div className="space-y-3">
+                                <p className="text-sm text-amber-900/60">
+                                    This is the rule-based context layer. It
+                                    helps explain the reading, but it does not
+                                    decide the final readiness label.
+                                </p>
+
+                                {prediction.threshold_match_summaries.length >
+                                0 ? (
+                                    prediction.threshold_match_summaries.map(
+                                        (match) => (
+                                            <div
+                                                key={match.id}
+                                                className="rounded-[1.25rem] border border-amber-100 bg-amber-50/60 p-4"
+                                            >
+                                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                                    <p className="font-semibold text-amber-900">
+                                                        {formatSensorLabel(
+                                                            match.sensor_type,
+                                                        )}
+                                                    </p>
+                                                    <span
+                                                        className={cn(
+                                                            'rounded-full px-2.5 py-1 text-[11px] font-bold capitalize',
+                                                            THRESHOLD_LEVEL_STYLES[
+                                                                match.level
+                                                            ] ??
+                                                                'bg-stone-100 text-stone-700',
+                                                        )}
+                                                    >
+                                                        {match.level}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-2 text-sm text-amber-900/65">
+                                                    {match.meaning ??
+                                                        'Threshold matched for this sensor.'}
+                                                </p>
+                                                <p className="mt-2 text-xs font-semibold text-amber-900/45 uppercase">
+                                                    Reading{' '}
+                                                    {formatSensorReading(
+                                                        match.sensor_type,
+                                                        match.reading,
+                                                    )}{' '}
+                                                    · Range {match.min_value} to{' '}
+                                                    {match.max_value}
+                                                </p>
+                                                {match.recommended_action && (
+                                                    <p className="mt-2 text-sm text-amber-900/60">
+                                                        Recommended action:{' '}
+                                                        {
+                                                            match.recommended_action
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ),
+                                    )
+                                ) : (
+                                    <div className="rounded-[1.25rem] border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-900/60">
+                                        No threshold matches were recorded for
+                                        this reading.
+                                    </div>
+                                )}
+                            </div>
+                        </ProcessSection>
+
+                        <ProcessSection
+                            eyebrow="Step 3"
+                            title="ML features sent"
+                        >
+                            <div className="space-y-4">
+                                <p className="text-sm text-amber-900/60">
+                                    The stored reading is sent to the Flask
+                                    prediction service using the same six sensor
+                                    values shown below.
+                                </p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        {
+                                            label: 'temp',
+                                            value: `${prediction.sensor_values.temp}°C`,
+                                        },
+                                        {
+                                            label: 'humidity',
+                                            value: `${prediction.sensor_values.humidity}%`,
+                                        },
+                                        {
+                                            label: 'mq2_value',
+                                            value: `${prediction.sensor_values.mq2_value}`,
+                                        },
+                                        {
+                                            label: 'mq3_value',
+                                            value: `${prediction.sensor_values.mq3_value}`,
+                                        },
+                                        {
+                                            label: 'mq5_value',
+                                            value: `${prediction.sensor_values.mq5_value}`,
+                                        },
+                                        {
+                                            label: 'mq135_value',
+                                            value: `${prediction.sensor_values.mq135_value}`,
+                                        },
+                                    ].map((feature) => (
+                                        <div
+                                            key={feature.label}
+                                            className="rounded-[1rem] border border-amber-100 px-3 py-3"
+                                        >
+                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                                {feature.label}
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-amber-900">
+                                                {feature.value}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </ProcessSection>
+                    </div>
+
+                    <div className="grid gap-5 xl:grid-cols-2">
+                        <ProcessSection
+                            eyebrow="Step 4"
+                            title="ML response returned"
+                            className="border-amber-200 bg-amber-50/60"
+                        >
+                            <div className="space-y-4">
+                                <p className="text-sm text-amber-900/60">
+                                    This is the model output returned by the ML
+                                    service for the stored reading.
+                                </p>
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    <div className="rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
+                                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                            Readiness
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-amber-900">
+                                            {getReadinessLabel(
+                                                prediction.readiness_level,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
+                                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                            HRI value
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-amber-900">
+                                            {Math.round(
+                                                prediction.hri_value * 100,
+                                            )}
+                                            %
+                                        </p>
+                                    </div>
+                                    <div className="rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
+                                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                            Confidence
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-amber-900">
+                                            {Math.round(
+                                                prediction.confidence_score *
+                                                    100,
+                                            )}
+                                            %
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </ProcessSection>
+
+                        <ProcessSection
+                            eyebrow="Step 5"
+                            title="Final stored result"
+                            className="border-amber-200 bg-white"
+                        >
+                            <div className="space-y-4">
+                                <p className="text-sm text-amber-900/60">
+                                    This is the persisted application result
+                                    that the live predictions page reads back
+                                    and refreshes every 10 seconds.
+                                </p>
+                                <div className="rounded-[1.5rem] border border-amber-100 bg-gradient-to-br from-white to-amber-50/80 p-5">
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <ReadinessBadge
+                                            level={prediction.readiness_level}
+                                        />
+                                        <span className="text-sm font-semibold text-amber-900/65">
+                                            Prediction #{prediction.id}
+                                        </span>
+                                    </div>
+                                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                                HRI value
+                                            </p>
+                                            <p className="mt-1 text-2xl font-black text-amber-900">
+                                                {Math.round(
+                                                    prediction.hri_value * 100,
+                                                )}
+                                                %
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                                Confidence
+                                            </p>
+                                            <p className="mt-1 text-2xl font-black text-amber-900">
+                                                {Math.round(
+                                                    prediction.confidence_score *
+                                                        100,
+                                                )}
+                                                %
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                                Stored at
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-amber-900">
+                                                {prediction.prediction_timestamp_label ??
+                                                    'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </ProcessSection>
+                    </div>
+                </div>
+            )}
+        </Modal>
+    );
+}
+
 export default function Predictions({ hive, predictions }: Props) {
     const latest = predictions[0] ?? null;
+    const [selectedPredictionId, setSelectedPredictionId] = useState<
+        number | null
+    >(null);
+    const selectedPrediction =
+        predictions.find(
+            (prediction) => prediction.id === selectedPredictionId,
+        ) ?? null;
 
     useEffect(() => {
         const id = setInterval(() => {
@@ -873,7 +1265,12 @@ export default function Predictions({ hive, predictions }: Props) {
 
                 {latest ? (
                     <>
-                        <LatestPredictionHero prediction={latest} />
+                        <LatestPredictionHero
+                            prediction={latest}
+                            onViewProcess={() =>
+                                setSelectedPredictionId(latest.id)
+                            }
+                        />
                         <PredictionProcessPanel prediction={latest} />
 
                         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -881,12 +1278,20 @@ export default function Predictions({ hive, predictions }: Props) {
                             <MlPredictionCard prediction={latest} />
                         </div>
 
-                        <PredictionHistory predictions={predictions} />
+                        <PredictionHistory
+                            predictions={predictions}
+                            onViewProcess={setSelectedPredictionId}
+                        />
                     </>
                 ) : (
                     <EmptyPredictionState />
                 )}
             </div>
+
+            <PredictionProcessModal
+                prediction={selectedPrediction}
+                onClose={() => setSelectedPredictionId(null)}
+            />
         </AuthenticatedLayout>
     );
 }
