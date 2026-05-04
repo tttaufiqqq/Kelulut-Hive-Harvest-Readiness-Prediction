@@ -1,6 +1,7 @@
 import { X, Download, FileText, ExternalLink } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect } from 'react';
+import { ScrollArea } from '@/components/core/scroll-area';
 
 interface ThesisModalProps {
     isOpen: boolean;
@@ -13,8 +14,8 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
         document.body.style.overflow = isOpen ? 'hidden' : '';
 
         return () => {
- document.body.style.overflow = ''; 
-};
+            document.body.style.overflow = '';
+        };
     }, [isOpen]);
 
     return (
@@ -76,13 +77,16 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                         </div>
 
                         {/* PDF Viewer — desktop */}
-                        <div className="hidden md:block flex-1 p-4 overflow-hidden">
+                        <ScrollArea
+                            className="hidden flex-1 p-4 md:block"
+                            direction="both"
+                        >
                             <iframe
                                 src={`${thesisUrl}#toolbar=0&navpanes=0`}
                                 className="w-full h-full rounded-2xl border border-yellow-100"
                                 title="BuzzyHive 2.0 Thesis"
                             />
-                        </div>
+                        </ScrollArea>
 
                         {/* Mobile fallback — open natively */}
                         <div className="md:hidden flex-1 flex flex-col items-center justify-center gap-5 p-8">

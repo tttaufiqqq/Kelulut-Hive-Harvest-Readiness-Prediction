@@ -181,9 +181,9 @@ function SensorChart({ data, selectedDate, onDateChange }: {
         <Card>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <p className="font-bold text-amber-900">Sensor Readings</p>
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end">
                     <DatePicker value={selectedDate} onChange={onDateChange} defaultValue={todayYMD} />
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 sm:w-[190px]">
                         <SelectField
                             value={group}
                             onChange={setGroup}
