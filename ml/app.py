@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 import pickle
-import numpy as np
 from pathlib import Path
 import sys
 import logging
+
+from runtime import FEATURES, build_prediction_response, load_model_metadata, to_feature_array
 
 app = Flask(__name__)
 
@@ -19,15 +20,7 @@ BASE = Path(__file__).parent
 # Load model and scaler
 model = pickle.load(open(BASE / 'model.pkl', 'rb'))
 scaler = pickle.load(open(BASE / 'scaler.pkl', 'rb'))
-
-HRI_MAP = {
-    'not_ready':    0.25,
-    'approaching':  0.50,
-    'nearly_ready': 0.75,
-    'ready':        1.00,
-}
-
-FEATURES = ['mq2_value', 'mq3_value', 'mq5_value', 'mq135_value', 'temp', 'humidity']
+metadata = load_model_metadata(BASE)
 
 
 @app.route('/health', methods=['GET'])
@@ -49,19 +42,28 @@ def predict():
         return jsonify({'error': f'Missing fields: {missing}'}), 400
 
     try:
-        X = np.array([[data[f] for f in FEATURES]])
+        X = to_feature_array(data)
         X_scaled = scaler.transform(X)
 
-        label = model.predict(X_scaled)[0]
+        raw_label = model.predict(X_scaled)[0]
         proba = model.predict_proba(X_scaled)[0]
         confidence = float(max(proba))
+        response = build_prediction_response(
+            data=data,
+            raw_label=raw_label,
+            confidence=confidence,
+            feature_bounds=metadata['feature_bounds'],
+        )
 
-        app.logger.info(f"Prediction: {label}, confidence {confidence}")
-        return jsonify({
-            'readiness_level':  label,
-            'hri_value':        HRI_MAP[label],
-            'confidence_score': round(confidence, 4),
-        })
+        app.logger.info(
+            "Prediction raw=%s guarded=%s confidence=%.4f ood=%s action=%s",
+            raw_label,
+            response['readiness_level'],
+            confidence,
+            response['out_of_distribution'],
+            response['guardrail_action'],
+        )
+        return jsonify(response)
     except Exception as e:
         app.logger.exception("Prediction failed")
         return jsonify({'error': str(e)}), 500

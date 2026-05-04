@@ -1,0 +1,51 @@
+{
+  "model_version": "legacy-knn-baseline-guarded-v1",
+  "training_dataset": "ml/dataset.csv",
+  "training_rows": 200,
+  "feature_order": [
+    "mq2_value",
+    "mq3_value",
+    "mq5_value",
+    "mq135_value",
+    "temp",
+    "humidity"
+  ],
+  "feature_bounds": {
+    "mq2_value": {
+      "min": 37.0,
+      "max": 167.0
+    },
+    "mq3_value": {
+      "min": 30.0,
+      "max": 185.0
+    },
+    "mq5_value": {
+      "min": 99.0,
+      "max": 253.0
+    },
+    "mq135_value": {
+      "min": 148.0,
+      "max": 293.0
+    },
+    "temp": {
+      "min": 25.3,
+      "max": 33.6
+    },
+    "humidity": {
+      "min": 60.4,
+      "max": 81.8
+    }
+  },
+  "label_mapping": {
+    "not_ready": 0.25,
+    "approaching": 0.5,
+    "nearly_ready": 0.75,
+    "ready": 1.0
+  },
+  "guardrail_policy": {
+    "version": "phase-1",
+    "out_of_distribution_rule": "flag any feature outside the active training min/max bounds",
+    "critical_threshold_rule": "downgrade or suppress optimistic predictions when threshold severity is critical",
+    "warning_threshold_rule": "annotate optimistic predictions when threshold severity is warning"
+  }
+}
