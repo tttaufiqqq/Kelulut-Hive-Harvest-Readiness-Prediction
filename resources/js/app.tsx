@@ -7,9 +7,32 @@ import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { configureEcho } from '@laravel/echo-react';
 
-configureEcho({
-    broadcaster: 'pusher',
-});
+const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
+const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
+const pusherScheme = import.meta.env.VITE_PUSHER_SCHEME ?? 'https';
+const pusherHost = import.meta.env.VITE_PUSHER_HOST;
+const pusherPort = Number(
+    import.meta.env.VITE_PUSHER_PORT ??
+        (pusherScheme === 'https' ? '443' : '80'),
+);
+
+configureEcho(
+    pusherKey && pusherCluster
+        ? {
+              broadcaster: 'pusher',
+              key: pusherKey,
+              cluster: pusherCluster,
+              forceTLS: pusherScheme === 'https',
+              enabledTransports: ['ws', 'wss'],
+              ...(pusherHost ? { wsHost: pusherHost } : {}),
+              ...(Number.isNaN(pusherPort)
+                  ? {}
+                  : { wsPort: pusherPort, wssPort: pusherPort }),
+          }
+        : {
+              broadcaster: 'null',
+          },
+);
 
 window.route = route;
 

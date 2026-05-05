@@ -256,7 +256,18 @@ These are not handled by the pipeline and must be configured manually:
 
 3. **Python app (Flask/ML)** — cPanel → Setup Python App → point to `ml/app.py`, install `requirements.txt`, set `ML_API_URL` in server `.env`
 
-4. **Demo data seed** — run once after first deploy:
+4. **Pusher runtime env** — set these in the cPanel `.env` used by Laravel:
+   ```dotenv
+   BROADCAST_CONNECTION=pusher
+   PUSHER_APP_ID=...
+   PUSHER_APP_KEY=...
+   PUSHER_APP_SECRET=...
+   PUSHER_APP_CLUSTER=...
+   PUSHER_PORT=443
+   PUSHER_SCHEME=https
+   ```
+
+5. **Demo data seed** — run once after first deploy:
    ```bash
    cd /home/urbanale/public_html/buzzyhive
    php artisan migrate:fresh --seed
