@@ -48,11 +48,20 @@ class PredictionController extends Controller
             ->withQueryString()
             ->through(fn (Prediction $prediction) => $this->transformPrediction($prediction));
 
+        $predictionTrends = (clone $baseQuery)
+            ->orderByDesc('predictions.prediction_timestamp')
+            ->limit(12)
+            ->get()
+            ->reverse()
+            ->values()
+            ->map(fn (Prediction $prediction) => $this->transformPredictionTrend($prediction));
+
         return Inertia::render('predictions', [
             'hive' => ['id' => $hive->id, 'name' => $hive->name],
             'latestPrediction' => $latestPrediction
                 ? $this->transformPrediction($latestPrediction)
                 : null,
+            'predictionTrends' => $predictionTrends,
             'historyPredictions' => $historyPredictions,
             'filters' => [
                 'page' => (int) $request->integer('page', 1),
@@ -117,6 +126,21 @@ class PredictionController extends Controller
                 })
                 ->values()
                 ->all() ?? [],
+        ];
+    }
+
+    private function transformPredictionTrend(Prediction $prediction): array
+    {
+        $sensorLog = $prediction->sensorLog;
+
+        return [
+            'id' => $prediction->id,
+            'label' => $prediction->prediction_timestamp?->format('d M, H:i') ?? 'N/A',
+            'hri_pct' => round((float) $prediction->hri_value * 100, 1),
+            'confidence_pct' => round((float) $prediction->confidence_score * 100, 1),
+            'temp' => round((float) ($sensorLog?->temp ?? 0), 1),
+            'humidity' => round((float) ($sensorLog?->humidity ?? 0), 1),
+            'warning_state' => $prediction->warning_state ?? 'normal',
         ];
     }
 }

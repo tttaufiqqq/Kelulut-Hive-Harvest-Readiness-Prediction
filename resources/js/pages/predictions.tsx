@@ -2,6 +2,16 @@ import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
+import {
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
@@ -37,6 +47,15 @@ interface PredictionEntry {
 interface Props {
     hive: { id: number; name: string };
     latestPrediction: PredictionEntry | null;
+    predictionTrends: {
+        id: number;
+        label: string;
+        hri_pct: number;
+        confidence_pct: number;
+        temp: number;
+        humidity: number;
+        warning_state: string;
+    }[];
     historyPredictions: {
         data: PredictionEntry[];
         links: { url: string | null; label: string; active: boolean }[];
@@ -85,6 +104,15 @@ const WARNING_LABEL_STYLES: Record<string, string> = {
     normal: 'bg-amber-100 text-amber-800',
     warning: 'bg-amber-200 text-amber-900',
     critical: 'bg-rose-100 text-rose-800',
+};
+
+const TOOLTIP_STYLE = {
+    backgroundColor: '#FFFBEB',
+    border: '1px solid #FEF3C7',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    color: '#78350F',
 };
 
 function getReadinessLabel(level: string) {
@@ -247,9 +275,156 @@ function PredictionTrustNotice({
     );
 }
 
+function PredictionTrendChart({
+    data,
+}: {
+    data: Props['predictionTrends'];
+}) {
+    return (
+        <Card className="h-full">
+            <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                        HRI Trend
+                    </p>
+                    <p className="mt-1 text-sm text-amber-700">
+                        Recent readiness movement across the latest live
+                        readings.
+                    </p>
+                </div>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={data}>
+                    <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#FEF3C7"
+                    />
+                    <XAxis
+                        dataKey="label"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                            fill: '#78350F',
+                            fontSize: 10,
+                            fontWeight: 600,
+                        }}
+                        minTickGap={24}
+                        dy={8}
+                    />
+                    <YAxis
+                        domain={[0, 100]}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(value) => `${value}%`}
+                        tick={{
+                            fill: '#78350F',
+                            fontSize: 10,
+                            fontWeight: 600,
+                        }}
+                    />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Line
+                        type="monotone"
+                        dataKey="hri_pct"
+                        name="HRI"
+                        stroke="#F59E0B"
+                        strokeWidth={3}
+                        dot={{ r: 3, fill: '#F59E0B' }}
+                        activeDot={{ r: 5 }}
+                    />
+                    <Line
+                        type="monotone"
+                        dataKey="confidence_pct"
+                        name="Raw confidence"
+                        stroke="#92400E"
+                        strokeWidth={2}
+                        strokeDasharray="5 4"
+                        dot={false}
+                    />
+                </LineChart>
+            </ResponsiveContainer>
+        </Card>
+    );
+}
+
+function SensorTrendChart({
+    data,
+}: {
+    data: Props['predictionTrends'];
+}) {
+    return (
+        <Card className="h-full">
+            <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                        Conditions Trend
+                    </p>
+                    <p className="mt-1 text-sm text-amber-700">
+                        Temperature and humidity context behind recent model
+                        changes.
+                    </p>
+                </div>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={data}>
+                    <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#FEF3C7"
+                    />
+                    <XAxis
+                        dataKey="label"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                            fill: '#78350F',
+                            fontSize: 10,
+                            fontWeight: 600,
+                        }}
+                        minTickGap={24}
+                        dy={8}
+                    />
+                    <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                            fill: '#78350F',
+                            fontSize: 10,
+                            fontWeight: 600,
+                        }}
+                    />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Line
+                        type="monotone"
+                        dataKey="temp"
+                        name="Temperature"
+                        stroke="#EA580C"
+                        strokeWidth={2.5}
+                        dot={{ r: 3, fill: '#EA580C' }}
+                        activeDot={{ r: 5 }}
+                    />
+                    <Line
+                        type="monotone"
+                        dataKey="humidity"
+                        name="Humidity"
+                        stroke="#2563EB"
+                        strokeWidth={2.5}
+                        dot={{ r: 3, fill: '#2563EB' }}
+                        activeDot={{ r: 5 }}
+                    />
+                </LineChart>
+            </ResponsiveContainer>
+        </Card>
+    );
+}
+
 export default function Predictions({
     hive,
     latestPrediction,
+    predictionTrends,
     historyPredictions,
     filters,
 }: Props) {
@@ -271,7 +446,11 @@ export default function Predictions({
     useEffect(() => {
         const id = setInterval(() => {
             router.reload({
-                only: ['latestPrediction', 'historyPredictions'],
+                only: [
+                    'latestPrediction',
+                    'predictionTrends',
+                    'historyPredictions',
+                ],
             });
         }, 10000);
 
@@ -466,6 +645,11 @@ export default function Predictions({
 
                             <PredictionTrustNotice prediction={latest} />
                         </Card>
+
+                        <div className="grid gap-6 xl:grid-cols-2">
+                            <PredictionTrendChart data={predictionTrends} />
+                            <SensorTrendChart data={predictionTrends} />
+                        </div>
 
                         <Card className="space-y-4 p-6">
                             <div className="flex flex-wrap items-center justify-between gap-2">
