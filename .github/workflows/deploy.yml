@@ -103,6 +103,9 @@ jobs:
         run: npm ci
 
       - name: Build Frontend Assets
+        env:
+          VITE_PUSHER_APP_KEY: ${{ secrets.VITE_PUSHER_APP_KEY }}
+          VITE_PUSHER_APP_CLUSTER: ${{ secrets.VITE_PUSHER_APP_CLUSTER }}
         run: npm run build
 
       - name: Upload build artifact

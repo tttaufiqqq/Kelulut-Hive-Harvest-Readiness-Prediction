@@ -42,6 +42,7 @@ git push main
     │  setup Node 22       │
     │  npm cache           │  ← keyed on package-lock.json hash
     │  npm ci              │
+    │  inject VITE_PUSHER_*│  ← prod frontend websocket config from GH secrets
     │  npm run build       │  ← compiles React/TS → public/build/
     │  upload artifact     │  ← public/build/ stored in GH for 1 day
     └──────────┬──────────┘
@@ -131,6 +132,8 @@ Extracting build into its own job means:
 - **Build fails clearly** — you know it's a build issue, not a deploy issue
 - **Artifact is shared** — `public/build/` is uploaded once to GitHub's artifact store and downloaded by the deploy job, eliminating a redundant second build
 - **No npm in deploy job** — the deploy job becomes a pure "move files to server" step
+
+If the frontend needs build-time environment variables, they must exist in GitHub Actions as secrets or variables. This matters for Pusher because `VITE_PUSHER_APP_KEY` and `VITE_PUSHER_APP_CLUSTER` are read by Vite during `npm run build`; values that exist only in the server `.env` are too late for the compiled JavaScript bundle.
 
 The artifact has `retention-days: 1` — it only needs to survive the duration of the pipeline run.
 
@@ -232,6 +235,8 @@ The deploy time breakdown for a warm cache run:
 | `FTP_USERNAME` | `deploy@buzzyhive.urban-alert.com` |
 | `FTP_PASSWORD` | FTP account password (set in cPanel) |
 | `DEPLOY_SECRET` | Must match `DEPLOY_SECRET` in server `.env` |
+| `VITE_PUSHER_APP_KEY` | Production Pusher public key used during `npm run build` |
+| `VITE_PUSHER_APP_CLUSTER` | Production Pusher cluster used during `npm run build` |
 
 ---
 

@@ -5,6 +5,11 @@ import { createRoot } from 'react-dom/client';
 import { route } from 'ziggy-js';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { configureEcho } from '@laravel/echo-react';
+
+configureEcho({
+    broadcaster: 'pusher',
+});
 
 window.route = route;
 
