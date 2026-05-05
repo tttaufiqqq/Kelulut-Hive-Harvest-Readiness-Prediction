@@ -28,6 +28,11 @@ class User extends Authenticatable
         return $this->hasMany(Harvest::class, 'beekeeper_id');
     }
 
+    public function hives(): HasMany
+    {
+        return $this->hasMany(Hive::class, 'beekeeper_id');
+    }
+
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');
