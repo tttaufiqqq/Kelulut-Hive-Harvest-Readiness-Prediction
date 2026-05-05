@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SensorReadingCreated;
 use App\Models\IotNode;
 use App\Models\SensorLog;
 use App\Services\MlPredictionService;
@@ -54,6 +55,12 @@ class SensorController extends Controller
             'mq135_value' => $data['mq135_value'],
             'record_timestamp' => now(),
         ]);
+
+        SensorReadingCreated::dispatch(
+            $log->hive_id,
+            $log->id,
+            $log->record_timestamp->toIso8601String(),
+        );
 
         // ── Threshold matching (non-blocking) ────────────────────
         try {

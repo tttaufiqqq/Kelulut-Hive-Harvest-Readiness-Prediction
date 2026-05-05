@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\PredictionCreated;
 use App\Jobs\SendTelegramAlert;
 use App\Models\HriSummary;
 use App\Models\Prediction;
@@ -76,6 +77,12 @@ class MlPredictionService
                 'out_of_distribution_features' => $data['out_of_distribution_features'] ?? [],
                 'prediction_timestamp' => now(),
             ]);
+
+            PredictionCreated::dispatch(
+                $log->hive_id,
+                $prediction->id,
+                $prediction->prediction_timestamp->toIso8601String(),
+            );
 
             if ($prediction->readiness_level === 'ready') {
                 SendTelegramAlert::dispatch($prediction->id);
