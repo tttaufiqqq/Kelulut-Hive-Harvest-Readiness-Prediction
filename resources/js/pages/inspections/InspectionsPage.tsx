@@ -24,25 +24,84 @@ import { SelectField } from '@/components/core/select-field';
 import { TextareaField } from '@/components/core/textarea-field';
 import { WeatherPills } from '@/components/core/weather-pills';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
-import {
-    BLOOMING_OPTIONS,
-    DAMAGE_OPTIONS,
-    EMPTY_CREATE_INSPECTION_FORM,
-    NECTAR_OPTIONS,
-    VEGETATION_OPTIONS,
-} from './constants';
 import type {
-    ActiveModal,
-    InspectionCreateFormData,
-    InspectionEditFormData,
-    InspectionRecord,
-    Props,
-} from './types';
-import {
-    buildHiveFilterOptions,
-    buildHiveFormOptions,
-    toMultiIds,
-} from './utils';
+    Inspection,
+    MasterWeatherCondition,
+    MasterFloraType,
+    PaginatedInspections,
+} from '@/types';
+
+type Props = {
+    inspections: PaginatedInspections;
+    hives: { id: number; name: string }[];
+    weatherConditions: MasterWeatherCondition[];
+    floraTypes: MasterFloraType[];
+    filters: { hive_id?: string };
+};
+
+type ActiveModal =
+    | { type: 'create' }
+    | { type: 'view'; index: number }
+    | { type: 'edit'; inspection: Inspection }
+    | { type: 'delete'; inspection: Inspection }
+    | null;
+
+const BLOOMING_OPTIONS = [
+    { value: 'pre_bloom', label: 'Pre-Bloom' },
+    { value: 'early_bloom', label: 'Early Bloom' },
+    { value: 'peak_bloom', label: 'Peak Bloom' },
+    { value: 'post_bloom', label: 'Post-Bloom' },
+    { value: 'dormant', label: 'Dormant' },
+];
+
+const VEGETATION_OPTIONS = [
+    { value: 'sparse', label: 'Sparse' },
+    { value: 'moderate', label: 'Moderate' },
+    { value: 'dense', label: 'Dense' },
+];
+
+const NECTAR_OPTIONS = [
+    { value: 'scarce', label: 'Scarce' },
+    { value: 'moderate', label: 'Moderate' },
+    { value: 'abundant', label: 'Abundant' },
+];
+
+const DAMAGE_OPTIONS = [
+    { value: 'none', label: 'None' },
+    { value: 'minor', label: 'Minor' },
+    { value: 'moderate', label: 'Moderate' },
+    { value: 'severe', label: 'Severe' },
+];
+
+const hiveOptions = (hives: { id: number; name: string }[]) => [
+    { value: '', label: 'All Hives' },
+    ...hives.map((h) => ({ value: String(h.id), label: h.name })),
+];
+
+const hiveFormOptions = (hives: { id: number; name: string }[]) => [
+    { value: '', label: 'Select hive...' },
+    ...hives.map((h) => ({ value: String(h.id), label: h.name })),
+];
+
+const toMultiIds = (items?: { id: number }[]) => items?.map((i) => i.id) ?? [];
+
+const emptyCreate = {
+    hive_id: '',
+    inspection_date: '',
+    blooming_status: '',
+    vegetation_density: '',
+    nectar_source_availability: '',
+    structural_damage: '',
+    food_source_observation: '',
+    notes: '',
+};
+
+type InspectionCreateFormData = typeof emptyCreate & {
+    weather_ids: number[];
+    flora_ids: number[];
+};
+
+type InspectionEditFormData = Omit<InspectionCreateFormData, 'hive_id'>;
 
 export default function InspectionsIndex({
     inspections,
@@ -102,7 +161,7 @@ export default function InspectionsIndex({
     const [editFloraIds, setEditFloraIds] = useState<number[]>([]);
 
     const createForm = useForm<InspectionCreateFormData>({
-        ...EMPTY_CREATE_INSPECTION_FORM,
+        ...emptyCreate,
         weather_ids: [],
         flora_ids: [],
     });
@@ -118,7 +177,7 @@ export default function InspectionsIndex({
         flora_ids: [],
     });
 
-    const openEdit = (inspection: InspectionRecord) => {
+    const openEdit = (inspection: Inspection) => {
         editForm.setData({
             inspection_date: inspection.inspection_date.slice(0, 10),
             blooming_status: inspection.blooming_status ?? '',
@@ -241,7 +300,7 @@ export default function InspectionsIndex({
                             <SelectField
                                 value={filters.hive_id ?? ''}
                                 onChange={onHiveFilter}
-                            options={buildHiveFilterOptions(hives)}
+                                options={hiveOptions(hives)}
                             />
                         </div>
                         <Button
@@ -408,7 +467,7 @@ export default function InspectionsIndex({
                             label="Hive"
                             value={createForm.data.hive_id}
                             onChange={(v) => createForm.setData('hive_id', v)}
-                                    options={buildHiveFormOptions(hives)}
+                            options={hiveFormOptions(hives)}
                             error={createForm.errors.hive_id}
                         />
                         <DatePickerField
