@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/core/card';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
@@ -204,6 +204,7 @@ function PredictionTrustNotice({
 
 export default function Predictions({ hive, predictions }: Props) {
     const latest = predictions[0] ?? null;
+    const [showHistory, setShowHistory] = useState(false);
 
     useEffect(() => {
         const id = setInterval(() => {
@@ -391,85 +392,123 @@ export default function Predictions({ hive, predictions }: Props) {
                             <SensorSnapshot prediction={latest} />
                         </Card>
 
-                        <div className="space-y-3">
-                            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                                Recent Predictions
-                            </p>
+                        <Card className="space-y-4 p-5">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                                        Recent Predictions
+                                    </p>
+                                    <p className="mt-1 text-sm text-amber-700">
+                                        Older readings are available when you
+                                        need extra context.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowHistory((current) => !current)
+                                    }
+                                    className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-50"
+                                >
+                                    {showHistory ? (
+                                        <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                    )}
+                                    {showHistory
+                                        ? 'Hide history'
+                                        : `Show history (${predictions.length})`}
+                                </button>
+                            </div>
+
                             <AnimatePresence initial={false}>
-                                {predictions.map((prediction) => (
+                                {showHistory && (
                                     <motion.div
-                                        key={prediction.id}
-                                        initial={{ opacity: 0, y: -12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
                                         transition={{
-                                            duration: 0.2,
+                                            duration: 0.22,
                                             ease: 'easeOut',
                                         }}
+                                        className="space-y-3 overflow-hidden"
                                     >
-                                        <Card className="space-y-4 p-5">
-                                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                                <span
-                                                    className="rounded-full px-3 py-1 text-xs font-bold text-white"
-                                                    style={{
-                                                        backgroundColor:
-                                                            getReadinessColor(
+                                        {predictions.map((prediction) => (
+                                            <motion.div
+                                                key={prediction.id}
+                                                initial={{ opacity: 0, y: -12 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -8 }}
+                                                transition={{
+                                                    duration: 0.2,
+                                                    ease: 'easeOut',
+                                                }}
+                                            >
+                                                <Card className="space-y-4 p-5">
+                                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                                        <span
+                                                            className="rounded-full px-3 py-1 text-xs font-bold text-white"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    getReadinessColor(
+                                                                        prediction.readiness_level,
+                                                                    ),
+                                                            }}
+                                                        >
+                                                            {getReadinessLabel(
                                                                 prediction.readiness_level,
-                                                            ),
-                                                    }}
-                                                >
-                                                    {getReadinessLabel(
-                                                        prediction.readiness_level,
-                                                    )}
-                                                </span>
-                                                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-amber-900/60">
-                                                    <span>
-                                                        HRI{' '}
-                                                        {Math.round(
-                                                            prediction.hri_value *
-                                                                100,
-                                                        )}
-                                                        %
-                                                    </span>
-                                                    <span>
-                                                        Raw confidence{' '}
-                                                        {formatRawConfidence(
-                                                            prediction.confidence_score,
-                                                        )}
-                                                    </span>
-                                                    <span
-                                                        className={`rounded-full px-2 py-0.5 ${getTrustStyle(prediction.warning_state)}`}
-                                                    >
-                                                        {getTrustLabel(
-                                                            prediction,
-                                                        )}
-                                                    </span>
-                                                    <span>
-                                                        {formatPredictionTime(
-                                                            prediction,
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                                            )}
+                                                        </span>
+                                                        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-amber-900/60">
+                                                            <span>
+                                                                HRI{' '}
+                                                                {Math.round(
+                                                                    prediction.hri_value *
+                                                                        100,
+                                                                )}
+                                                                %
+                                                            </span>
+                                                            <span>
+                                                                Raw confidence{' '}
+                                                                {formatRawConfidence(
+                                                                    prediction.confidence_score,
+                                                                )}
+                                                            </span>
+                                                            <span
+                                                                className={`rounded-full px-2 py-0.5 ${getTrustStyle(prediction.warning_state)}`}
+                                                            >
+                                                                {getTrustLabel(
+                                                                    prediction,
+                                                                )}
+                                                            </span>
+                                                            <span>
+                                                                {formatPredictionTime(
+                                                                    prediction,
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
 
-                                            {prediction.warning_state !==
-                                                'normal' &&
-                                                prediction.prediction_warning && (
-                                                    <p className="text-sm text-amber-900/70">
-                                                        {
-                                                            prediction.prediction_warning
-                                                        }
-                                                    </p>
-                                                )}
+                                                    {prediction.warning_state !==
+                                                        'normal' &&
+                                                        prediction.prediction_warning && (
+                                                            <p className="text-sm text-amber-900/70">
+                                                                {
+                                                                    prediction.prediction_warning
+                                                                }
+                                                            </p>
+                                                        )}
 
-                                            <SensorSnapshot
-                                                prediction={prediction}
-                                            />
-                                        </Card>
+                                                    <SensorSnapshot
+                                                        prediction={prediction}
+                                                    />
+                                                </Card>
+                                            </motion.div>
+                                        ))}
                                     </motion.div>
-                                ))}
+                                )}
                             </AnimatePresence>
-                        </div>
+                        </Card>
                     </>
                 ) : (
                     <EmptyPredictionState />
