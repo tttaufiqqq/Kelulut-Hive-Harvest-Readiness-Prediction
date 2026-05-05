@@ -57,8 +57,28 @@ type Props = {
     last_seen: string | null;
 };
 
-function formatAnimatedReading(value: number, maxFractionDigits = 1): string {
-    return value.toFixed(maxFractionDigits).replace(/\.0$/, '');
+function toFiniteNumber(value: unknown): number | null {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : null;
+    }
+
+    if (typeof value === 'string' && value.trim() !== '') {
+        const parsed = Number(value);
+
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+}
+
+function formatAnimatedReading(value: unknown, maxFractionDigits = 1): string {
+    const numericValue = toFiniteNumber(value);
+
+    if (numericValue === null) {
+        return '—';
+    }
+
+    return numericValue.toFixed(maxFractionDigits).replace(/\.0$/, '');
 }
 
 function useAnimatedNumber(value: number, durationMs = 900) {
@@ -602,6 +622,26 @@ export default function AdminSensors({
     last_seen,
 }: Props) {
     const liveReloadInFlight = useRef(false);
+    const normalizedLatest = latest
+        ? {
+              ...latest,
+              temperature: toFiniteNumber(latest.temperature),
+              humidity: toFiniteNumber(latest.humidity),
+              mq2: toFiniteNumber(latest.mq2),
+              mq3: toFiniteNumber(latest.mq3),
+              mq5: toFiniteNumber(latest.mq5),
+              mq135: toFiniteNumber(latest.mq135),
+          }
+        : null;
+    const normalizedHistory = history.map((point) => ({
+        ...point,
+        temperature: toFiniteNumber(point.temperature) ?? 0,
+        humidity: toFiniteNumber(point.humidity) ?? 0,
+        mq2: toFiniteNumber(point.mq2) ?? 0,
+        mq3: toFiniteNumber(point.mq3) ?? 0,
+        mq5: toFiniteNumber(point.mq5) ?? 0,
+        mq135: toFiniteNumber(point.mq135) ?? 0,
+    }));
     const sensorChannelName = hives.some((hive) => hive.id === selected)
         ? `hive.${selected}.sensors`
         : null;
@@ -617,7 +657,7 @@ export default function AdminSensors({
     const WINDOWS: ('1h' | '6h' | '24h')[] = ['1h', '6h', '24h'];
 
     const nudgeWindows =
-        latest === null
+        normalizedLatest === null
             ? WINDOWS.filter(
                   (w) => WINDOWS.indexOf(w) > WINDOWS.indexOf(window),
               )
@@ -687,7 +727,7 @@ export default function AdminSensors({
                             selected={selected}
                             onSelect={(id) => navigate({ hive_id: id })}
                         />
-                        {latest !== null ? (
+                        {normalizedLatest !== null ? (
                             <div className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-1.5 sm:justify-start">
                                 <span className="relative flex h-2 w-2">
                                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -740,7 +780,7 @@ export default function AdminSensors({
                 </div>
 
                 {/* ── Window Nudge Bar ──────────────────────────────── */}
-                {latest === null && (
+                {normalizedLatest === null && (
                     <div className="flex flex-col gap-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center">
                         <div className="flex min-w-0 flex-1 items-start gap-2">
                             <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
@@ -780,7 +820,10 @@ export default function AdminSensors({
                                     label="Temperature"
                                     value={
                                         <AnimatedMetricValue
-                                            value={latest?.temperature ?? null}
+                                            value={
+                                                normalizedLatest?.temperature ??
+                                                null
+                                            }
                                             suffix="°C"
                                             maxFractionDigits={1}
                                         />
@@ -789,22 +832,26 @@ export default function AdminSensors({
                                     iconColor="#B45309"
                                 />
                                 <ArcGauge
-                                    value={latest?.temperature ?? 0}
+                                    value={normalizedLatest?.temperature ?? 0}
                                     max={45}
                                     color={
-                                        latest
-                                            ? tempColor(latest.temperature)
+                                        normalizedLatest?.temperature !== null
+                                            ? tempColor(
+                                                  normalizedLatest.temperature,
+                                              )
                                             : '#FEF3C7'
                                     }
-                                    noData={!latest}
+                                    noData={!normalizedLatest}
                                 />
-                                {latest && (
+                                {normalizedLatest?.temperature !== null && (
                                     <StatusBadge
-                                        color={tempColor(latest.temperature)}
+                                        color={tempColor(
+                                            normalizedLatest.temperature,
+                                        )}
                                     />
                                 )}
                                 <SensorLine
-                                    data={history}
+                                    data={normalizedHistory}
                                     dataKey="temperature"
                                 />
                             </Card>
@@ -816,7 +863,10 @@ export default function AdminSensors({
                                     label="Humidity"
                                     value={
                                         <AnimatedMetricValue
-                                            value={latest?.humidity ?? null}
+                                            value={
+                                                normalizedLatest?.humidity ??
+                                                null
+                                            }
                                             suffix="%"
                                             maxFractionDigits={1}
                                         />
@@ -825,20 +875,27 @@ export default function AdminSensors({
                                     iconColor="#3B82F6"
                                 />
                                 <ProgressBar
-                                    value={latest?.humidity ?? 0}
+                                    value={normalizedLatest?.humidity ?? 0}
                                     color={
-                                        latest
-                                            ? humidColor(latest.humidity)
+                                        normalizedLatest?.humidity !== null
+                                            ? humidColor(
+                                                  normalizedLatest.humidity,
+                                              )
                                             : '#FEF3C7'
                                     }
-                                    noData={!latest}
+                                    noData={!normalizedLatest}
                                 />
-                                {latest && (
+                                {normalizedLatest?.humidity !== null && (
                                     <StatusBadge
-                                        color={humidColor(latest.humidity)}
+                                        color={humidColor(
+                                            normalizedLatest.humidity,
+                                        )}
                                     />
                                 )}
-                                <SensorLine data={history} dataKey="humidity" />
+                                <SensorLine
+                                    data={normalizedHistory}
+                                    dataKey="humidity"
+                                />
                             </Card>
                         </div>
 
@@ -905,28 +962,41 @@ export default function AdminSensors({
                                                 </div>
                                                 <AnimatedMetricValue
                                                     value={
-                                                        latest?.[key] ?? null
+                                                        normalizedLatest?.[
+                                                            key
+                                                        ] ?? null
                                                     }
                                                     className="text-2xl font-black text-amber-950"
                                                 />
                                             </div>
                                             <ArcGauge
-                                                value={latest?.[key] ?? 0}
+                                                value={
+                                                    normalizedLatest?.[key] ??
+                                                    0
+                                                }
                                                 max={MQ_GAUGE_MAX}
                                                 color={
-                                                    latest
-                                                        ? mqColor(latest[key])
+                                                    normalizedLatest?.[key] !==
+                                                    null
+                                                        ? mqColor(
+                                                              normalizedLatest[
+                                                                  key
+                                                              ],
+                                                          )
                                                         : '#FEF3C7'
                                                 }
-                                                noData={!latest}
+                                                noData={!normalizedLatest}
                                             />
-                                            {latest && (
+                                            {normalizedLatest?.[key] !==
+                                                null && (
                                                 <StatusBadge
-                                                    color={mqColor(latest[key])}
+                                                    color={mqColor(
+                                                        normalizedLatest[key],
+                                                    )}
                                                 />
                                             )}
                                             <SensorLine
-                                                data={history}
+                                                data={normalizedHistory}
                                                 dataKey={key}
                                             />
                                         </Card>
@@ -938,9 +1008,9 @@ export default function AdminSensors({
                 )}
 
                 {/* ── Last updated ──────────────────────────────────── */}
-                {latest && (
+                {normalizedLatest && (
                     <p className="text-right text-xs font-semibold tracking-widest text-amber-900/30 uppercase">
-                        Last reading: {latest.recorded_at}
+                        Last reading: {normalizedLatest.recorded_at}
                     </p>
                 )}
             </div>
