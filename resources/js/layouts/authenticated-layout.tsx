@@ -129,7 +129,7 @@ export function AuthenticatedLayout({
             <main className="relative z-10 min-h-0 flex-1">{children}</main>
 
             {/* ── Bottom Navigation (mobile only) ──────────────────────────── */}
-            <nav className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-around border-t border-yellow-100 bg-white/90 px-6 py-3 backdrop-blur-lg md:hidden">
+            <nav className="fixed right-0 bottom-0 left-0 z-50 flex items-center border-t border-yellow-100 bg-white/90 px-2 py-2.5 backdrop-blur-lg sm:px-4 md:hidden">
                 {navItems.map((item) => {
                     const isActive = route().current(item.routeName);
 
@@ -138,7 +138,7 @@ export function AuthenticatedLayout({
                             key={item.routeName}
                             href={route(item.routeName)}
                             className={cn(
-                                'flex flex-col items-center gap-1 transition-colors',
+                                'flex min-w-0 flex-1 flex-col items-center gap-1 px-1 text-center transition-colors',
                                 isActive
                                     ? 'text-amber-800'
                                     : 'text-amber-900/40',
@@ -154,7 +154,7 @@ export function AuthenticatedLayout({
                             </div>
                             <span
                                 className={cn(
-                                    'text-[10px]',
+                                    'w-full truncate text-[9px] leading-tight sm:text-[10px]',
                                     isActive ? 'font-semibold' : 'font-medium',
                                 )}
                             >

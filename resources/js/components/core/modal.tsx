@@ -10,6 +10,7 @@ interface ModalProps {
     title: string;
     children: React.ReactNode;
     maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl';
+    mobileLayout?: 'centered' | 'sheet';
 }
 
 const maxWidthMap = {
@@ -27,6 +28,7 @@ export function Modal({
     title,
     children,
     maxWidth = 'md',
+    mobileLayout = 'centered',
 }: ModalProps) {
     useEffect(() => {
         if (isOpen) {
@@ -50,7 +52,13 @@ export function Modal({
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+                <div
+                    className={`fixed inset-0 z-[9999] flex justify-center ${
+                        mobileLayout === 'sheet'
+                            ? 'items-end p-0 sm:items-center sm:p-6'
+                            : 'items-center p-4 sm:p-6'
+                    }`}
+                >
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -65,14 +73,18 @@ export function Modal({
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className={`relative w-full bg-white ${maxWidthMap[maxWidth]} flex max-h-[90vh] flex-col overflow-hidden rounded-[2.5rem] shadow-2xl`}
+                        className={`relative flex w-full flex-col overflow-hidden bg-white shadow-2xl ${
+                            mobileLayout === 'sheet'
+                                ? `max-h-[92dvh] rounded-t-[2rem] rounded-b-none sm:max-h-[90vh] sm:rounded-[2.5rem] ${maxWidthMap[maxWidth]}`
+                                : `max-h-[calc(100vh-2rem)] rounded-[2rem] sm:max-h-[90vh] sm:rounded-[2.5rem] ${maxWidthMap[maxWidth]}`
+                        }`}
                     >
                         {/* Top accent bar */}
                         <div className="absolute top-0 left-0 h-2 w-full flex-shrink-0 bg-yellow-400" />
 
                         {/* Header — pinned */}
-                        <div className="flex flex-shrink-0 items-center justify-between px-8 pt-8 pb-0">
-                            <h2 className="text-2xl font-bold text-amber-900">
+                        <div className="flex flex-shrink-0 items-center justify-between px-5 pt-5 pb-0 sm:px-8 sm:pt-8">
+                            <h2 className="text-xl font-bold text-amber-900 sm:text-2xl">
                                 {title}
                             </h2>
                             <button
@@ -84,7 +96,7 @@ export function Modal({
                         </div>
 
                         {/* Content — scrollable */}
-                        <ScrollArea className="flex-1 px-8 pt-6 pb-8">
+                        <ScrollArea className="flex-1 px-5 pt-4 pb-6 sm:px-8 sm:pt-6 sm:pb-8">
                             {children}
                         </ScrollArea>
                     </motion.div>
