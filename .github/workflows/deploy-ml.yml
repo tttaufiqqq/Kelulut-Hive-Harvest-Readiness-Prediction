@@ -1,0 +1,157 @@
+name: Deploy ML App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/**'
+      - '.github/workflows/deploy-ml.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-ml:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'ml/requirements.txt'
+
+      - name: Install ML dependencies
+        run: pip install -r ml/requirements.txt
+
+      - name: Smoke test Flask app
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          repo_root = Path.cwd()
+          sys.path.insert(0, str(repo_root / "ml"))
+
+          import app as ml_app
+
+          client = ml_app.app.test_client()
+
+          health_response = client.get("/health")
+          assert health_response.status_code == 200, health_response.data
+
+          predict_response = client.post(
+              "/predict",
+              json={
+                  "mq2_value": 120,
+                  "mq3_value": 95,
+                  "mq5_value": 110,
+                  "mq135_value": 140,
+                  "temp": 31.2,
+                  "humidity": 78.4,
+              },
+          )
+          assert predict_response.status_code == 200, predict_response.data
+
+          payload = predict_response.get_json()
+          expected_keys = {
+              "readiness_level",
+              "hri_value",
+              "confidence_score",
+              "warning_state",
+              "guardrail_action",
+              "out_of_distribution",
+              "prediction_warning",
+          }
+          missing = expected_keys - payload.keys()
+          assert not missing, f"Missing keys: {sorted(missing)}"
+
+          print("ML smoke tests passed")
+          PY
+
+  deploy-ml:
+    runs-on: ubuntu-latest
+    needs: test-ml
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Warn when server dependency refresh is required
+        if: github.event_name == 'push'
+        run: |
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- ml/requirements.txt | grep -q 'ml/requirements.txt'; then
+            echo "::warning title=Manual server pip install required::ml/requirements.txt changed. Run 'source /home/urbanale/virtualenv/public_html/buzzyhive-ml/3.11/bin/activate && cd /home/urbanale/public_html/buzzyhive-ml && pip install -r requirements.txt' on the server, then restart the Python app."
+            {
+              echo "## Manual follow-up required"
+              echo
+              echo "- \`ml/requirements.txt\` changed in this deploy."
+              echo "- Run \`source /home/urbanale/virtualenv/public_html/buzzyhive-ml/3.11/bin/activate && cd /home/urbanale/public_html/buzzyhive-ml && pip install -r requirements.txt\` on the server."
+              echo "- Restart the Python app in cPanel after the install finishes."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Deploy ML runtime files
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.ML_FTP_SERVER }}
+          username: ${{ secrets.ML_FTP_USERNAME }}
+          password: ${{ secrets.ML_FTP_PASSWORD }}
+          local-dir: ./ml/
+          server-dir: /
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.idea/**
+            **/.venv/**
+            **/__pycache__/**
+            artifacts/**
+            datasets/**
+            reports/**
+            data_sources/**
+            train.ipynb
+            dataset.csv
+
+      - name: Create Passenger restart marker
+        run: |
+          New-Item -ItemType Directory -Force -Path '.tmp-ml-restart\tmp' | Out-Null
+          (Get-Date).ToUniversalTime().ToString('o') | Set-Content -Path '.tmp-ml-restart\tmp\restart.txt'
+        shell: pwsh
+
+      - name: Restart ML app
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.ML_FTP_SERVER }}
+          username: ${{ secrets.ML_FTP_USERNAME }}
+          password: ${{ secrets.ML_FTP_PASSWORD }}
+          local-dir: ./.tmp-ml-restart/tmp/
+          server-dir: /tmp/
+
+      - name: Verify deployed health endpoint
+        run: |
+          $maxAttempts = 8
+
+          for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+              try {
+                  $response = Invoke-WebRequest `
+                      -Uri 'https://ml.buzzyhive.urban-alert.com/health' `
+                      -UseBasicParsing `
+                      -TimeoutSec 20
+
+                  if ($response.StatusCode -eq 200 -and $response.Content -match '"status"\s*:\s*"ok"') {
+                      Write-Host 'ML health check passed'
+                      exit 0
+                  }
+              } catch {
+                  Write-Host "Health check attempt $attempt failed: $($_.Exception.Message)"
+              }
+
+              Start-Sleep -Seconds 10
+          }
+
+          throw 'ML health check failed after deploy'
+        shell: pwsh

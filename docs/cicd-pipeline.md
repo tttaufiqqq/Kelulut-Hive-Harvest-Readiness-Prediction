@@ -1,10 +1,21 @@
-# BuzzyHive CI/CD Pipeline
+# BuzzyHive CI/CD Pipelines
 
-Reference document for the GitHub Actions deployment pipeline to Exabytes shared hosting.
+Reference document for the GitHub Actions deployment pipelines to Exabytes shared hosting.
+
+There are now two deployment workflows:
+
+- `deploy.yml` — Laravel + React app for `https://buzzyhive.urban-alert.com`
+- `deploy-ml.yml` — Flask ML app for `https://ml.buzzyhive.urban-alert.com`
+
+The apps are deployed separately because they live in different server roots and use different runtimes:
+
+- Laravel root: `/home/urbanale/public_html/buzzyhive`
+- Laravel document root: `/home/urbanale/public_html/buzzyhive/public`
+- ML app root: `/home/urbanale/public_html/buzzyhive-ml`
 
 ---
 
-## Full Pipeline Diagram
+## Laravel Pipeline Diagram
 
 ```
 git push main
@@ -73,7 +84,45 @@ git push main
 
 ---
 
-## Trigger — Why Path Filtering
+## ML Pipeline Diagram
+
+```
+git push main
+(only triggers when ml/** changes — see path filter)
+         │
+         ▼
+┌─────────────────────────────────────┐
+│          CONCURRENCY GUARD          │
+│  cancel-in-progress: true           │
+│  If a run is already in progress,   │
+│  cancel it and start fresh.         │
+└──────────────┬──────────────────────┘
+               │
+    ┌──────────▼──────────┐
+    │     TEST-ML JOB     │
+    │─────────────────────│
+    │  checkout            │
+    │  setup Python 3.11   │
+    │  pip cache           │
+    │  pip install         │
+    │  Flask smoke test    │
+    │  /health + /predict  │
+    └──────────┬──────────┘
+               │
+    ┌──────────▼──────────┐
+    │    DEPLOY-ML JOB    │
+    │─────────────────────│
+    │  checkout            │
+    │  optional warning    │  ← requirements.txt changed?
+    │  FTP upload ml/      │  ← runtime files only
+    │  upload restart.txt  │  ← Passenger restart marker
+    │  GET /health         │  ← live health verification
+    └─────────────────────┘
+```
+
+---
+
+## Laravel Trigger — Why Path Filtering
 
 ```yaml
 paths:
@@ -95,6 +144,20 @@ paths:
 **Why:** Pushing diary entries, documentation, or memory files should not trigger a full deploy. Only actual application code changes warrant a test + build + deploy cycle. This saves CI minutes on every non-code commit.
 
 `workflow_dispatch` is kept enabled so the pipeline can be triggered manually from the GitHub Actions tab at any time.
+
+---
+
+## ML Trigger — Why Path Filtering
+
+```yaml
+paths:
+  - 'ml/**'
+  - '.github/workflows/deploy-ml.yml'
+```
+
+**Why:** ML-only changes should not wait for the Laravel test/build/deploy cycle, and Laravel-only changes should not redeploy the Python app. Splitting by path keeps each workflow fast and reduces the blast radius of failures.
+
+`workflow_dispatch` is also enabled for the ML workflow so the Flask app can be redeployed manually without touching Laravel.
 
 ---
 
@@ -136,6 +199,27 @@ Extracting build into its own job means:
 If the frontend needs build-time environment variables, they must exist in GitHub Actions as secrets or variables. This matters for Pusher because `VITE_PUSHER_APP_KEY` and `VITE_PUSHER_APP_CLUSTER` are read by Vite during `npm run build`; values that exist only in the server `.env` are too late for the compiled JavaScript bundle.
 
 The artifact has `retention-days: 1` — it only needs to survive the duration of the pipeline run.
+
+---
+
+## ML Test Job — What It Verifies
+
+The ML workflow uses `actions/setup-python@v5` with Python `3.11` to stay close to the cPanel Python App runtime.
+
+The smoke test:
+
+- imports `ml/app.py`
+- creates a Flask test client
+- checks `GET /health`
+- posts a sample payload to `POST /predict`
+- verifies expected response keys exist
+
+This is intentionally lightweight. It confirms that:
+
+- the Flask app imports
+- the serialized model/scaler can load
+- the prediction route still accepts the expected request shape
+- the response contract still contains the fields Laravel depends on
 
 ---
 
@@ -200,6 +284,89 @@ Demo data seeders (`DemoHiveSeeder`, `SensorLogSeeder`, etc.) are run **manually
 
 ---
 
+## ML Deploy Job — Why a Separate FTP Account
+
+The Laravel and ML apps use separate FTP accounts:
+
+- Laravel FTP user → scoped to the Laravel app root
+- ML FTP user → scoped to `/home/urbanale/public_html/buzzyhive-ml`
+
+This separation is important because:
+
+- each app has a different server root
+- each app has a different restart procedure
+- Laravel deploys should not accidentally overwrite ML files
+- ML deploys should not need access to the Laravel `.env`, `public/`, or deploy hook
+
+The ML workflow uploads only the runtime subset of `ml/`:
+
+- `app.py`
+- `runtime.py`
+- `predict.py`
+- `model.pkl`
+- `scaler.pkl`
+- `model_metadata.json`
+- `requirements.txt`
+- other runtime helpers needed by the Flask app
+
+It excludes development-only or heavyweight local files such as:
+
+- `.venv/`
+- `.idea/`
+- `__pycache__/`
+- `artifacts/`
+- `datasets/`
+- `reports/`
+- `data_sources/`
+- `train.ipynb`
+- `dataset.csv`
+
+---
+
+## ML Restart Strategy
+
+The cPanel Python App uses Passenger. After an FTP deploy, the workflow uploads `tmp/restart.txt` into the ML app root to tell Passenger to reload the app.
+
+This makes normal ML code deploys automated:
+
+- upload changed files
+- touch `tmp/restart.txt`
+- verify `/health`
+
+If Passenger fails to pick up the restart marker on a particular deploy, the fallback is manual: open cPanel → Python App → click `RESTART`.
+
+---
+
+## ML Dependencies — What Is Still Manual
+
+The ML workflow installs dependencies in CI for testing, but it does **not** currently run `pip install -r requirements.txt` inside the production cPanel virtualenv.
+
+That means:
+
+- code-only changes in `ml/` are automated
+- model/scaler/metadata changes are automated
+- `requirements.txt` changes still require a manual server-side dependency refresh
+
+The workflow now emits a warning when `ml/requirements.txt` changes during a push deploy.
+
+Manual command on the server:
+
+```bash
+source /home/urbanale/virtualenv/public_html/buzzyhive-ml/3.11/bin/activate && cd /home/urbanale/public_html/buzzyhive-ml && pip install -r requirements.txt
+```
+
+After the install finishes:
+
+- click `RESTART` in cPanel, or
+- allow the next deploy to touch `tmp/restart.txt`
+
+Important:
+
+- keep the cPanel Python version aligned with the workflow (`3.11.x`)
+- prefer pinned dependency versions in `ml/requirements.txt` for reproducible production installs
+
+---
+
 ## Caching Strategy
 
 | Cache | Key | Benefit |
@@ -207,6 +374,7 @@ Demo data seeders (`DemoHiveSeeder`, `SensorLogSeeder`, etc.) are run **manually
 | `vendor/` (tests) | `composer-{php-version}-{composer.lock hash}` | Skip composer install when no packages changed |
 | `vendor/` (build) | `composer-8.3-{composer.lock hash}` | Same — shared across test and build jobs for PHP 8.3 |
 | `node_modules/` | `node-{package-lock.json hash}` | Skip npm ci when no packages changed |
+| `pip` (ML tests) | `ml/requirements.txt` hash | Skip repeated Python dependency downloads during ML CI |
 
 Cache hits restore in ~2s vs 30–45s for a full install. On a typical code-only push, all three caches hit and dependency installation is essentially instant.
 
@@ -237,6 +405,9 @@ The deploy time breakdown for a warm cache run:
 | `DEPLOY_SECRET` | Must match `DEPLOY_SECRET` in server `.env` |
 | `VITE_PUSHER_APP_KEY` | Production Pusher public key used during `npm run build` |
 | `VITE_PUSHER_APP_CLUSTER` | Production Pusher cluster used during `npm run build` |
+| `ML_FTP_SERVER` | `ftp.urban-alert.com` |
+| `ML_FTP_USERNAME` | FTP username for the ML app root |
+| `ML_FTP_PASSWORD` | FTP password for the ML app root |
 
 ---
 
@@ -254,7 +425,13 @@ These are not handled by the pipeline and must be configured manually:
    * * * * * cd /home/urbanale/public_html/buzzyhive && php artisan schedule:run 2>&1
    ```
 
-3. **Python app (Flask/ML)** — cPanel → Setup Python App → point to `ml/app.py`, install `requirements.txt`, set `ML_API_URL` in server `.env`
+3. **Python app (Flask/ML)** — cPanel → Setup Python App
+   - Python version: `3.11.x`
+   - Application root: `public_html/buzzyhive-ml`
+   - Application URL: `ml.buzzyhive.urban-alert.com`
+   - Startup file: `app.py`
+   - Entry point: `application`
+   - install `requirements.txt` into the cPanel-managed virtualenv before first use
 
 4. **Pusher runtime env** — set these in the cPanel `.env` used by Laravel:
    ```dotenv
@@ -272,3 +449,24 @@ These are not handled by the pipeline and must be configured manually:
    cd /home/urbanale/public_html/buzzyhive
    php artisan migrate:fresh --seed
    ```
+
+---
+
+## Operational Summary
+
+### Fully automated
+
+- Laravel code deploys
+- Laravel migrations and cache rebuild
+- Frontend asset builds
+- ML code deploys
+- ML model/scaler/metadata deploys
+- ML Passenger restart marker upload
+- ML live `/health` verification
+
+### Still manual
+
+- creating and rotating FTP accounts/secrets
+- first-time cPanel Python App creation/configuration
+- production ML dependency refresh when `ml/requirements.txt` changes
+- manual cPanel restart if Passenger does not react to `tmp/restart.txt`
