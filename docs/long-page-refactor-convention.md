@@ -88,4 +88,20 @@ Refactor these pages first because their size makes them the biggest maintenance
 
 - Resolver audit completed.
 - Convention documented.
-- Thin-entry structural extraction started for predictions, inspections, and harvests.
+- Page-local constants and helpers extracted for predictions, inspections, and harvests.
+- Thin-entry modules now back these route entries:
+  - `predictions`
+  - `inspections/index`
+  - `harvests/index`
+  - `admin/sensors`
+  - `admin/dashboard`
+  - `admin/hives/index`
+  - `admin/beekeepers/index`
+  - `admin/devices/index`
+  - `admin/sites/index`
+  - `admin/inspections/index`
+  - `admin/harvests/index`
+  - `dashboard`
+  - `analytics`
+  - `LandingPage`
+- Latest automated verification: `npm run build` passed on 2026-05-05 after the full modularization sweep.
