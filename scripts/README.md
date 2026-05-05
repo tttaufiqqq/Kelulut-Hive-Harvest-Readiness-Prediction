@@ -1,21 +1,64 @@
-# Sensor Simulation Scripts
+# Scripts
 
-This folder contains local PowerShell helpers for simulating sensor traffic against:
+This folder contains:
 
-- `POST http://127.0.0.1:8000/api/sensor-data`
-
-They are meant for local realtime testing while the admin sensors page and live predictions page are open.
+- local PowerShell helpers for simulating sensor traffic
+- a production smoke-test helper for Laravel + ML deployments
 
 ## Files
 
 - `send-sensor-intervals.ps1`
-  - replays a fixed sequence of payloads
-  - useful when you want a predictable timeline
+  - local replay script for a fixed sequence of sensor payloads
 - `send-sensor-drift.ps1`
-  - generates a random walk around a starting value
-  - useful when you want the page to behave like a live drifting sensor
+  - local random-walk sensor simulator
 - `sensor-payloads.sample.json`
-  - sample payload timeline for the fixed-sequence script
+  - sample payload timeline for local replay testing
+- `test-prod.ps1`
+  - production smoke test for:
+    - Laravel `/up`
+    - Laravel `/login`
+    - ML `/health`
+    - ML `/predict`
+    - optional `POST /api/sensor-data`
+
+---
+
+## Production Smoke Test
+
+### Safe public checks only
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod.ps1" -SkipSensorIngest
+```
+
+This verifies:
+
+- `https://buzzyhive.urban-alert.com/up`
+- `https://buzzyhive.urban-alert.com/login`
+- `https://ml.buzzyhive.urban-alert.com/health`
+- `https://ml.buzzyhive.urban-alert.com/predict`
+
+### Include real sensor ingest
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod.ps1" -ApiKey "<prod-iot-api-key>" -DeviceId "NODE-001" -HiveId 1
+```
+
+Use the ingest check only when:
+
+- the `DeviceId` exists in production
+- the device is assigned to that `HiveId`
+- the IoT API key is the real production key
+
+### Custom domains
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -MlUrl "https://ml.buzzyhive.urban-alert.com" -SkipSensorIngest
+```
+
+---
+
+## Local Sensor Simulation
 
 ## Before Running
 
