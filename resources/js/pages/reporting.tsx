@@ -1,21 +1,25 @@
 import { Head } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
-    ResponsiveContainer,
-    AreaChart,
     Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    CartesianGrid,
-    Tooltip,
 } from 'recharts';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Card } from '@/components/core/card';
 import { Breadcrumbs } from '@/components/core/navigation';
+import {
+    ChartCard,
+    ConfidenceBar,
+    ReadinessBadge,
+} from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/select-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
-// ── Types ─────────────────────────────────────────────────────────────
 interface HriGauge {
     hive_id: number;
     hive_name: string;
@@ -37,81 +41,48 @@ interface Props {
     readinessTrends: ReadinessTrend[];
 }
 
-// ── Readiness level display maps ───────────────────────────────────────
-const READINESS_LABEL: Record<string, string> = {
-    not_ready: 'Not Ready',
-    approaching: 'Approaching',
-    nearly_ready: 'Nearly Ready',
-    ready: 'Ready to Harvest',
+const READINESS_BAR_STYLES: Record<string, string> = {
+    not_ready: 'bg-rose-400',
+    approaching: 'bg-amber-400',
+    nearly_ready: 'bg-yellow-400',
+    ready: 'bg-emerald-400',
 };
 
-const BADGE_CLASS: Record<string, string> = {
-    not_ready: 'bg-red-100 text-red-800',
-    approaching: 'bg-yellow-100 text-yellow-800',
-    nearly_ready: 'bg-amber-100 text-amber-800',
-    ready: 'bg-green-100 text-green-800',
-};
-
-// ── HriGaugeCard ──────────────────────────────────────────────────────
 function HriGaugeCard({ gauge }: { gauge: HriGauge }) {
-    const badge = gauge.readiness_level
-        ? (BADGE_CLASS[gauge.readiness_level] ?? 'bg-gray-100 text-gray-500')
-        : 'bg-gray-100 text-gray-500';
-    const label = gauge.readiness_level
-        ? (READINESS_LABEL[gauge.readiness_level] ?? gauge.readiness_level)
-        : 'No Data';
-    const pct = gauge.confidence_pct ?? 0;
-
     return (
-        <Card>
-            <div className="mb-3 flex items-start justify-between">
-                <div>
-                    <p className="font-bold text-amber-950">
-                        {gauge.hive_name}
+        <Card className="flex h-full flex-col gap-5 border border-amber-100/80 bg-white/95">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="font-bold text-amber-950">{gauge.hive_name}</p>
+                    <p className="mt-0.5 text-xs text-amber-900/50">
+                        {gauge.site_name ?? 'No site assigned'}
                     </p>
-                    {gauge.site_name && (
-                        <p className="mt-0.5 text-xs text-amber-900/50">
-                            {gauge.site_name}
-                        </p>
-                    )}
                 </div>
-                <span
-                    className={`rounded-lg px-2 py-1 text-xs font-bold ${badge}`}
-                >
-                    {label}
-                </span>
+                <ReadinessBadge level={gauge.readiness_level} size="sm" />
             </div>
 
-            <div className="mt-4">
-                <div className="mb-1.5 flex justify-between">
-                    <p className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                        Confidence
-                    </p>
-                    <span className="text-xs font-bold text-amber-900">
-                        {gauge.confidence_pct !== null ? `${pct}%` : '—'}
-                    </span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-yellow-100">
-                    <div
-                        className="h-full rounded-full bg-amber-400 transition-all duration-300"
-                        style={{ width: `${pct}%` }}
-                    />
-                </div>
-            </div>
-
-            {gauge.hri_value !== null && (
-                <p className="mt-3 text-xs text-amber-900/50">
-                    HRI:{' '}
-                    <span className="font-bold text-amber-900">
-                        {gauge.hri_value.toFixed(2)}
-                    </span>
+            <div className="space-y-1">
+                <p className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                    Current HRI
                 </p>
-            )}
+                <p className="text-4xl font-black tracking-tight text-amber-950">
+                    {gauge.hri_value !== null ? gauge.hri_value.toFixed(2) : '—'}
+                </p>
+            </div>
+
+            <ConfidenceBar
+                value={gauge.confidence_pct}
+                label="Confidence"
+                emptyLabel="—"
+                barClassName={
+                    READINESS_BAR_STYLES[gauge.readiness_level ?? ''] ??
+                    'bg-amber-400'
+                }
+            />
         </Card>
     );
 }
 
-// ── HriGaugeGrid ──────────────────────────────────────────────────────
 function HriGaugeGrid({ gauges }: { gauges: HriGauge[] }) {
     if (gauges.length === 0) {
         return (
@@ -125,121 +96,135 @@ function HriGaugeGrid({ gauges }: { gauges: HriGauge[] }) {
 
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {gauges.map((g) => (
-                <HriGaugeCard key={g.hive_id} gauge={g} />
+            {gauges.map((gauge) => (
+                <HriGaugeCard key={gauge.hive_id} gauge={gauge} />
             ))}
         </div>
     );
 }
 
-// ── ReadinessTrendChart ────────────────────────────────────────────────
 function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
-    const hiveNames = [...new Set(trends.map((t) => t.hive_name))];
-    const hiveOptions = hiveNames.map((n) => ({ value: n, label: n }));
+    const hiveNames = [...new Set(trends.map((trend) => trend.hive_name))];
+    const hiveOptions = hiveNames.map((name) => ({
+        value: name,
+        label: name,
+    }));
     const [selectedHive, setSelectedHive] = useState(hiveNames[0] ?? '');
-
-    const filtered = trends.filter((t) => t.hive_name === selectedHive);
-
-    if (trends.length === 0) {
-        return (
-            <Card>
-                <p className="py-6 text-center text-sm text-amber-900/40">
-                    No HRI history in the last 30 days.
-                </p>
-            </Card>
-        );
-    }
-
-    return (
-        <Card>
-            <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-black tracking-widest text-amber-900/60 uppercase">
-                    Readiness Trend (30 days)
-                </h3>
-                {hiveNames.length > 1 && (
-                    <SelectField
-                        value={selectedHive}
-                        onChange={setSelectedHive}
-                        options={hiveOptions}
-                    />
-                )}
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-                <AreaChart
-                    data={filtered}
-                    margin={{ left: 0, right: 16, top: 4, bottom: 4 }}
-                >
-                    <defs>
-                        <linearGradient
-                            id="hriGrad"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                        >
-                            <stop
-                                offset="5%"
-                                stopColor="#F59E0B"
-                                stopOpacity={0.3}
-                            />
-                            <stop
-                                offset="95%"
-                                stopColor="#F59E0B"
-                                stopOpacity={0}
-                            />
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#fef3c7" />
-                    <XAxis
-                        dataKey="date"
-                        tick={{ fontSize: 10, fill: '#92400e' }}
-                        axisLine={false}
-                        tickLine={false}
-                    />
-                    <YAxis
-                        unit="%"
-                        domain={[0, 100]}
-                        tick={{ fontSize: 10, fill: '#92400e' }}
-                        axisLine={false}
-                        tickLine={false}
-                    />
-                    <Tooltip
-                        contentStyle={{
-                            borderRadius: 12,
-                            border: '1px solid #fef3c7',
-                            fontSize: 12,
-                        }}
-                        formatter={(value) => {
-                            const displayValue =
-                                typeof value === 'number'
-                                    ? value
-                                    : Number(value ?? 0);
-
-                            return [`${displayValue}%`, 'Avg HRI'];
-                        }}
-                    />
-                    <Area
-                        type="monotone"
-                        dataKey="avg_hri_pct"
-                        stroke="#F59E0B"
-                        strokeWidth={2}
-                        fill="url(#hriGrad)"
-                        dot={false}
-                    />
-                </AreaChart>
-            </ResponsiveContainer>
-        </Card>
-    );
-}
-
-// ── Reporting ─────────────────────────────────────────────────────────
-export default function Reporting({ hriGauges, readinessTrends }: Props) {
     const [mounted, setMounted] = useState(false);
+
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
+    const filtered = trends.filter((trend) => trend.hive_name === selectedHive);
+
+    if (trends.length === 0) {
+        return (
+            <ChartCard
+                eyebrow="Readiness Trend"
+                title="30-day HRI movement"
+                description="Trend data will appear once recent readiness history is available."
+            >
+                <p className="py-6 text-center text-sm text-amber-900/40">
+                    No HRI history in the last 30 days.
+                </p>
+            </ChartCard>
+        );
+    }
+
+    return (
+        <ChartCard
+            eyebrow="Readiness Trend"
+            title="30-day HRI movement"
+            description="Review how each hive's average readiness has shifted over time."
+            actions={
+                hiveNames.length > 1 ? (
+                    <div className="w-full sm:w-[220px]">
+                        <SelectField
+                            value={selectedHive}
+                            onChange={setSelectedHive}
+                            options={hiveOptions}
+                        />
+                    </div>
+                ) : null
+            }
+        >
+            {mounted && (
+                <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart
+                        data={filtered}
+                        margin={{ left: 0, right: 16, top: 4, bottom: 4 }}
+                    >
+                        <defs>
+                            <linearGradient
+                                id="reportingHriGradient"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+                                <stop
+                                    offset="5%"
+                                    stopColor="#F59E0B"
+                                    stopOpacity={0.3}
+                                />
+                                <stop
+                                    offset="95%"
+                                    stopColor="#F59E0B"
+                                    stopOpacity={0}
+                                />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#fef3c7"
+                        />
+                        <XAxis
+                            dataKey="date"
+                            tick={{ fontSize: 10, fill: '#92400e' }}
+                            axisLine={false}
+                            tickLine={false}
+                        />
+                        <YAxis
+                            unit="%"
+                            domain={[0, 100]}
+                            tick={{ fontSize: 10, fill: '#92400e' }}
+                            axisLine={false}
+                            tickLine={false}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                borderRadius: 12,
+                                border: '1px solid #fef3c7',
+                                fontSize: 12,
+                            }}
+                            formatter={(value) => {
+                                const displayValue =
+                                    typeof value === 'number'
+                                        ? value
+                                        : Number(value ?? 0);
+
+                                return [`${displayValue}%`, 'Avg HRI'];
+                            }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="avg_hri_pct"
+                            stroke="#F59E0B"
+                            strokeWidth={2}
+                            fill="url(#reportingHriGradient)"
+                            dot={false}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            )}
+        </ChartCard>
+    );
+}
+
+export default function Reporting({ hriGauges, readinessTrends }: Props) {
     return (
         <AuthenticatedLayout>
             <Head title="Reporting — BuzzyHive 2.0" />
@@ -263,7 +248,6 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
                     </p>
                 </div>
 
-                {/* P6.1 HRI Gauge Grid */}
                 <div>
                     <h2 className="mb-3 text-sm font-black tracking-widest text-amber-900/60 uppercase">
                         HRI Gauge
@@ -271,12 +255,7 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
                     <HriGaugeGrid gauges={hriGauges} />
                 </div>
 
-                {/* P6.2 Readiness Trends */}
-                {mounted && (
-                    <div>
-                        <ReadinessTrendChart trends={readinessTrends} />
-                    </div>
-                )}
+                <ReadinessTrendChart trends={readinessTrends} />
             </div>
         </AuthenticatedLayout>
     );

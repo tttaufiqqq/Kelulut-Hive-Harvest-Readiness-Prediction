@@ -1,27 +1,31 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
-    ResponsiveContainer,
-    AreaChart,
     Area,
-    BarChart,
+    AreaChart,
     Bar,
-    LineChart,
+    BarChart,
+    CartesianGrid,
+    Legend,
     Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
 } from 'recharts';
-import { Card } from '@/components/core/card';
 import { DatePicker } from '@/components/core/date-picker';
 import { Breadcrumbs } from '@/components/core/navigation';
+import {
+    ChartCard,
+    ConfidenceBar,
+    getReadinessColor,
+    ReadinessBadge,
+    ReadinessScoreCard,
+} from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/select-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface HiveData {
     id: number;
@@ -71,22 +75,6 @@ interface Props {
     harvestHistory: HarvestRecord[];
 }
 
-// ─── Readiness maps ───────────────────────────────────────────────────────────
-
-const READINESS_LABELS: Record<string, string> = {
-    not_ready: 'Not Ready',
-    approaching: 'Approaching',
-    nearly_ready: 'Nearly Ready',
-    ready: 'Ready to Harvest',
-};
-
-const READINESS_COLORS: Record<string, string> = {
-    not_ready: '#dc2626',
-    approaching: '#d97706',
-    nearly_ready: '#ca8a04',
-    ready: '#16a34a',
-};
-
 const TOOLTIP_STYLE = {
     backgroundColor: '#FFFBEB',
     border: '1px solid #FEF3C7',
@@ -96,61 +84,60 @@ const TOOLTIP_STYLE = {
     color: '#78350F',
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+const SENSOR_GROUP_OPTIONS = [
+    { value: 'all', label: 'All Sensors' },
+    { value: 'environment', label: 'Environmental (Temp + Humidity)' },
+    { value: 'gas', label: 'Gas Sensors (MQ2 – MQ135)' },
+];
+
+const READINESS_BAR_STYLES: Record<string, string> = {
+    not_ready: 'bg-rose-400',
+    approaching: 'bg-amber-400',
+    nearly_ready: 'bg-yellow-400',
+    ready: 'bg-emerald-400',
+};
 
 function HriScoreCard({ hive }: { hive: HiveData }) {
-    const level = hive.latest_readiness_level ?? 'not_ready';
-    const color = READINESS_COLORS[level] ?? '#d97706';
-    const label = READINESS_LABELS[level] ?? level;
-
     return (
-        <Card className="flex h-full flex-col items-center justify-center gap-2 py-8">
-            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                HRI Score
-            </p>
-            <p
-                className="text-7xl font-black tracking-tighter"
-                style={{ color }}
-            >
-                {hive.avg_hri_pct}%
-            </p>
-            <span
-                className="rounded-full px-4 py-1 text-sm font-bold text-white"
-                style={{ backgroundColor: color }}
-            >
-                {label}
-            </span>
-            <div className="mt-4 text-center">
-                <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                    7-day avg
-                </p>
-                <p className="text-xl font-bold text-amber-900">
-                    {hive.avg_hri_7d_pct}%
-                </p>
-            </div>
-        </Card>
+        <ReadinessScoreCard
+            value={
+                <span
+                    style={{
+                        color: getReadinessColor(hive.latest_readiness_level),
+                    }}
+                >
+                    {hive.avg_hri_pct}%
+                </span>
+            }
+            level={hive.latest_readiness_level}
+            secondaryLabel="7-day avg"
+            secondaryValue={`${hive.avg_hri_7d_pct}%`}
+            description="Current harvest readiness score based on the latest analytics window."
+        />
     );
 }
 
 function HriTrendChart({ data }: { data: HriTrend[] }) {
     const [mounted, setMounted] = useState(false);
+
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
     return (
-        <Card className="h-full">
-            <p className="mb-4 font-bold text-amber-900">
-                HRI Score — 30 Day Trend
-            </p>
+        <ChartCard
+            eyebrow="HRI Trend"
+            title="Harvest readiness over 30 days"
+            description="Compare the daily score with the rolling 7-day average."
+        >
             <div className="w-full">
                 {mounted && (
                     <ResponsiveContainer width="100%" height={220}>
                         <AreaChart data={data}>
                             <defs>
                                 <linearGradient
-                                    id="hriGrad"
+                                    id="analyticsHriGradient"
                                     x1="0"
                                     y1="0"
                                     x2="0"
@@ -188,7 +175,7 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
                                 domain={[0, 100]}
                                 axisLine={false}
                                 tickLine={false}
-                                tickFormatter={(v) => `${v}%`}
+                                tickFormatter={(value) => `${value}%`}
                                 tick={{
                                     fill: '#78350F',
                                     fontSize: 10,
@@ -203,7 +190,7 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
                                 name="HRI Score"
                                 stroke="#F59E0B"
                                 strokeWidth={3}
-                                fill="url(#hriGrad)"
+                                fill="url(#analyticsHriGradient)"
                             />
                             <Line
                                 type="monotone"
@@ -218,15 +205,9 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
                     </ResponsiveContainer>
                 )}
             </div>
-        </Card>
+        </ChartCard>
     );
 }
-
-const SENSOR_GROUP_OPTIONS = [
-    { value: 'all', label: 'All Sensors' },
-    { value: 'environment', label: 'Environmental (Temp + Humidity)' },
-    { value: 'gas', label: 'Gas Sensors (MQ2 – MQ135)' },
-];
 
 function SensorChart({
     data,
@@ -246,13 +227,15 @@ function SensorChart({
         setMounted(true);
     }, []);
 
-    const showEnv = group === 'all' || group === 'environment';
+    const showEnvironment = group === 'all' || group === 'environment';
     const showGas = group === 'all' || group === 'gas';
 
     return (
-        <Card>
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="font-bold text-amber-900">Sensor Readings</p>
+        <ChartCard
+            eyebrow="Sensor Readings"
+            title="Daily sensor curves"
+            description="Filter the selected date into environment or gas sensor groups."
+            actions={
                 <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
                     <DatePicker
                         className="w-[124px] shrink-0"
@@ -268,7 +251,8 @@ function SensorChart({
                         />
                     </div>
                 </div>
-            </div>
+            }
+        >
             <div className="w-full">
                 {mounted && (
                     <ResponsiveContainer width="100%" height={250}>
@@ -300,7 +284,7 @@ function SensorChart({
                             />
                             <Tooltip contentStyle={TOOLTIP_STYLE} />
                             <Legend wrapperStyle={{ fontSize: 11 }} />
-                            {showEnv && (
+                            {showEnvironment && (
                                 <Line
                                     type="monotone"
                                     dataKey="temp"
@@ -310,7 +294,7 @@ function SensorChart({
                                     dot={false}
                                 />
                             )}
-                            {showEnv && (
+                            {showEnvironment && (
                                 <Line
                                     type="monotone"
                                     dataKey="humidity"
@@ -364,7 +348,7 @@ function SensorChart({
                     </ResponsiveContainer>
                 )}
             </div>
-        </Card>
+        </ChartCard>
     );
 }
 
@@ -375,68 +359,69 @@ function LatestPredictionCard({
 }) {
     if (!prediction) {
         return (
-            <Card className="flex flex-col items-center justify-center gap-2 py-8">
-                <p className="mb-2 font-bold text-amber-900">
-                    Latest Prediction
+            <ChartCard
+                eyebrow="Latest Prediction"
+                title="Awaiting first prediction"
+                description="Predictions will appear here once enough sensor data has been processed."
+            >
+                <p className="py-8 text-center text-sm text-amber-700/60">
+                    No predictions yet.
                 </p>
-                <p className="text-sm text-amber-700/60">No predictions yet</p>
-            </Card>
+            </ChartCard>
         );
     }
 
-    const color = READINESS_COLORS[prediction.readiness_level] ?? '#d97706';
-    const label =
-        READINESS_LABELS[prediction.readiness_level] ??
-        prediction.readiness_level;
     const confidencePct = Math.round(prediction.confidence_score * 100);
 
     return (
-        <Card className="flex flex-col gap-4 py-6">
-            <p className="font-bold text-amber-900">Latest Prediction</p>
-            <span
-                className="self-start rounded-full px-4 py-1 text-sm font-bold text-white"
-                style={{ backgroundColor: color }}
-            >
-                {label}
-            </span>
-            <div>
-                <p className="mb-1 text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                    Confidence — {confidencePct}%
-                </p>
-                <div className="h-3 w-full overflow-hidden rounded-full bg-amber-100">
-                    <div
-                        className="h-full rounded-full"
-                        style={{
-                            width: `${confidencePct}%`,
-                            backgroundColor: color,
-                        }}
-                    />
+        <ChartCard
+            eyebrow="Latest Prediction"
+            title="Most recent harvest readiness result"
+            description="The newest model output paired with its confidence score."
+        >
+            <div className="space-y-5">
+                <ReadinessBadge
+                    level={prediction.readiness_level}
+                    appearance="solid"
+                    className="self-start"
+                />
+
+                <ConfidenceBar
+                    value={Math.min(prediction.confidence_score * 100, 99.9)}
+                    label="Model confidence"
+                    formatter={() => `${confidencePct}%`}
+                    barClassName={
+                        READINESS_BAR_STYLES[prediction.readiness_level] ??
+                        'bg-amber-400'
+                    }
+                />
+
+                <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                            HRI Value
+                        </p>
+                        <p className="text-xl font-bold text-amber-900">
+                            {Math.round(prediction.hri_value * 100)}%
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                            Timestamp
+                        </p>
+                        <p className="text-sm font-semibold text-amber-900">
+                            {prediction.prediction_timestamp}
+                        </p>
+                    </div>
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                        HRI Value
-                    </p>
-                    <p className="text-xl font-bold text-amber-900">
-                        {Math.round(prediction.hri_value * 100)}%
-                    </p>
-                </div>
-                <div>
-                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                        Timestamp
-                    </p>
-                    <p className="text-sm font-semibold text-amber-900">
-                        {prediction.prediction_timestamp}
-                    </p>
-                </div>
-            </div>
-        </Card>
+        </ChartCard>
     );
 }
 
 function HarvestBar({ data }: { data: HarvestRecord[] }) {
     const [mounted, setMounted] = useState(false);
+
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
@@ -444,19 +429,24 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
 
     if (data.length === 0) {
         return (
-            <Card className="flex items-center justify-center py-10">
-                <p className="text-sm text-amber-700/60">
-                    No harvest records yet
+            <ChartCard
+                eyebrow="Harvest History"
+                title="Weight records"
+                description="Recent harvest outcomes will appear here once a harvest has been logged."
+            >
+                <p className="py-10 text-center text-sm text-amber-700/60">
+                    No harvest records yet.
                 </p>
-            </Card>
+            </ChartCard>
         );
     }
 
     return (
-        <Card>
-            <p className="mb-4 font-bold text-amber-900">
-                Harvest History — Weight (kg)
-            </p>
+        <ChartCard
+            eyebrow="Harvest History"
+            title="Weight trend"
+            description="Recorded harvest weights across previous visits."
+        >
             <div className="w-full">
                 {mounted && (
                     <ResponsiveContainer width="100%" height={200}>
@@ -497,11 +487,9 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
                     </ResponsiveContainer>
                 )}
             </div>
-        </Card>
+        </ChartCard>
     );
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Analytics({
     hive,
@@ -558,7 +546,6 @@ export default function Analytics({
                     </div>
                 </div>
 
-                {/* Top row: score card + HRI trend */}
                 <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
                     <div className="h-full lg:col-span-1">
                         <HriScoreCard hive={hive} />
@@ -568,14 +555,12 @@ export default function Analytics({
                     </div>
                 </div>
 
-                {/* Sensor readings — full width */}
                 <SensorChart
                     data={sensorReadings}
                     selectedDate={sensorDate}
                     onDateChange={handleSensorDateChange}
                 />
 
-                {/* Prediction + harvest */}
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <LatestPredictionCard prediction={latestPrediction} />
                     <HarvestBar data={harvestHistory} />

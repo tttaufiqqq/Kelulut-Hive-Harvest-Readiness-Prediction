@@ -1,5 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    ArrowLeft,
+    ChevronLeft,
+    ChevronRight,
+    CircleAlert,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import {
@@ -12,10 +17,23 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { DataTable } from '@/components/core/content';
 import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
+import {
+    ChartCard,
+    ConfidenceBar,
+    ReadinessBadge,
+    SnapshotGrid,
+} from '@/components/core/readiness-chart-cards';
 import { ScrollArea } from '@/components/core/scroll-area';
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+} from '@/components/ui/alert';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 interface PredictionEntry {
@@ -68,20 +86,6 @@ interface Props {
     };
 }
 
-const READINESS_LABELS: Record<string, string> = {
-    not_ready: 'Not Ready',
-    approaching: 'Approaching',
-    nearly_ready: 'Nearly Ready',
-    ready: 'Ready to Harvest',
-};
-
-const READINESS_COLORS: Record<string, string> = {
-    not_ready: '#dc2626',
-    approaching: '#d97706',
-    nearly_ready: '#ca8a04',
-    ready: '#16a34a',
-};
-
 const TRUST_STYLES: Record<string, string> = {
     normal: 'bg-emerald-100 text-emerald-700',
     warning: 'bg-amber-100 text-amber-800',
@@ -94,16 +98,29 @@ const ROW_TONE_STYLES: Record<string, string> = {
     critical: 'bg-rose-50/45 hover:bg-rose-50/70',
 };
 
-const WARNING_PANEL_STYLES: Record<string, string> = {
-    normal: 'border-amber-200 bg-amber-50/80 text-amber-900',
-    warning: 'border-amber-300 bg-amber-50 text-amber-950',
-    critical: 'border-rose-300 bg-rose-50 text-rose-950',
+const TRUST_ALERT_STYLES: Record<
+    string,
+    { container: string; icon: string }
+> = {
+    normal: {
+        container: 'border-amber-200 bg-amber-50/80 text-amber-900',
+        icon: 'text-amber-700',
+    },
+    warning: {
+        container: 'border-amber-300 bg-amber-50 text-amber-950',
+        icon: 'text-amber-700',
+    },
+    critical: {
+        container: 'border-rose-300 bg-rose-50 text-rose-950',
+        icon: 'text-rose-700',
+    },
 };
 
-const WARNING_LABEL_STYLES: Record<string, string> = {
-    normal: 'bg-amber-100 text-amber-800',
-    warning: 'bg-amber-200 text-amber-900',
-    critical: 'bg-rose-100 text-rose-800',
+const READINESS_BAR_STYLES: Record<string, string> = {
+    not_ready: 'bg-rose-400',
+    approaching: 'bg-amber-400',
+    nearly_ready: 'bg-yellow-400',
+    ready: 'bg-emerald-400',
 };
 
 const TOOLTIP_STYLE = {
@@ -115,24 +132,12 @@ const TOOLTIP_STYLE = {
     color: '#78350F',
 };
 
-function getReadinessLabel(level: string) {
-    return READINESS_LABELS[level] ?? level;
-}
-
-function getReadinessColor(level: string) {
-    return READINESS_COLORS[level] ?? '#d97706';
-}
-
 function formatRawConfidence(score: number) {
     if (score >= 0.9995) {
         return 'Approx. 99.9%+';
     }
 
     return `${(score * 100).toFixed(1)}%`;
-}
-
-function getConfidenceBarWidth(score: number) {
-    return `${Math.min(score * 100, 99.9).toFixed(1)}%`;
 }
 
 function getTrustLabel(prediction: PredictionEntry) {
@@ -155,15 +160,13 @@ function getRowToneStyle(state: string) {
     return ROW_TONE_STYLES[state] ?? 'hover:bg-yellow-50/30';
 }
 
-function getWarningPanelStyle(state: string) {
+function getTrustAlertStyle(state: string) {
     return (
-        WARNING_PANEL_STYLES[state] ??
-        'border-amber-200 bg-amber-50/80 text-amber-900'
+        TRUST_ALERT_STYLES[state] ?? {
+            container: 'border-amber-200 bg-amber-50/80 text-amber-900',
+            icon: 'text-amber-700',
+        }
     );
-}
-
-function getWarningLabelStyle(state: string) {
-    return WARNING_LABEL_STYLES[state] ?? 'bg-amber-100 text-amber-800';
 }
 
 function formatPredictionTime(prediction: PredictionEntry) {
@@ -183,49 +186,35 @@ function formatCapturedTime(prediction: PredictionEntry) {
 }
 
 function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
-    const sensors = [
-        {
-            label: 'Temp',
-            value: `${prediction.sensor_values.temp}°C`,
-        },
-        {
-            label: 'Humidity',
-            value: `${prediction.sensor_values.humidity}%`,
-        },
-        {
-            label: 'MQ2',
-            value: `${prediction.sensor_values.mq2_value}`,
-        },
-        {
-            label: 'MQ3',
-            value: `${prediction.sensor_values.mq3_value}`,
-        },
-        {
-            label: 'MQ5',
-            value: `${prediction.sensor_values.mq5_value}`,
-        },
-        {
-            label: 'MQ135',
-            value: `${prediction.sensor_values.mq135_value}`,
-        },
-    ];
-
     return (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-            {sensors.map((sensor) => (
-                <div
-                    key={sensor.label}
-                    className="rounded-xl bg-amber-50 px-3 py-3 text-center"
-                >
-                    <p className="text-[9px] font-bold tracking-wider text-amber-900/40 uppercase">
-                        {sensor.label}
-                    </p>
-                    <p className="mt-1 text-sm font-bold text-amber-900">
-                        {sensor.value}
-                    </p>
-                </div>
-            ))}
-        </div>
+        <SnapshotGrid
+            items={[
+                {
+                    label: 'Temp',
+                    value: `${prediction.sensor_values.temp}°C`,
+                },
+                {
+                    label: 'Humidity',
+                    value: `${prediction.sensor_values.humidity}%`,
+                },
+                {
+                    label: 'MQ2',
+                    value: prediction.sensor_values.mq2_value,
+                },
+                {
+                    label: 'MQ3',
+                    value: prediction.sensor_values.mq3_value,
+                },
+                {
+                    label: 'MQ5',
+                    value: prediction.sensor_values.mq5_value,
+                },
+                {
+                    label: 'MQ135',
+                    value: prediction.sensor_values.mq135_value,
+                },
+            ]}
+        />
     );
 }
 
@@ -254,24 +243,68 @@ function PredictionTrustNotice({
         return null;
     }
 
+    const alertStyle = getTrustAlertStyle(prediction.warning_state);
+
     return (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3">
-            <div className="flex flex-wrap items-center gap-2">
-                <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${getTrustStyle(prediction.warning_state)}`}
-                >
-                    {getTrustLabel(prediction)}
-                </span>
-                <span className="text-xs font-semibold text-amber-900/60">
-                    Raw model confidence{' '}
-                    {formatRawConfidence(prediction.confidence_score)}
-                </span>
-            </div>
-            <p className="mt-2 text-sm text-amber-900/75">
-                {prediction.prediction_warning ??
-                    'This result was flagged by the safety layer, so interpret the raw model score carefully.'}
-            </p>
-        </div>
+        <Alert className={alertStyle.container}>
+            <CircleAlert className={alertStyle.icon} />
+            <AlertTitle className="line-clamp-none">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${getTrustStyle(prediction.warning_state)}`}
+                    >
+                        {getTrustLabel(prediction)}
+                    </span>
+                    <span className="text-xs font-semibold opacity-75">
+                        Raw model confidence{' '}
+                        {formatRawConfidence(prediction.confidence_score)}
+                    </span>
+                </div>
+            </AlertTitle>
+            <AlertDescription className="text-sm opacity-85">
+                <p>
+                    {prediction.prediction_warning ??
+                        'This result was flagged by the safety layer, so interpret the raw model score carefully.'}
+                </p>
+                {prediction.guardrail_action && (
+                    <p className="font-medium">
+                        Recommended action: {prediction.guardrail_action}
+                    </p>
+                )}
+            </AlertDescription>
+        </Alert>
+    );
+}
+
+function PredictionWarningAlert({
+    prediction,
+}: {
+    prediction: PredictionEntry;
+}) {
+    if (!prediction.prediction_warning && !prediction.out_of_distribution) {
+        return null;
+    }
+
+    const alertStyle = getTrustAlertStyle(prediction.warning_state);
+
+    return (
+        <Alert className={alertStyle.container}>
+            <CircleAlert className={alertStyle.icon} />
+            <AlertTitle className="line-clamp-none">
+                Prediction Warning
+            </AlertTitle>
+            <AlertDescription className="text-sm opacity-85">
+                <p>
+                    {prediction.prediction_warning ??
+                        'This prediction was flagged by the safety layer, so review the reading carefully before acting on it.'}
+                </p>
+                {prediction.guardrail_action && (
+                    <p className="font-medium">
+                        Recommended action: {prediction.guardrail_action}
+                    </p>
+                )}
+            </AlertDescription>
+        </Alert>
     );
 }
 
@@ -281,18 +314,11 @@ function PredictionTrendChart({
     data: Props['predictionTrends'];
 }) {
     return (
-        <Card className="h-full">
-            <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                        HRI Trend
-                    </p>
-                    <p className="mt-1 text-sm text-amber-700">
-                        Recent readiness movement across the latest live
-                        readings.
-                    </p>
-                </div>
-            </div>
+        <ChartCard
+            eyebrow="HRI Trend"
+            title="Recent readiness movement"
+            description="Monitor how HRI and raw confidence are changing across the latest live readings."
+        >
             <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={data}>
                     <CartesianGrid
@@ -345,7 +371,7 @@ function PredictionTrendChart({
                     />
                 </LineChart>
             </ResponsiveContainer>
-        </Card>
+        </ChartCard>
     );
 }
 
@@ -355,18 +381,11 @@ function SensorTrendChart({
     data: Props['predictionTrends'];
 }) {
     return (
-        <Card className="h-full">
-            <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                        Conditions Trend
-                    </p>
-                    <p className="mt-1 text-sm text-amber-700">
-                        Temperature and humidity context behind recent model
-                        changes.
-                    </p>
-                </div>
-            </div>
+        <ChartCard
+            eyebrow="Conditions Trend"
+            title="Environmental context"
+            description="Review temperature and humidity shifts alongside readiness changes."
+        >
             <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={data}>
                     <CartesianGrid
@@ -417,7 +436,120 @@ function SensorTrendChart({
                     />
                 </LineChart>
             </ResponsiveContainer>
-        </Card>
+        </ChartCard>
+    );
+}
+
+function MobilePredictionHistoryList({
+    predictions,
+    onSelect,
+}: {
+    predictions: PredictionEntry[];
+    onSelect: (index: number) => void;
+}) {
+    return (
+        <div className="space-y-3 md:hidden">
+            {predictions.length === 0 ? (
+                <Card className="border-yellow-100 px-5 py-8 text-center text-sm text-amber-900/40 shadow-sm">
+                    No older predictions yet.
+                </Card>
+            ) : (
+                predictions.map((prediction, index) => (
+                    <button
+                        key={prediction.id}
+                        type="button"
+                        onClick={() => onSelect(index)}
+                        className={`block w-full rounded-3xl border border-yellow-100 px-4 py-4 text-left shadow-sm transition-colors ${getRowToneStyle(prediction.warning_state)}`}
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Prediction Time
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-amber-900">
+                                    {formatPredictionTime(prediction)}
+                                </p>
+                            </div>
+                            <ReadinessBadge
+                                level={prediction.readiness_level}
+                                size="sm"
+                                className="shrink-0"
+                            />
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                            <div className="rounded-2xl bg-white/70 px-3 py-2.5">
+                                <p className="text-[10px] font-bold tracking-widest text-amber-900/35 uppercase">
+                                    HRI
+                                </p>
+                                <p className="mt-1 text-sm font-bold text-amber-900">
+                                    {Math.round(prediction.hri_value * 100)}%
+                                </p>
+                            </div>
+                            <div className="rounded-2xl bg-white/70 px-3 py-2.5">
+                                <p className="text-[10px] font-bold tracking-widest text-amber-900/35 uppercase">
+                                    Confidence
+                                </p>
+                                <p className="mt-1 text-sm font-bold text-amber-900">
+                                    {formatRawConfidence(
+                                        prediction.confidence_score,
+                                    )}
+                                </p>
+                            </div>
+                            <div className="rounded-2xl bg-white/70 px-3 py-2.5">
+                                <p className="text-[10px] font-bold tracking-widest text-amber-900/35 uppercase">
+                                    Trust
+                                </p>
+                                <span
+                                    className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${getTrustStyle(prediction.warning_state)}`}
+                                >
+                                    {getTrustLabel(prediction)}
+                                </span>
+                            </div>
+                            <div className="rounded-2xl bg-white/70 px-3 py-2.5">
+                                <p className="text-[10px] font-bold tracking-widest text-amber-900/35 uppercase">
+                                    Device
+                                </p>
+                                <p className="mt-1 truncate text-sm font-medium text-amber-900/70">
+                                    {prediction.device_identifier ??
+                                        'Unknown device'}
+                                </p>
+                            </div>
+                        </div>
+                    </button>
+                ))
+            )}
+        </div>
+    );
+}
+
+function AnimatedReadinessBadge({ level }: { level: string }) {
+    const badge = (
+        <ReadinessBadge level={level} appearance="solid" className="text-base" />
+    );
+
+    if (level !== 'ready') {
+        return badge;
+    }
+
+    return (
+        <motion.div
+            className="inline-block"
+            animate={{
+                boxShadow: [
+                    '0 0 0px rgba(22,163,74,0.5)',
+                    '0 0 18px rgba(22,163,74,0.55)',
+                    '0 0 0px rgba(22,163,74,0.5)',
+                ],
+            }}
+            transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+            }}
+        >
+            {badge}
+        </motion.div>
     );
 }
 
@@ -462,16 +594,16 @@ export default function Predictions({
             return;
         }
 
-        const handler = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                e.preventDefault();
+        const handler = (event: KeyboardEvent) => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                event.preventDefault();
                 setActiveHistoryIndex((current) =>
                     current !== null && current > 0 ? current - 1 : current,
                 );
             }
 
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                e.preventDefault();
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                event.preventDefault();
                 setActiveHistoryIndex((current) =>
                     current !== null &&
                     current < historyPredictions.data.length - 1
@@ -535,175 +667,138 @@ export default function Predictions({
 
                 {latest ? (
                     <>
-                        <Card className="space-y-6 p-8">
-                            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                                Latest Prediction
-                            </p>
+                        <ChartCard
+                            eyebrow="Latest Prediction"
+                            title="Current model output"
+                            description="Live harvest readiness result from the most recent processed sensor reading."
+                            className="p-8"
+                        >
+                            <div className="space-y-6">
+                                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                                    <div className="space-y-4">
+                                        <AnimatedReadinessBadge
+                                            level={latest.readiness_level}
+                                        />
+                                        <div className="flex flex-wrap items-end gap-3">
+                                            <p className="text-5xl font-black tracking-tight text-amber-900">
+                                                {Math.round(
+                                                    latest.hri_value * 100,
+                                                )}
+                                                %
+                                            </p>
+                                            <p className="pb-1 text-sm text-amber-900/55">
+                                                HRI value
+                                            </p>
+                                        </div>
+                                    </div>
 
-                            {latest.readiness_level === 'ready' ? (
-                                <motion.span
-                                    className="inline-block rounded-full px-5 py-1.5 text-base font-bold text-white"
-                                    style={{
-                                        backgroundColor: getReadinessColor(
-                                            latest.readiness_level,
-                                        ),
-                                    }}
-                                    animate={{
-                                        boxShadow: [
-                                            '0 0 0px #16a34a',
-                                            '0 0 18px #16a34a',
-                                            '0 0 0px #16a34a',
-                                        ],
-                                    }}
-                                    transition={{
-                                        duration: 2,
-                                        repeat: Infinity,
-                                        ease: 'easeInOut',
-                                    }}
-                                >
-                                    {getReadinessLabel(latest.readiness_level)}
-                                </motion.span>
-                            ) : (
-                                <span
-                                    className="inline-block rounded-full px-5 py-1.5 text-base font-bold text-white"
-                                    style={{
-                                        backgroundColor: getReadinessColor(
-                                            latest.readiness_level,
-                                        ),
-                                    }}
-                                >
-                                    {getReadinessLabel(latest.readiness_level)}
-                                </span>
-                            )}
+                                    <div className="grid gap-5 text-sm sm:grid-cols-2 lg:min-w-[360px]">
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                                Trust
+                                            </p>
+                                            <span
+                                                className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-bold ${getTrustStyle(latest.warning_state)}`}
+                                            >
+                                                {getTrustLabel(latest)}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                                Captured
+                                            </p>
+                                            <p className="mt-2 font-semibold text-amber-900">
+                                                {formatCapturedTime(latest)}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                                Prediction Time
+                                            </p>
+                                            <p className="mt-2 font-semibold text-amber-900">
+                                                {formatPredictionTime(latest)}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                                Device
+                                            </p>
+                                            <p className="mt-2 font-semibold text-amber-900">
+                                                {latest.device_identifier ??
+                                                    'Unknown device'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <div>
-                                <p className="mb-2 text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                                    Raw Model Confidence —{' '}
-                                    {formatRawConfidence(
-                                        latest.confidence_score,
+                                <ConfidenceBar
+                                    value={Math.min(
+                                        latest.confidence_score * 100,
+                                        99.9,
                                     )}
-                                </p>
-                                <div className="h-3 w-full overflow-hidden rounded-full bg-amber-100">
-                                    <motion.div
-                                        className="h-full rounded-full"
-                                        style={{
-                                            backgroundColor: getReadinessColor(
-                                                latest.readiness_level,
-                                            ),
-                                        }}
-                                        initial={{ width: '0%' }}
-                                        animate={{
-                                            width: getConfidenceBarWidth(
-                                                latest.confidence_score,
-                                            ),
-                                        }}
-                                        transition={{
-                                            duration: 0.8,
-                                            ease: 'easeOut',
-                                        }}
-                                    />
-                                </div>
-                            </div>
+                                    label="Raw model confidence"
+                                    formatter={() =>
+                                        formatRawConfidence(
+                                            latest.confidence_score,
+                                        )
+                                    }
+                                    barClassName={
+                                        READINESS_BAR_STYLES[
+                                            latest.readiness_level
+                                        ] ?? 'bg-amber-400'
+                                    }
+                                />
 
-                            <div className="grid gap-6 pt-2 text-center sm:grid-cols-2 lg:grid-cols-4">
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                                        HRI Value
-                                    </p>
-                                    <p className="text-3xl font-black text-amber-900">
-                                        {Math.round(latest.hri_value * 100)}%
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                                        Trust
-                                    </p>
-                                    <span
-                                        className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ${getTrustStyle(latest.warning_state)}`}
-                                    >
-                                        {getTrustLabel(latest)}
-                                    </span>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                                        Captured
-                                    </p>
-                                    <p className="mt-1 text-sm font-semibold text-amber-900">
-                                        {formatCapturedTime(latest)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
-                                        Device
-                                    </p>
-                                    <p className="mt-1 text-sm font-semibold text-amber-900">
-                                        {latest.device_identifier ??
-                                            'Unknown device'}
-                                    </p>
-                                </div>
+                                <PredictionTrustNotice prediction={latest} />
                             </div>
-
-                            <PredictionTrustNotice prediction={latest} />
-                        </Card>
+                        </ChartCard>
 
                         <div className="grid gap-6 xl:grid-cols-2">
                             <PredictionTrendChart data={predictionTrends} />
                             <SensorTrendChart data={predictionTrends} />
                         </div>
 
-                        <Card className="space-y-4 p-6">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <div>
-                                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                                        Current Sensor Snapshot
-                                    </p>
-                                    <p className="mt-1 text-sm text-amber-700">
-                                        Latest reading used for the most recent
-                                        prediction.
-                                    </p>
-                                </div>
+                        <ChartCard
+                            eyebrow="Current Sensor Snapshot"
+                            title="Inputs behind the latest prediction"
+                            description="The most recent environmental and gas readings used by the model."
+                            actions={
                                 <p className="text-sm font-semibold text-amber-900/70">
                                     {formatPredictionTime(latest)}
                                 </p>
-                            </div>
+                            }
+                        >
                             <SensorSnapshot prediction={latest} />
-                        </Card>
+                        </ChartCard>
 
-                        <Card className="space-y-4 p-5">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                                        Recent Predictions
-                                    </p>
-                                    <p className="mt-1 text-sm text-amber-700">
-                                        Previous prediction entries in a cleaner
-                                        compact view. Select a row to inspect
-                                        details.
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
-                                        {historyPredictions.total} older
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setShowHistory(
-                                                (current) => !current,
-                                            )
-                                        }
-                                        className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-50"
-                                    >
-                                        {showHistory ? (
-                                            <ChevronLeft className="h-4 w-4 rotate-[-90deg]" />
-                                        ) : (
-                                            <ChevronRight className="h-4 w-4" />
-                                        )}
-                                        {showHistory
-                                            ? 'Hide history'
-                                            : 'Show history'}
-                                    </button>
-                                </div>
+                        <ChartCard
+                            eyebrow="Recent Predictions"
+                            title="History browser"
+                            description="Select a row to inspect older prediction details."
+                            className="p-5"
+                        >
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
+                                    {historyPredictions.total} older
+                                </span>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() =>
+                                        setShowHistory((current) => !current)
+                                    }
+                                    className="w-full justify-center gap-2 text-sm font-semibold sm:w-auto"
+                                >
+                                    {showHistory ? (
+                                        <ChevronLeft className="h-4 w-4 rotate-[-90deg]" />
+                                    ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                    )}
+                                    {showHistory
+                                        ? 'Hide history'
+                                        : 'Show history'}
+                                </Button>
                             </div>
 
                             <motion.div
@@ -713,110 +808,110 @@ export default function Predictions({
                                     opacity: showHistory ? 1 : 0,
                                 }}
                                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                                className={`space-y-3 overflow-hidden ${showHistory ? '' : 'pointer-events-none'}`}
+                                className={
+                                    showHistory
+                                        ? 'mt-4 space-y-3'
+                                        : 'pointer-events-none mt-4 space-y-3 overflow-hidden'
+                                }
                             >
-                                <Card className="overflow-hidden border-yellow-100 p-0 shadow-sm">
-                                    <ScrollArea direction="horizontal">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-yellow-100 bg-yellow-50/40">
-                                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/45 uppercase">
-                                                        Time
-                                                    </th>
-                                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/45 uppercase">
-                                                        Readiness
-                                                    </th>
-                                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/45 uppercase">
-                                                        HRI
-                                                    </th>
-                                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/45 uppercase">
-                                                        Raw Confidence
-                                                    </th>
-                                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/45 uppercase">
-                                                        Trust
-                                                    </th>
-                                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/45 uppercase md:table-cell">
-                                                        Device
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-yellow-50">
-                                                {historyPredictions.data
-                                                    .length === 0 ? (
-                                                    <tr>
-                                                        <td
-                                                            colSpan={6}
-                                                            className="px-6 py-10 text-center text-sm text-amber-900/40"
-                                                        >
-                                                            No older predictions
-                                                            yet.
-                                                        </td>
-                                                    </tr>
-                                                ) : (
-                                                    historyPredictions.data.map(
-                                                        (prediction, index) => (
-                                                            <tr
-                                                                key={
-                                                                    prediction.id
-                                                                }
-                                                                className={`cursor-pointer align-middle transition-colors ${getRowToneStyle(prediction.warning_state)}`}
-                                                                onClick={() =>
-                                                                    setActiveHistoryIndex(
-                                                                        index,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <td className="px-6 py-4 font-semibold whitespace-nowrap text-amber-900 tabular-nums">
-                                                                    {formatPredictionTime(
-                                                                        prediction,
-                                                                    )}
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <span
-                                                                        className="inline-flex rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap text-white"
-                                                                        style={{
-                                                                            backgroundColor:
-                                                                                getReadinessColor(
-                                                                                    prediction.readiness_level,
-                                                                                ),
-                                                                        }}
-                                                                    >
-                                                                        {getReadinessLabel(
-                                                                            prediction.readiness_level,
-                                                                        )}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="px-6 py-4 font-semibold whitespace-nowrap text-amber-800">
-                                                                    {Math.round(
-                                                                        prediction.hri_value *
-                                                                            100,
-                                                                    )}
-                                                                    %
-                                                                </td>
-                                                                <td className="px-6 py-4 font-semibold whitespace-nowrap text-amber-800">
-                                                                    {formatRawConfidence(
-                                                                        prediction.confidence_score,
-                                                                    )}
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <span
-                                                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap ${getTrustStyle(prediction.warning_state)}`}
-                                                                    >
-                                                                        {getTrustLabel(
-                                                                            prediction,
-                                                                        )}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="hidden px-6 py-4 font-mono whitespace-nowrap text-amber-900/60 md:table-cell">
-                                                                    {prediction.device_identifier ??
-                                                                        'Unknown device'}
-                                                                </td>
-                                                            </tr>
-                                                        ),
-                                                    )
-                                                )}
-                                            </tbody>
-                                        </table>
+                                <MobilePredictionHistoryList
+                                    predictions={historyPredictions.data}
+                                    onSelect={setActiveHistoryIndex}
+                                />
+
+                                <Card className="hidden overflow-hidden border-yellow-100 p-0 shadow-sm md:block">
+                                    <ScrollArea
+                                        direction="horizontal"
+                                        className="w-full"
+                                    >
+                                        <DataTable
+                                        className="overflow-visible"
+                                        tableClassName="min-w-[920px] text-sm"
+                                        bodyClassName="divide-y divide-yellow-50"
+                                        rowClassName={(prediction) =>
+                                            getRowToneStyle(
+                                                prediction.warning_state,
+                                            )
+                                        }
+                                        data={historyPredictions.data}
+                                        onRowClick={(_, index) =>
+                                            setActiveHistoryIndex(index)
+                                        }
+                                        emptyColSpan={6}
+                                        emptyState={
+                                            <div className="px-6 py-10 text-center text-sm text-amber-900/40">
+                                                No older predictions yet.
+                                            </div>
+                                        }
+                                        columns={[
+                                            {
+                                                key: 'time',
+                                                header: 'Time',
+                                                cellClassName:
+                                                    'px-6 py-4 font-semibold whitespace-nowrap text-amber-900 tabular-nums',
+                                                render: (prediction) =>
+                                                    formatPredictionTime(
+                                                        prediction,
+                                                    ),
+                                            },
+                                            {
+                                                key: 'readiness',
+                                                header: 'Readiness',
+                                                cellClassName: 'px-6 py-4',
+                                                render: (prediction) => (
+                                                    <ReadinessBadge
+                                                        level={
+                                                            prediction.readiness_level
+                                                        }
+                                                        size="sm"
+                                                    />
+                                                ),
+                                            },
+                                            {
+                                                key: 'hri',
+                                                header: 'HRI',
+                                                cellClassName:
+                                                    'px-6 py-4 font-semibold whitespace-nowrap text-amber-800',
+                                                render: (prediction) =>
+                                                    `${Math.round(prediction.hri_value * 100)}%`,
+                                            },
+                                            {
+                                                key: 'confidence',
+                                                header: 'Raw Confidence',
+                                                cellClassName:
+                                                    'px-6 py-4 font-semibold whitespace-nowrap text-amber-800',
+                                                render: (prediction) =>
+                                                    formatRawConfidence(
+                                                        prediction.confidence_score,
+                                                    ),
+                                            },
+                                            {
+                                                key: 'trust',
+                                                header: 'Trust',
+                                                cellClassName: 'px-6 py-4',
+                                                render: (prediction) => (
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap ${getTrustStyle(prediction.warning_state)}`}
+                                                    >
+                                                        {getTrustLabel(
+                                                            prediction,
+                                                        )}
+                                                    </span>
+                                                ),
+                                            },
+                                            {
+                                                key: 'device',
+                                                header: 'Device',
+                                                headerClassName:
+                                                    'hidden md:table-cell',
+                                                cellClassName:
+                                                    'hidden px-6 py-4 font-mono whitespace-nowrap text-amber-900/60 md:table-cell',
+                                                render: (prediction) =>
+                                                    prediction.device_identifier ??
+                                                    'Unknown device',
+                                            },
+                                        ]}
+                                        />
                                     </ScrollArea>
                                 </Card>
 
@@ -852,7 +947,7 @@ export default function Predictions({
                                     </div>
                                 )}
                             </motion.div>
-                        </Card>
+                        </ChartCard>
                     </>
                 ) : (
                     <EmptyPredictionState />
@@ -868,7 +963,10 @@ export default function Predictions({
                 >
                     <div className="space-y-5">
                         <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() =>
                                     setActiveHistoryIndex((current) =>
                                         current !== null && current > 0
@@ -877,15 +975,18 @@ export default function Predictions({
                                     )
                                 }
                                 disabled={!hasPrevHistory}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
+                                className="h-9 w-9 rounded-xl p-0 text-amber-900 hover:bg-yellow-100 hover:text-amber-900"
                             >
-                                <ChevronLeft className="h-4 w-4 text-amber-900" />
-                            </button>
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
                             <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
                                 {activeHistoryIndex + 1} /{' '}
                                 {historyPredictions.data.length}
                             </span>
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() =>
                                     setActiveHistoryIndex((current) =>
                                         current !== null &&
@@ -896,10 +997,10 @@ export default function Predictions({
                                     )
                                 }
                                 disabled={!hasNextHistory}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
+                                className="h-9 w-9 rounded-xl p-0 text-amber-900 hover:bg-yellow-100 hover:text-amber-900"
                             >
-                                <ChevronRight className="h-4 w-4 text-amber-900" />
-                            </button>
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -907,18 +1008,10 @@ export default function Predictions({
                                 <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                     Readiness
                                 </p>
-                                <span
-                                    className="inline-flex rounded-full px-3 py-1 text-xs font-bold text-white"
-                                    style={{
-                                        backgroundColor: getReadinessColor(
-                                            activeHistoryPrediction.readiness_level,
-                                        ),
-                                    }}
-                                >
-                                    {getReadinessLabel(
-                                        activeHistoryPrediction.readiness_level,
-                                    )}
-                                </span>
+                                <ReadinessBadge
+                                    level={activeHistoryPrediction.readiness_level}
+                                    size="sm"
+                                />
                             </div>
                             <div>
                                 <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
@@ -956,9 +1049,7 @@ export default function Predictions({
                                     Captured
                                 </p>
                                 <p className="font-medium text-amber-950">
-                                    {formatCapturedTime(
-                                        activeHistoryPrediction,
-                                    )}
+                                    {formatCapturedTime(activeHistoryPrediction)}
                                 </p>
                             </div>
                             <div>
@@ -982,20 +1073,9 @@ export default function Predictions({
                             </div>
                         </div>
 
-                        {activeHistoryPrediction.prediction_warning && (
-                            <div
-                                className={`rounded-2xl border px-4 py-3 ${getWarningPanelStyle(activeHistoryPrediction.warning_state)}`}
-                            >
-                                <span
-                                    className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-widest uppercase ${getWarningLabelStyle(activeHistoryPrediction.warning_state)}`}
-                                >
-                                    Prediction Warning
-                                </span>
-                                <p className="mt-3 text-sm font-medium">
-                                    {activeHistoryPrediction.prediction_warning}
-                                </p>
-                            </div>
-                        )}
+                        <PredictionWarningAlert
+                            prediction={activeHistoryPrediction}
+                        />
 
                         <div>
                             <p className="mb-3 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
