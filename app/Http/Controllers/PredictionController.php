@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Hive;
 use App\Models\Prediction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -35,6 +36,9 @@ class PredictionController extends Controller
         $latestPrediction = (clone $baseQuery)
             ->orderByDesc('predictions.prediction_timestamp')
             ->first();
+        $chartDate = $request->date('chart_date')
+            ?? $latestPrediction?->prediction_timestamp
+            ?? now();
 
         $historyQuery = (clone $baseQuery)
             ->orderByDesc('predictions.prediction_timestamp');
@@ -49,12 +53,13 @@ class PredictionController extends Controller
             ->through(fn (Prediction $prediction) => $this->transformPrediction($prediction));
 
         $predictionTrends = (clone $baseQuery)
+            ->whereDate('predictions.prediction_timestamp', $chartDate)
             ->orderByDesc('predictions.prediction_timestamp')
-            ->limit(12)
+            ->limit(24)
             ->get()
             ->reverse()
             ->values()
-            ->map(fn (Prediction $prediction) => $this->transformPredictionTrend($prediction));
+            ->map(fn (Prediction $prediction) => $this->transformPredictionTrend($prediction, $chartDate));
 
         return Inertia::render('predictions', [
             'hive' => ['id' => $hive->id, 'name' => $hive->name],
@@ -65,6 +70,7 @@ class PredictionController extends Controller
             'historyPredictions' => $historyPredictions,
             'filters' => [
                 'page' => (int) $request->integer('page', 1),
+                'chart_date' => Carbon::parse($chartDate)->toDateString(),
             ],
         ]);
     }
@@ -129,13 +135,17 @@ class PredictionController extends Controller
         ];
     }
 
-    private function transformPredictionTrend(Prediction $prediction): array
+    private function transformPredictionTrend(Prediction $prediction, $chartDate): array
     {
         $sensorLog = $prediction->sensorLog;
+        $predictionTimestamp = $prediction->prediction_timestamp;
+        $isSameDay = $predictionTimestamp?->isSameDay(Carbon::parse($chartDate));
 
         return [
             'id' => $prediction->id,
-            'label' => $prediction->prediction_timestamp?->format('d M, H:i') ?? 'N/A',
+            'label' => $predictionTimestamp
+                ? $predictionTimestamp->format($isSameDay ? 'H:i' : 'd M, H:i')
+                : 'N/A',
             'hri_pct' => round((float) $prediction->hri_value * 100, 1),
             'confidence_pct' => round((float) $prediction->confidence_score * 100, 1),
             'temp' => round((float) ($sensorLog?->temp ?? 0), 1),

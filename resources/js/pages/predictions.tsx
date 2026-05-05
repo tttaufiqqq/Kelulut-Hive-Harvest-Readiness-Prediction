@@ -9,6 +9,8 @@ import {
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import {
+    Area,
+    AreaChart,
     CartesianGrid,
     Legend,
     Line,
@@ -21,6 +23,7 @@ import {
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { DataTable } from '@/components/core/content';
+import { DatePicker } from '@/components/core/date-picker';
 import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
 import {
@@ -80,6 +83,7 @@ interface Props {
     };
     filters: {
         page: number;
+        chart_date: string;
     };
 }
 
@@ -303,127 +307,223 @@ function PredictionWarningAlert({
     );
 }
 
-function PredictionTrendChart({ data }: { data: Props['predictionTrends'] }) {
+function PredictionTrendChart({
+    data,
+    selectedDate,
+    onDateChange,
+}: {
+    data: Props['predictionTrends'];
+    selectedDate: string;
+    onDateChange: (date: string | null) => void;
+}) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
+
     return (
         <ChartCard
             eyebrow="HRI Trend"
             title="Recent readiness movement"
             description="Monitor how HRI and raw confidence are changing across the latest live readings."
+            actions={
+                <ChartDateFilter
+                    selectedDate={selectedDate}
+                    onDateChange={onDateChange}
+                />
+            }
         >
-            <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={data}>
-                    <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="#FEF3C7"
-                    />
-                    <XAxis
-                        dataKey="label"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{
-                            fill: '#78350F',
-                            fontSize: 10,
-                            fontWeight: 600,
-                        }}
-                        minTickGap={24}
-                        dy={8}
-                    />
-                    <YAxis
-                        domain={[0, 100]}
-                        axisLine={false}
-                        tickLine={false}
-                        tickFormatter={(value) => `${value}%`}
-                        tick={{
-                            fill: '#78350F',
-                            fontSize: 10,
-                            fontWeight: 600,
-                        }}
-                    />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Line
-                        type="monotone"
-                        dataKey="hri_pct"
-                        name="HRI"
-                        stroke="#F59E0B"
-                        strokeWidth={3}
-                        dot={{ r: 3, fill: '#F59E0B' }}
-                        activeDot={{ r: 5 }}
-                    />
-                    <Line
-                        type="monotone"
-                        dataKey="confidence_pct"
-                        name="Raw confidence"
-                        stroke="#92400E"
-                        strokeWidth={2}
-                        strokeDasharray="5 4"
-                        dot={false}
-                    />
-                </LineChart>
-            </ResponsiveContainer>
+            <div className="w-full">
+                {mounted ? (
+                    data.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={220}>
+                            <AreaChart data={data}>
+                                <defs>
+                                    <linearGradient
+                                        id="predictionsHriGradient"
+                                        x1="0"
+                                        y1="0"
+                                        x2="0"
+                                        y2="1"
+                                    >
+                                        <stop
+                                            offset="5%"
+                                            stopColor="#F59E0B"
+                                            stopOpacity={0.3}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor="#F59E0B"
+                                            stopOpacity={0}
+                                        />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    vertical={false}
+                                    stroke="#FEF3C7"
+                                />
+                                <XAxis
+                                    dataKey="label"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{
+                                        fill: '#78350F',
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                    }}
+                                    dy={8}
+                                />
+                                <YAxis
+                                    domain={[0, 100]}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tickFormatter={(value) => `${value}%`}
+                                    tick={{
+                                        fill: '#78350F',
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                    }}
+                                />
+                                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                                <Legend wrapperStyle={{ fontSize: 11 }} />
+                                <Area
+                                    type="monotone"
+                                    dataKey="hri_pct"
+                                    name="HRI"
+                                    stroke="#F59E0B"
+                                    strokeWidth={3}
+                                    fill="url(#predictionsHriGradient)"
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="confidence_pct"
+                                    name="Raw confidence"
+                                    stroke="#92400E"
+                                    strokeWidth={1.5}
+                                    strokeDasharray="4 2"
+                                    dot={false}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <p className="py-10 text-center text-sm text-amber-700/60">
+                            No prediction trend data for the selected date.
+                        </p>
+                    )
+                ) : null}
+            </div>
         </ChartCard>
     );
 }
 
-function SensorTrendChart({ data }: { data: Props['predictionTrends'] }) {
+function SensorTrendChart({
+    data,
+    selectedDate,
+    onDateChange,
+}: {
+    data: Props['predictionTrends'];
+    selectedDate: string;
+    onDateChange: (date: string | null) => void;
+}) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
+
     return (
         <ChartCard
             eyebrow="Conditions Trend"
             title="Environmental context"
             description="Review temperature and humidity shifts alongside readiness changes."
+            actions={
+                <ChartDateFilter
+                    selectedDate={selectedDate}
+                    onDateChange={onDateChange}
+                />
+            }
         >
-            <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={data}>
-                    <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="#FEF3C7"
-                    />
-                    <XAxis
-                        dataKey="label"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{
-                            fill: '#78350F',
-                            fontSize: 10,
-                            fontWeight: 600,
-                        }}
-                        minTickGap={24}
-                        dy={8}
-                    />
-                    <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{
-                            fill: '#78350F',
-                            fontSize: 10,
-                            fontWeight: 600,
-                        }}
-                    />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Line
-                        type="monotone"
-                        dataKey="temp"
-                        name="Temperature"
-                        stroke="#EA580C"
-                        strokeWidth={2.5}
-                        dot={{ r: 3, fill: '#EA580C' }}
-                        activeDot={{ r: 5 }}
-                    />
-                    <Line
-                        type="monotone"
-                        dataKey="humidity"
-                        name="Humidity"
-                        stroke="#2563EB"
-                        strokeWidth={2.5}
-                        dot={{ r: 3, fill: '#2563EB' }}
-                        activeDot={{ r: 5 }}
-                    />
-                </LineChart>
-            </ResponsiveContainer>
+            <div className="w-full">
+                {mounted ? (
+                    data.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                            <LineChart data={data}>
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    vertical={false}
+                                    stroke="#FEF3C7"
+                                />
+                                <XAxis
+                                    dataKey="label"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{
+                                        fill: '#78350F',
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                    }}
+                                    dy={8}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{
+                                        fill: '#78350F',
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                    }}
+                                />
+                                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                                <Legend wrapperStyle={{ fontSize: 11 }} />
+                                <Line
+                                    type="monotone"
+                                    dataKey="temp"
+                                    name="Temp (°C)"
+                                    stroke="#ef4444"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="humidity"
+                                    name="Humidity (%)"
+                                    stroke="#3b82f6"
+                                    strokeWidth={2}
+                                    dot={false}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <p className="py-10 text-center text-sm text-amber-700/60">
+                            No environmental trend data for the selected date.
+                        </p>
+                    )
+                ) : null}
+            </div>
         </ChartCard>
+    );
+}
+
+function ChartDateFilter({
+    selectedDate,
+    onDateChange,
+}: {
+    selectedDate: string;
+    onDateChange: (date: string | null) => void;
+}) {
+    return (
+        <div className="w-full sm:w-auto">
+            <DatePicker
+                className="w-full sm:w-[124px]"
+                value={selectedDate}
+                onChange={onDateChange}
+                defaultValue={selectedDate}
+            />
+        </div>
     );
 }
 
@@ -569,6 +669,7 @@ export default function Predictions({
     const predictionChannelName = `hive.${hive.id}.predictions`;
     const [showHistory, setShowHistory] = useState(filters.page > 1);
     const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
+    const [chartDate, setChartDate] = useState(filters.chart_date);
     const activeHistoryIndex =
         activeHistoryId === null
             ? null
@@ -584,6 +685,10 @@ export default function Predictions({
     const hasNextHistory =
         activeHistoryIndex !== null &&
         activeHistoryIndex < historyPredictions.data.length - 1;
+
+    useEffect(() => {
+        setChartDate(filters.chart_date);
+    }, [filters.chart_date]);
 
     useEffect(() => {
         const resetLiveReload = () => {
@@ -663,6 +768,23 @@ export default function Predictions({
 
         return () => window.removeEventListener('keydown', handler);
     }, [activeHistoryId, activeHistoryIndex, historyPredictions.data]);
+
+    function handleChartDateChange(date: string | null) {
+        const resolved = date ?? filters.chart_date;
+        setChartDate(resolved);
+        router.get(
+            route('predictions.live', { hive: hive.id }),
+            {
+                chart_date: resolved,
+                page: filters.page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['predictionTrends', 'filters'],
+            },
+        );
+    }
 
     return (
         <AuthenticatedLayout>
@@ -800,8 +922,16 @@ export default function Predictions({
                         </ChartCard>
 
                         <div className="grid gap-6 xl:grid-cols-2">
-                            <PredictionTrendChart data={predictionTrends} />
-                            <SensorTrendChart data={predictionTrends} />
+                            <PredictionTrendChart
+                                data={predictionTrends}
+                                selectedDate={chartDate}
+                                onDateChange={handleChartDateChange}
+                            />
+                            <SensorTrendChart
+                                data={predictionTrends}
+                                selectedDate={chartDate}
+                                onDateChange={handleChartDateChange}
+                            />
                         </div>
 
                         <ChartCard
