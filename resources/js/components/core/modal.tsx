@@ -75,7 +75,7 @@ export function Modal({
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         className={`relative flex w-full flex-col overflow-hidden bg-white shadow-2xl ${
                             mobileLayout === 'sheet'
-                                ? `max-h-[92dvh] rounded-t-[2rem] rounded-b-none sm:max-h-[90vh] sm:rounded-[2.5rem] ${maxWidthMap[maxWidth]}`
+                                ? `max-h-[85dvh] rounded-t-[2rem] rounded-b-none sm:max-h-[90vh] sm:rounded-[2.5rem] ${maxWidthMap[maxWidth]}`
                                 : `max-h-[calc(100vh-2rem)] rounded-[2rem] sm:max-h-[90vh] sm:rounded-[2.5rem] ${maxWidthMap[maxWidth]}`
                         }`}
                     >
@@ -96,7 +96,13 @@ export function Modal({
                         </div>
 
                         {/* Content — scrollable */}
-                        <ScrollArea className="flex-1 px-5 pt-4 pb-6 sm:px-8 sm:pt-6 sm:pb-8">
+                        <ScrollArea
+                            className={
+                                mobileLayout === 'sheet'
+                                    ? 'max-h-[calc(85dvh-5.5rem)] px-5 pt-4 pb-6 sm:max-h-none sm:flex-1 sm:px-8 sm:pt-6 sm:pb-8'
+                                    : 'flex-1 px-5 pt-4 pb-6 sm:px-8 sm:pt-6 sm:pb-8'
+                            }
+                        >
                             {children}
                         </ScrollArea>
                     </motion.div>

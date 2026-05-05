@@ -132,6 +132,80 @@ const TOOLTIP_STYLE = {
     color: '#78350F',
 };
 
+function formatAnimatedReading(value: number, maxFractionDigits = 1): string {
+    return value.toFixed(maxFractionDigits).replace(/\.0$/, '');
+}
+
+function useAnimatedNumber(value: number, durationMs = 700) {
+    const [displayValue, setDisplayValue] = useState(value);
+    const previousValueRef = useRef(value);
+    const animationFrameRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (animationFrameRef.current !== null) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+
+        const startValue = previousValueRef.current;
+
+        if (startValue === value) {
+            setDisplayValue(value);
+            return;
+        }
+
+        previousValueRef.current = value;
+
+        const startedAt = performance.now();
+        const tick = (now: number) => {
+            const progress = Math.min((now - startedAt) / durationMs, 1);
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+            const nextValue = startValue + (value - startValue) * easedProgress;
+
+            setDisplayValue(nextValue);
+
+            if (progress < 1) {
+                animationFrameRef.current = requestAnimationFrame(tick);
+            } else {
+                animationFrameRef.current = null;
+                setDisplayValue(value);
+            }
+        };
+
+        animationFrameRef.current = requestAnimationFrame(tick);
+
+        return () => {
+            if (animationFrameRef.current !== null) {
+                cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
+            }
+        };
+    }, [durationMs, value]);
+
+    return displayValue;
+}
+
+function AnimatedNumber({
+    value,
+    suffix = '',
+    maxFractionDigits = 0,
+    className = '',
+}: {
+    value: number;
+    suffix?: string;
+    maxFractionDigits?: number;
+    className?: string;
+}) {
+    const displayValue = useAnimatedNumber(value);
+
+    return (
+        <span className={`tabular-nums ${className}`}>
+            {formatAnimatedReading(displayValue, maxFractionDigits)}
+            {suffix}
+        </span>
+    );
+}
+
 function formatRawConfidence(score: number) {
     if (score >= 0.9995) {
         return 'Approx. 99.9%+';
@@ -846,10 +920,13 @@ export default function Predictions({
                                         />
                                         <div className="flex flex-wrap items-end gap-3">
                                             <p className="text-5xl font-black tracking-tight text-amber-900">
-                                                {Math.round(
-                                                    latest.hri_value * 100,
-                                                )}
-                                                %
+                                                <AnimatedNumber
+                                                    value={
+                                                        latest.hri_value * 100
+                                                    }
+                                                    suffix="%"
+                                                    className="text-5xl font-black tracking-tight text-amber-900"
+                                                />
                                             </p>
                                             <p className="pb-1 text-sm text-amber-900/55">
                                                 HRI value
@@ -902,11 +979,15 @@ export default function Predictions({
                                         99.9,
                                     )}
                                     label="Raw model confidence"
-                                    formatter={() =>
-                                        formatRawConfidence(
-                                            latest.confidence_score,
-                                        )
-                                    }
+                                    formatter={() => (
+                                        <AnimatedNumber
+                                            value={
+                                                latest.confidence_score * 100
+                                            }
+                                            suffix="%"
+                                            maxFractionDigits={1}
+                                        />
+                                    )}
                                     barClassName={
                                         READINESS_BAR_STYLES[
                                             latest.readiness_level
@@ -1082,144 +1163,372 @@ export default function Predictions({
 
             {activeHistoryPrediction && activeHistoryIndex !== null && (
                 <Modal
-                    key={activeHistoryId}
                     isOpen
                     onClose={() => setActiveHistoryId(null)}
                     title="Prediction Details"
                     maxWidth="2xl"
-                    mobileLayout="sheet"
                 >
-                    <div className="space-y-5">
-                        <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                    setActiveHistoryId(
-                                        historyPredictions.data[
-                                            activeHistoryIndex - 1
-                                        ]?.id ?? activeHistoryId,
-                                    )
-                                }
-                                disabled={!hasPrevHistory}
-                                className="h-9 w-9 rounded-xl p-0 text-amber-900 transition-none active:scale-100 hover:bg-yellow-100 hover:text-amber-900"
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
-                                {activeHistoryIndex + 1} /{' '}
-                                {historyPredictions.data.length}
-                            </span>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                    setActiveHistoryId(
-                                        historyPredictions.data[
-                                            activeHistoryIndex + 1
-                                        ]?.id ?? activeHistoryId,
-                                    )
-                                }
-                                disabled={!hasNextHistory}
-                                className="h-9 w-9 rounded-xl p-0 text-amber-900 transition-none active:scale-100 hover:bg-yellow-100 hover:text-amber-900"
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Readiness
-                                </p>
-                                <ReadinessBadge
-                                    level={
-                                        activeHistoryPrediction.readiness_level
+                    <>
+                        <div className="space-y-4 sm:hidden">
+                            <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() =>
+                                        setActiveHistoryId(
+                                            historyPredictions.data[
+                                                activeHistoryIndex - 1
+                                            ]?.id ?? activeHistoryId,
+                                        )
                                     }
-                                    size="sm"
-                                />
-                            </div>
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    HRI
-                                </p>
-                                <p className="font-semibold text-amber-950">
-                                    {Math.round(
-                                        activeHistoryPrediction.hri_value * 100,
-                                    )}
-                                    %
-                                </p>
-                            </div>
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Raw Confidence
-                                </p>
-                                <p className="font-semibold text-amber-950">
-                                    {formatRawConfidence(
-                                        activeHistoryPrediction.confidence_score,
-                                    )}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Trust
-                                </p>
-                                <span
-                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${getTrustStyle(activeHistoryPrediction.warning_state)}`}
+                                    disabled={!hasPrevHistory}
+                                    className="h-auto rounded-xl p-1.5 text-amber-900 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                                 >
-                                    {getTrustLabel(activeHistoryPrediction)}
+                                    <ChevronLeft className="h-4 w-4 text-amber-900" />
+                                </Button>
+                                <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
+                                    {activeHistoryIndex + 1} /{' '}
+                                    {historyPredictions.data.length}
                                 </span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() =>
+                                        setActiveHistoryId(
+                                            historyPredictions.data[
+                                                activeHistoryIndex + 1
+                                            ]?.id ?? activeHistoryId,
+                                        )
+                                    }
+                                    disabled={!hasNextHistory}
+                                    className="h-auto rounded-xl p-1.5 text-amber-900 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
+                                >
+                                    <ChevronRight className="h-4 w-4 text-amber-900" />
+                                </Button>
                             </div>
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Captured
-                                </p>
-                                <p className="font-medium text-amber-950">
-                                    {formatCapturedTime(
-                                        activeHistoryPrediction,
-                                    )}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Prediction Time
-                                </p>
-                                <p className="font-medium text-amber-950">
-                                    {formatPredictionTime(
-                                        activeHistoryPrediction,
-                                    )}
-                                </p>
-                            </div>
-                            <div className="sm:col-span-2 lg:col-span-3">
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Device
-                                </p>
-                                <p className="font-medium text-amber-950">
-                                    {activeHistoryPrediction.device_identifier ??
-                                        'Unknown device'}
-                                </p>
-                            </div>
-                        </div>
 
-                        <PredictionWarningAlert
-                            prediction={activeHistoryPrediction}
-                        />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Readiness
+                                    </p>
+                                    <ReadinessBadge
+                                        level={
+                                            activeHistoryPrediction.readiness_level
+                                        }
+                                        size="sm"
+                                    />
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Trust
+                                    </p>
+                                    <span
+                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${getTrustStyle(activeHistoryPrediction.warning_state)}`}
+                                    >
+                                        {getTrustLabel(
+                                            activeHistoryPrediction,
+                                        )}
+                                    </span>
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        HRI
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        <AnimatedNumber
+                                            value={
+                                                activeHistoryPrediction.hri_value *
+                                                100
+                                            }
+                                            suffix="%"
+                                        />
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Raw Confidence
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        <AnimatedNumber
+                                            value={
+                                                activeHistoryPrediction.confidence_score *
+                                                100
+                                            }
+                                            suffix="%"
+                                            maxFractionDigits={1}
+                                        />
+                                    </p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Captured
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        {formatCapturedTime(
+                                            activeHistoryPrediction,
+                                        )}
+                                    </p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Prediction Time
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        {formatPredictionTime(
+                                            activeHistoryPrediction,
+                                        )}
+                                    </p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Device
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        {activeHistoryPrediction.device_identifier ??
+                                            'Unknown device'}
+                                    </p>
+                                </div>
+                            </div>
 
-                        <div>
-                            <p className="mb-3 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                Sensor Snapshot
-                            </p>
-                            <SensorSnapshot
+                            <PredictionWarningAlert
                                 prediction={activeHistoryPrediction}
                             />
+
+                            <div>
+                                <p className="mb-2 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Sensor Snapshot
+                                </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                            Temp
+                                        </p>
+                                        <p className="font-medium text-amber-950">
+                                            {
+                                                activeHistoryPrediction
+                                                    .sensor_values.temp
+                                            }
+                                            °C
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                            Humidity
+                                        </p>
+                                        <p className="font-medium text-amber-950">
+                                            {
+                                                activeHistoryPrediction
+                                                    .sensor_values.humidity
+                                            }
+                                            %
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                            MQ2
+                                        </p>
+                                        <p className="font-medium text-amber-950">
+                                            {
+                                                activeHistoryPrediction
+                                                    .sensor_values.mq2_value
+                                            }
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                            MQ3
+                                        </p>
+                                        <p className="font-medium text-amber-950">
+                                            {
+                                                activeHistoryPrediction
+                                                    .sensor_values.mq3_value
+                                            }
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                            MQ5
+                                        </p>
+                                        <p className="font-medium text-amber-950">
+                                            {
+                                                activeHistoryPrediction
+                                                    .sensor_values.mq5_value
+                                            }
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                            MQ135
+                                        </p>
+                                        <p className="font-medium text-amber-950">
+                                            {
+                                                activeHistoryPrediction
+                                                    .sensor_values.mq135_value
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-center text-[10px] tracking-widest text-amber-900/25 uppercase">
+                                Use arrow keys to navigate
+                            </p>
+
+                            <div className="pt-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setActiveHistoryId(null)}
+                                    className="w-full"
+                                >
+                                    Close
+                                </Button>
+                            </div>
                         </div>
 
-                        <p className="hidden text-center text-[10px] tracking-widest text-amber-900/25 uppercase sm:block">
-                            Use arrow keys to navigate
-                        </p>
-                    </div>
+                        <div className="hidden space-y-5 sm:block">
+                            <div className="-mt-2 mb-0.5 flex items-center justify-end gap-1">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                        setActiveHistoryId(
+                                            historyPredictions.data[
+                                                activeHistoryIndex - 1
+                                            ]?.id ?? activeHistoryId,
+                                        )
+                                    }
+                                    disabled={!hasPrevHistory}
+                                    className="h-9 w-9 rounded-xl p-0 text-amber-900 transition-none active:scale-100 hover:bg-yellow-100 hover:text-amber-900"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
+                                    {activeHistoryIndex + 1} /{' '}
+                                    {historyPredictions.data.length}
+                                </span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                        setActiveHistoryId(
+                                            historyPredictions.data[
+                                                activeHistoryIndex + 1
+                                            ]?.id ?? activeHistoryId,
+                                        )
+                                    }
+                                    disabled={!hasNextHistory}
+                                    className="h-9 w-9 rounded-xl p-0 text-amber-900 transition-none active:scale-100 hover:bg-yellow-100 hover:text-amber-900"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:gap-4 lg:grid-cols-3">
+                                <div>
+                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Readiness
+                                    </p>
+                                    <ReadinessBadge
+                                        level={
+                                            activeHistoryPrediction.readiness_level
+                                        }
+                                        size="sm"
+                                    />
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        HRI
+                                    </p>
+                                    <p className="font-semibold text-amber-950">
+                                        <AnimatedNumber
+                                            value={
+                                                activeHistoryPrediction.hri_value *
+                                                100
+                                            }
+                                            suffix="%"
+                                        />
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Raw Confidence
+                                    </p>
+                                    <p className="font-semibold text-amber-950">
+                                        <AnimatedNumber
+                                            value={
+                                                activeHistoryPrediction.confidence_score *
+                                                100
+                                            }
+                                            suffix="%"
+                                            maxFractionDigits={1}
+                                        />
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Trust
+                                    </p>
+                                    <span
+                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${getTrustStyle(activeHistoryPrediction.warning_state)}`}
+                                    >
+                                        {getTrustLabel(
+                                            activeHistoryPrediction,
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Captured
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        {formatCapturedTime(
+                                            activeHistoryPrediction,
+                                        )}
+                                    </p>
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Prediction Time
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        {formatPredictionTime(
+                                            activeHistoryPrediction,
+                                        )}
+                                    </p>
+                                </div>
+                                <div className="col-span-2 lg:col-span-3">
+                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-amber-900/40 uppercase">
+                                        Device
+                                    </p>
+                                    <p className="font-medium text-amber-950">
+                                        {activeHistoryPrediction.device_identifier ??
+                                            'Unknown device'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <PredictionWarningAlert
+                                prediction={activeHistoryPrediction}
+                            />
+
+                            <div>
+                                <p className="mb-3 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                    Sensor Snapshot
+                                </p>
+                                <SensorSnapshot
+                                    prediction={activeHistoryPrediction}
+                                />
+                            </div>
+
+                            <p className="text-center text-[10px] tracking-widest text-amber-900/25 uppercase">
+                                Use arrow keys to navigate
+                            </p>
+                        </div>
+                    </>
                 </Modal>
             )}
         </AuthenticatedLayout>
