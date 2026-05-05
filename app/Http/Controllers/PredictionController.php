@@ -96,9 +96,9 @@ class PredictionController extends Controller
             'out_of_distribution' => (bool) ($prediction->out_of_distribution ?? false),
             'out_of_distribution_features' => $prediction->out_of_distribution_features ?? [],
             'prediction_timestamp' => $prediction->prediction_timestamp?->toIso8601String(),
-            'prediction_timestamp_label' => $prediction->prediction_timestamp?->format('d M Y, H:i'),
+            'prediction_timestamp_label' => $prediction->prediction_timestamp?->format('d/m/Y H:i'),
             'record_timestamp' => $sensorLog?->record_timestamp?->toIso8601String(),
-            'record_timestamp_label' => $sensorLog?->record_timestamp?->format('d M Y, H:i'),
+            'record_timestamp_label' => $sensorLog?->record_timestamp?->format('d/m/Y H:i'),
             'sensor_values' => [
                 'temp' => round((float) ($sensorLog?->temp ?? 0), 1),
                 'humidity' => round((float) ($sensorLog?->humidity ?? 0), 1),

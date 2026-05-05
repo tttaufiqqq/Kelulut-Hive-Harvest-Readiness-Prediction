@@ -853,43 +853,54 @@ export default function Predictions({
             <Head title={`Live Predictions — ${hive.name}`} />
 
             <div className="mx-auto w-full max-w-4xl space-y-8 p-4 sm:p-6 md:p-10">
-                <div className="flex flex-col gap-2">
-                    <Breadcrumbs
-                        items={[
-                            { label: 'Home', href: '/' },
-                            { label: 'My Hives', href: '/dashboard' },
-                            { label: hive.name, href: '/dashboard' },
-                            { label: 'Live Predictions' },
-                        ]}
-                    />
-                    <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3">
+                    <div className="sm:hidden">
+                        <div className="text-[11px] font-bold tracking-[0.18em] text-amber-900/45 uppercase">
+                            Home / {hive.name} / Live Predictions
+                        </div>
+                    </div>
+                    <div className="hidden sm:block">
+                        <Breadcrumbs
+                            items={[
+                                { label: 'Home', href: '/' },
+                                { label: 'My Hives', href: '/dashboard' },
+                                { label: hive.name, href: '/dashboard' },
+                                { label: 'Live Predictions' },
+                            ]}
+                        />
+                    </div>
+                    <div className="flex items-start gap-3">
                         <Link
                             href="/dashboard"
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-900 transition-colors hover:bg-amber-200"
+                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-900 transition-colors hover:bg-amber-200"
                         >
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
-                        <div className="flex-1">
-                            <h1 className="text-2xl font-black text-amber-900">
+                        <div className="min-w-0 flex-1">
+                            <h1 className="text-2xl leading-tight font-black text-amber-900">
                                 Live Predictions
                             </h1>
-                            <div className="mt-1 flex items-center gap-2">
-                                <motion.div
-                                    className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"
-                                    animate={{ opacity: [1, 0.3, 1] }}
-                                    transition={{
-                                        duration: 1.2,
-                                        repeat: Infinity,
-                                        ease: 'easeInOut',
-                                    }}
-                                />
-                                <span className="text-xs font-bold tracking-wider whitespace-nowrap text-emerald-600 uppercase">
+                            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+                                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold tracking-[0.18em] text-emerald-700 uppercase">
+                                    <motion.span
+                                        className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"
+                                        animate={{ opacity: [1, 0.3, 1] }}
+                                        transition={{
+                                            duration: 1.2,
+                                            repeat: Infinity,
+                                            ease: 'easeInOut',
+                                        }}
+                                    />
                                     Live
                                 </span>
-                                <span className="text-amber-900/20">·</span>
-                                <p className="truncate text-sm text-amber-700">
-                                    {hive.name} — ML Harvest Readiness
-                                </p>
+                                <div className="min-w-0 text-sm leading-relaxed text-amber-700">
+                                    <p className="truncate font-semibold text-amber-800">
+                                        {hive.name}
+                                    </p>
+                                    <p className="text-amber-700/75">
+                                        ML Harvest Readiness
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1199,7 +1210,7 @@ export default function Predictions({
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className="min-w-0">
                                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                         Readiness
                                     </p>
@@ -1208,21 +1219,22 @@ export default function Predictions({
                                             activeHistoryPrediction.readiness_level
                                         }
                                         size="sm"
+                                        className="min-w-[7.5rem] justify-center"
                                     />
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                         Trust
                                     </p>
                                     <span
-                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${getTrustStyle(activeHistoryPrediction.warning_state)}`}
+                                        className={`inline-flex min-w-[7.5rem] justify-center rounded-full px-3 py-1 text-xs font-bold ${getTrustStyle(activeHistoryPrediction.warning_state)}`}
                                     >
                                         {getTrustLabel(
                                             activeHistoryPrediction,
                                         )}
                                     </span>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                         HRI
                                     </p>
@@ -1236,7 +1248,7 @@ export default function Predictions({
                                         />
                                     </p>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                         Raw Confidence
                                     </p>
@@ -1251,31 +1263,31 @@ export default function Predictions({
                                         />
                                     </p>
                                 </div>
-                                <div className="col-span-2">
+                                <div className="min-w-0">
                                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                         Captured
                                     </p>
-                                    <p className="font-medium text-amber-950">
+                                    <p className="break-words font-medium text-amber-950">
                                         {formatCapturedTime(
                                             activeHistoryPrediction,
                                         )}
                                     </p>
                                 </div>
-                                <div className="col-span-2">
+                                <div className="min-w-0">
                                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                         Prediction Time
                                     </p>
-                                    <p className="font-medium text-amber-950">
+                                    <p className="break-words font-medium text-amber-950">
                                         {formatPredictionTime(
                                             activeHistoryPrediction,
                                         )}
                                     </p>
                                 </div>
-                                <div className="col-span-2">
+                                <div className="col-span-2 min-w-0">
                                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                                         Device
                                     </p>
-                                    <p className="font-medium text-amber-950">
+                                    <p className="break-words font-medium text-amber-950">
                                         {activeHistoryPrediction.device_identifier ??
                                             'Unknown device'}
                                     </p>

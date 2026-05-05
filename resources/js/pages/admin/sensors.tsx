@@ -656,13 +656,6 @@ export default function AdminSensors({
 
     const WINDOWS: ('1h' | '6h' | '24h')[] = ['1h', '6h', '24h'];
 
-    const nudgeWindows =
-        normalizedLatest === null
-            ? WINDOWS.filter(
-                  (w) => WINDOWS.indexOf(w) > WINDOWS.indexOf(window),
-              )
-            : [];
-
     useEffect(() => {
         const resetLiveReload = () => {
             liveReloadInFlight.current = false;
@@ -781,23 +774,12 @@ export default function AdminSensors({
 
                 {/* ── Window Nudge Bar ──────────────────────────────── */}
                 {normalizedLatest === null && (
-                    <div className="flex flex-col gap-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center">
-                        <div className="flex min-w-0 flex-1 items-start gap-2">
+                    <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+                        <div className="flex min-w-0 items-start gap-2">
                             <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
                             <span className="text-sm leading-relaxed font-semibold text-amber-700">
                                 No readings in the last {window}.
                             </span>
-                        </div>
-                        <div className="flex gap-2 self-start sm:self-auto">
-                            {nudgeWindows.map((w) => (
-                                <button
-                                    key={w}
-                                    onClick={() => navigate({ window: w })}
-                                    className="rounded-lg bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900 transition-colors hover:bg-amber-200"
-                                >
-                                    {w}
-                                </button>
-                            ))}
                         </div>
                     </div>
                 )}
