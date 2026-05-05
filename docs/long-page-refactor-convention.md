@@ -55,6 +55,12 @@ resources/js/pages/
   4. page-specific hooks
 - Prefer `PageNamePage.tsx` for the main page-local module and `components/SectionName.tsx` for extracted sections.
 - Keep extracted modules page-local unless at least two pages genuinely share the same abstraction.
+- Keep file naming consistent within a page folder:
+  - `types.ts` for page-local interfaces and discriminated unions
+  - `constants.ts` for options, labels, thresholds, and static chart config
+  - `utils.ts` for pure formatting and mapping helpers
+  - `hooks/useThing.ts` for page-specific stateful logic
+  - `components/Thing.tsx` for extracted presentational sections
 
 ## Manual Verification Checklist
 
