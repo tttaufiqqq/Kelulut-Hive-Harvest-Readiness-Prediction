@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { echo } from '@laravel/echo-react';
 import {
     ArrowLeft,
     ChevronLeft,
@@ -6,7 +7,7 @@ import {
     CircleAlert,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     CartesianGrid,
     Legend,
@@ -29,11 +30,7 @@ import {
     SnapshotGrid,
 } from '@/components/core/readiness-chart-cards';
 import { ScrollArea } from '@/components/core/scroll-area';
-import {
-    Alert,
-    AlertDescription,
-    AlertTitle,
-} from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 interface PredictionEntry {
@@ -98,23 +95,21 @@ const ROW_TONE_STYLES: Record<string, string> = {
     critical: 'bg-rose-50/45 hover:bg-rose-50/70',
 };
 
-const TRUST_ALERT_STYLES: Record<
-    string,
-    { container: string; icon: string }
-> = {
-    normal: {
-        container: 'border-amber-200 bg-amber-50/80 text-amber-900',
-        icon: 'text-amber-700',
-    },
-    warning: {
-        container: 'border-amber-300 bg-amber-50 text-amber-950',
-        icon: 'text-amber-700',
-    },
-    critical: {
-        container: 'border-rose-300 bg-rose-50 text-rose-950',
-        icon: 'text-rose-700',
-    },
-};
+const TRUST_ALERT_STYLES: Record<string, { container: string; icon: string }> =
+    {
+        normal: {
+            container: 'border-amber-200 bg-amber-50/80 text-amber-900',
+            icon: 'text-amber-700',
+        },
+        warning: {
+            container: 'border-amber-300 bg-amber-50 text-amber-950',
+            icon: 'text-amber-700',
+        },
+        critical: {
+            container: 'border-rose-300 bg-rose-50 text-rose-950',
+            icon: 'text-rose-700',
+        },
+    };
 
 const READINESS_BAR_STYLES: Record<string, string> = {
     not_ready: 'bg-rose-400',
@@ -308,11 +303,7 @@ function PredictionWarningAlert({
     );
 }
 
-function PredictionTrendChart({
-    data,
-}: {
-    data: Props['predictionTrends'];
-}) {
+function PredictionTrendChart({ data }: { data: Props['predictionTrends'] }) {
     return (
         <ChartCard
             eyebrow="HRI Trend"
@@ -375,11 +366,7 @@ function PredictionTrendChart({
     );
 }
 
-function SensorTrendChart({
-    data,
-}: {
-    data: Props['predictionTrends'];
-}) {
+function SensorTrendChart({ data }: { data: Props['predictionTrends'] }) {
     return (
         <ChartCard
             eyebrow="Conditions Trend"
@@ -445,7 +432,7 @@ function MobilePredictionHistoryList({
     onSelect,
 }: {
     predictions: PredictionEntry[];
-    onSelect: (index: number) => void;
+    onSelect: (predictionId: number) => void;
 }) {
     return (
         <div className="space-y-3 md:hidden">
@@ -458,7 +445,7 @@ function MobilePredictionHistoryList({
                     <button
                         key={prediction.id}
                         type="button"
-                        onClick={() => onSelect(index)}
+                        onClick={() => onSelect(prediction.id)}
                         className={`block w-full rounded-3xl border border-yellow-100 px-4 py-4 text-left shadow-sm transition-colors ${getRowToneStyle(prediction.warning_state)}`}
                     >
                         <div className="flex items-start justify-between gap-3">
@@ -525,7 +512,11 @@ function MobilePredictionHistoryList({
 
 function AnimatedReadinessBadge({ level }: { level: string }) {
     const badge = (
-        <ReadinessBadge level={level} appearance="solid" className="text-base" />
+        <ReadinessBadge
+            level={level}
+            appearance="solid"
+            className="text-base"
+        />
     );
 
     if (level !== 'ready') {
@@ -561,12 +552,18 @@ export default function Predictions({
     filters,
 }: Props) {
     const latest = latestPrediction;
+    const liveReloadInFlight = useRef(false);
+    const predictionChannelName = `hive.${hive.id}.predictions`;
     const [showHistory, setShowHistory] = useState(filters.page > 1);
-    const [activeHistoryIndex, setActiveHistoryIndex] = useState<number | null>(
-        null,
-    );
+    const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
+    const activeHistoryIndex =
+        activeHistoryId === null
+            ? null
+            : historyPredictions.data.findIndex(
+                  (prediction) => prediction.id === activeHistoryId,
+              );
     const activeHistoryPrediction =
-        activeHistoryIndex !== null
+        activeHistoryIndex !== null && activeHistoryIndex >= 0
             ? (historyPredictions.data[activeHistoryIndex] ?? null)
             : null;
     const hasPrevHistory =
@@ -576,39 +573,89 @@ export default function Predictions({
         activeHistoryIndex < historyPredictions.data.length - 1;
 
     useEffect(() => {
-        const id = setInterval(() => {
+        const resetLiveReload = () => {
+            liveReloadInFlight.current = false;
+        };
+
+        const removeStartListener = router.on('start', () => {
+            liveReloadInFlight.current = true;
+        });
+        const removeFinishListener = router.on('finish', resetLiveReload);
+
+        return () => {
+            removeStartListener();
+            removeFinishListener();
+        };
+    }, []);
+
+    useEffect(() => {
+        const realtime = echo();
+        const channel = realtime.private(predictionChannelName);
+        const eventName = '.prediction.created';
+        const resetLiveReload = () => {
+            liveReloadInFlight.current = false;
+        };
+        const reloadPredictionProps = () => {
+            if (document.hidden || liveReloadInFlight.current) {
+                return;
+            }
+
+            liveReloadInFlight.current = true;
+
             router.reload({
                 only: [
                     'latestPrediction',
                     'predictionTrends',
                     'historyPredictions',
                 ],
+                onCancel: resetLiveReload,
+                onError: resetLiveReload,
+                onFinish: resetLiveReload,
+                onSuccess: resetLiveReload,
             });
-        }, 10000);
+        };
 
-        return () => clearInterval(id);
-    }, []);
+        channel.listen(eventName, reloadPredictionProps);
+
+        return () => {
+            channel.stopListening(eventName, reloadPredictionProps);
+            realtime.leave(predictionChannelName);
+        };
+    }, [predictionChannelName]);
 
     useEffect(() => {
-        if (activeHistoryIndex === null) {
+        if (activeHistoryId === null) {
+            return;
+        }
+
+        if (
+            !historyPredictions.data.some(
+                (prediction) => prediction.id === activeHistoryId,
+            )
+        ) {
+            setActiveHistoryId(null);
+        }
+    }, [activeHistoryId, historyPredictions.data]);
+
+    useEffect(() => {
+        if (activeHistoryIndex === null || activeHistoryIndex < 0) {
             return;
         }
 
         const handler = (event: KeyboardEvent) => {
             if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
                 event.preventDefault();
-                setActiveHistoryIndex((current) =>
-                    current !== null && current > 0 ? current - 1 : current,
+                setActiveHistoryId(
+                    historyPredictions.data[activeHistoryIndex - 1]?.id ??
+                        activeHistoryId,
                 );
             }
 
             if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
                 event.preventDefault();
-                setActiveHistoryIndex((current) =>
-                    current !== null &&
-                    current < historyPredictions.data.length - 1
-                        ? current + 1
-                        : current,
+                setActiveHistoryId(
+                    historyPredictions.data[activeHistoryIndex + 1]?.id ??
+                        activeHistoryId,
                 );
             }
         };
@@ -616,7 +663,7 @@ export default function Predictions({
         window.addEventListener('keydown', handler);
 
         return () => window.removeEventListener('keydown', handler);
-    }, [activeHistoryIndex, historyPredictions.data.length]);
+    }, [activeHistoryId, activeHistoryIndex, historyPredictions.data]);
 
     return (
         <AuthenticatedLayout>
@@ -816,7 +863,7 @@ export default function Predictions({
                             >
                                 <MobilePredictionHistoryList
                                     predictions={historyPredictions.data}
-                                    onSelect={setActiveHistoryIndex}
+                                    onSelect={setActiveHistoryId}
                                 />
 
                                 <Card className="hidden overflow-hidden border-yellow-100 p-0 shadow-sm md:block">
@@ -825,92 +872,96 @@ export default function Predictions({
                                         className="w-full"
                                     >
                                         <DataTable
-                                        className="overflow-visible"
-                                        tableClassName="min-w-[920px] text-sm"
-                                        bodyClassName="divide-y divide-yellow-50"
-                                        rowClassName={(prediction) =>
-                                            getRowToneStyle(
-                                                prediction.warning_state,
-                                            )
-                                        }
-                                        data={historyPredictions.data}
-                                        onRowClick={(_, index) =>
-                                            setActiveHistoryIndex(index)
-                                        }
-                                        emptyColSpan={6}
-                                        emptyState={
-                                            <div className="px-6 py-10 text-center text-sm text-amber-900/40">
-                                                No older predictions yet.
-                                            </div>
-                                        }
-                                        columns={[
-                                            {
-                                                key: 'time',
-                                                header: 'Time',
-                                                cellClassName:
-                                                    'px-6 py-4 font-semibold whitespace-nowrap text-amber-900 tabular-nums',
-                                                render: (prediction) =>
-                                                    formatPredictionTime(
-                                                        prediction,
-                                                    ),
-                                            },
-                                            {
-                                                key: 'readiness',
-                                                header: 'Readiness',
-                                                cellClassName: 'px-6 py-4',
-                                                render: (prediction) => (
-                                                    <ReadinessBadge
-                                                        level={
-                                                            prediction.readiness_level
-                                                        }
-                                                        size="sm"
-                                                    />
-                                                ),
-                                            },
-                                            {
-                                                key: 'hri',
-                                                header: 'HRI',
-                                                cellClassName:
-                                                    'px-6 py-4 font-semibold whitespace-nowrap text-amber-800',
-                                                render: (prediction) =>
-                                                    `${Math.round(prediction.hri_value * 100)}%`,
-                                            },
-                                            {
-                                                key: 'confidence',
-                                                header: 'Raw Confidence',
-                                                cellClassName:
-                                                    'px-6 py-4 font-semibold whitespace-nowrap text-amber-800',
-                                                render: (prediction) =>
-                                                    formatRawConfidence(
-                                                        prediction.confidence_score,
-                                                    ),
-                                            },
-                                            {
-                                                key: 'trust',
-                                                header: 'Trust',
-                                                cellClassName: 'px-6 py-4',
-                                                render: (prediction) => (
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap ${getTrustStyle(prediction.warning_state)}`}
-                                                    >
-                                                        {getTrustLabel(
+                                            className="overflow-visible"
+                                            tableClassName="min-w-[920px] text-sm"
+                                            bodyClassName="divide-y divide-yellow-50"
+                                            rowClassName={(prediction) =>
+                                                getRowToneStyle(
+                                                    prediction.warning_state,
+                                                )
+                                            }
+                                            data={historyPredictions.data}
+                                            onRowClick={(_, index) =>
+                                                setActiveHistoryId(
+                                                    historyPredictions.data[
+                                                        index
+                                                    ]?.id ?? null,
+                                                )
+                                            }
+                                            emptyColSpan={6}
+                                            emptyState={
+                                                <div className="px-6 py-10 text-center text-sm text-amber-900/40">
+                                                    No older predictions yet.
+                                                </div>
+                                            }
+                                            columns={[
+                                                {
+                                                    key: 'time',
+                                                    header: 'Time',
+                                                    cellClassName:
+                                                        'px-6 py-4 font-semibold whitespace-nowrap text-amber-900 tabular-nums',
+                                                    render: (prediction) =>
+                                                        formatPredictionTime(
                                                             prediction,
-                                                        )}
-                                                    </span>
-                                                ),
-                                            },
-                                            {
-                                                key: 'device',
-                                                header: 'Device',
-                                                headerClassName:
-                                                    'hidden md:table-cell',
-                                                cellClassName:
-                                                    'hidden px-6 py-4 font-mono whitespace-nowrap text-amber-900/60 md:table-cell',
-                                                render: (prediction) =>
-                                                    prediction.device_identifier ??
-                                                    'Unknown device',
-                                            },
-                                        ]}
+                                                        ),
+                                                },
+                                                {
+                                                    key: 'readiness',
+                                                    header: 'Readiness',
+                                                    cellClassName: 'px-6 py-4',
+                                                    render: (prediction) => (
+                                                        <ReadinessBadge
+                                                            level={
+                                                                prediction.readiness_level
+                                                            }
+                                                            size="sm"
+                                                        />
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'hri',
+                                                    header: 'HRI',
+                                                    cellClassName:
+                                                        'px-6 py-4 font-semibold whitespace-nowrap text-amber-800',
+                                                    render: (prediction) =>
+                                                        `${Math.round(prediction.hri_value * 100)}%`,
+                                                },
+                                                {
+                                                    key: 'confidence',
+                                                    header: 'Raw Confidence',
+                                                    cellClassName:
+                                                        'px-6 py-4 font-semibold whitespace-nowrap text-amber-800',
+                                                    render: (prediction) =>
+                                                        formatRawConfidence(
+                                                            prediction.confidence_score,
+                                                        ),
+                                                },
+                                                {
+                                                    key: 'trust',
+                                                    header: 'Trust',
+                                                    cellClassName: 'px-6 py-4',
+                                                    render: (prediction) => (
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap ${getTrustStyle(prediction.warning_state)}`}
+                                                        >
+                                                            {getTrustLabel(
+                                                                prediction,
+                                                            )}
+                                                        </span>
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'device',
+                                                    header: 'Device',
+                                                    headerClassName:
+                                                        'hidden md:table-cell',
+                                                    cellClassName:
+                                                        'hidden px-6 py-4 font-mono whitespace-nowrap text-amber-900/60 md:table-cell',
+                                                    render: (prediction) =>
+                                                        prediction.device_identifier ??
+                                                        'Unknown device',
+                                                },
+                                            ]}
                                         />
                                     </ScrollArea>
                                 </Card>
@@ -957,7 +1008,7 @@ export default function Predictions({
             {activeHistoryPrediction && activeHistoryIndex !== null && (
                 <Modal
                     isOpen
-                    onClose={() => setActiveHistoryIndex(null)}
+                    onClose={() => setActiveHistoryId(null)}
                     title="Prediction Details"
                     maxWidth="2xl"
                 >
@@ -968,10 +1019,10 @@ export default function Predictions({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() =>
-                                    setActiveHistoryIndex((current) =>
-                                        current !== null && current > 0
-                                            ? current - 1
-                                            : current,
+                                    setActiveHistoryId(
+                                        historyPredictions.data[
+                                            activeHistoryIndex - 1
+                                        ]?.id ?? activeHistoryId,
                                     )
                                 }
                                 disabled={!hasPrevHistory}
@@ -988,12 +1039,10 @@ export default function Predictions({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() =>
-                                    setActiveHistoryIndex((current) =>
-                                        current !== null &&
-                                        current <
-                                            historyPredictions.data.length - 1
-                                            ? current + 1
-                                            : current,
+                                    setActiveHistoryId(
+                                        historyPredictions.data[
+                                            activeHistoryIndex + 1
+                                        ]?.id ?? activeHistoryId,
                                     )
                                 }
                                 disabled={!hasNextHistory}
@@ -1009,7 +1058,9 @@ export default function Predictions({
                                     Readiness
                                 </p>
                                 <ReadinessBadge
-                                    level={activeHistoryPrediction.readiness_level}
+                                    level={
+                                        activeHistoryPrediction.readiness_level
+                                    }
                                     size="sm"
                                 />
                             </div>
@@ -1049,7 +1100,9 @@ export default function Predictions({
                                     Captured
                                 </p>
                                 <p className="font-medium text-amber-950">
-                                    {formatCapturedTime(activeHistoryPrediction)}
+                                    {formatCapturedTime(
+                                        activeHistoryPrediction,
+                                    )}
                                 </p>
                             </div>
                             <div>
