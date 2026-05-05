@@ -1,11 +1,13 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { Input } from '@/components/core/input';
+import { TextLink } from '@/components/core/text-link';
 import { DeleteUser } from '@/components/settings/delete-user';
 import { Heading } from '@/components/settings/heading';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { SettingsLayout } from '@/layouts/settings/layout';
 import { send } from '@/routes/verification';
@@ -80,27 +82,39 @@ export default function Profile({
                                     {mustVerifyEmail &&
                                         auth.user.email_verified_at ===
                                             null && (
-                                            <div>
-                                                <p className="-mt-4 text-sm text-amber-600/60">
-                                                    Your email address is
-                                                    unverified.{' '}
-                                                    <Link
-                                                        href={send()}
-                                                        as="button"
-                                                        className="text-yellow-700 underline underline-offset-4 transition-colors hover:text-yellow-900"
-                                                    >
-                                                        Click here to resend the
-                                                        verification email.
-                                                    </Link>
-                                                </p>
+                                            <div className="space-y-3">
+                                                <Alert className="-mt-4 rounded-2xl border-yellow-100 bg-yellow-50 text-amber-900">
+                                                    <AlertDescription className="text-sm text-amber-600/60">
+                                                        <p>
+                                                            Your email address
+                                                            is unverified.{' '}
+                                                            <TextLink
+                                                                href={send()}
+                                                                as="button"
+                                                                className="font-medium text-yellow-700 decoration-current underline-offset-4 hover:text-yellow-900"
+                                                            >
+                                                                Click here to
+                                                                resend the
+                                                                verification
+                                                                email.
+                                                            </TextLink>
+                                                        </p>
+                                                    </AlertDescription>
+                                                </Alert>
 
                                                 {status ===
                                                     'verification-link-sent' && (
-                                                    <div className="mt-2 text-sm font-medium text-emerald-600">
-                                                        A new verification link
-                                                        has been sent to your
-                                                        email address.
-                                                    </div>
+                                                    <Alert className="rounded-2xl border-green-200 bg-green-50 text-green-700">
+                                                        <AlertDescription className="text-sm font-medium text-green-700">
+                                                            <p>
+                                                                A new
+                                                                verification
+                                                                link has been
+                                                                sent to your
+                                                                email address.
+                                                            </p>
+                                                        </AlertDescription>
+                                                    </Alert>
                                                 )}
                                             </div>
                                         )}

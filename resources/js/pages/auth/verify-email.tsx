@@ -1,6 +1,8 @@
 import { Form, Head } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/core/button';
 import { TextLink } from '@/components/core/text-link';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
@@ -14,18 +16,23 @@ export default function VerifyEmail({ status }: { status?: string }) {
             <Head title="Email Verification — BuzzyHive 2.0" />
 
             {status === 'verification-link-sent' && (
-                <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
-                    A new verification link has been sent to your email address.
-                </div>
+                <Alert className="mb-6 rounded-2xl border-green-200 bg-green-50 text-green-700">
+                    <AlertDescription className="text-sm font-medium text-green-700">
+                        <p>
+                            A new verification link has been sent to your email
+                            address.
+                        </p>
+                    </AlertDescription>
+                </Alert>
             )}
 
             <Form {...send()} className="space-y-4">
                 {({ processing }) => (
                     <>
-                        <button
+                        <Button
                             type="submit"
                             disabled={processing}
-                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-yellow-400 py-4 text-lg font-bold text-yellow-950 transition-colors hover:bg-yellow-500 disabled:opacity-50"
+                            className="group w-full gap-2 rounded-2xl py-4 text-lg font-bold hover:bg-yellow-500"
                         >
                             {processing
                                 ? 'Sending...'
@@ -33,7 +40,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                             {!processing && (
                                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                             )}
-                        </button>
+                        </Button>
 
                         <p className="text-center text-sm text-amber-800/50">
                             <TextLink href={logout()}>Log out</TextLink>

@@ -5,10 +5,12 @@ import { useRef, useState } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { InputError } from '@/components/core/input-error';
 import { Heading } from '@/components/settings/heading';
 import { PasswordInput } from '@/components/settings/password-input';
 import { TwoFactorRecoveryCodes } from '@/components/settings/two-factor-recovery-codes';
 import { TwoFactorSetupModal } from '@/components/settings/two-factor-setup-modal';
+import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { SettingsLayout } from '@/layouts/settings/layout';
@@ -80,9 +82,12 @@ export default function Security({
                             {({ errors, processing, recentlySuccessful }) => (
                                 <>
                                     <div className="space-y-1.5">
-                                        <label className="ml-1 text-sm font-medium text-amber-900">
+                                        <Label
+                                            htmlFor="current_password"
+                                            className="ml-1 text-amber-900"
+                                        >
                                             Current password
-                                        </label>
+                                        </Label>
                                         <PasswordInput
                                             id="current_password"
                                             ref={currentPasswordInput}
@@ -90,17 +95,19 @@ export default function Security({
                                             autoComplete="current-password"
                                             placeholder="Current password"
                                         />
-                                        {errors.current_password && (
-                                            <p className="ml-1 text-xs text-red-500">
-                                                {errors.current_password}
-                                            </p>
-                                        )}
+                                        <InputError
+                                            message={errors.current_password}
+                                            className="ml-1 text-xs text-red-500"
+                                        />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="ml-1 text-sm font-medium text-amber-900">
+                                        <Label
+                                            htmlFor="password"
+                                            className="ml-1 text-amber-900"
+                                        >
                                             New password
-                                        </label>
+                                        </Label>
                                         <PasswordInput
                                             id="password"
                                             ref={passwordInput}
@@ -108,28 +115,31 @@ export default function Security({
                                             autoComplete="new-password"
                                             placeholder="New password"
                                         />
-                                        {errors.password && (
-                                            <p className="ml-1 text-xs text-red-500">
-                                                {errors.password}
-                                            </p>
-                                        )}
+                                        <InputError
+                                            message={errors.password}
+                                            className="ml-1 text-xs text-red-500"
+                                        />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="ml-1 text-sm font-medium text-amber-900">
+                                        <Label
+                                            htmlFor="password_confirmation"
+                                            className="ml-1 text-amber-900"
+                                        >
                                             Confirm password
-                                        </label>
+                                        </Label>
                                         <PasswordInput
                                             id="password_confirmation"
                                             name="password_confirmation"
                                             autoComplete="new-password"
                                             placeholder="Confirm password"
                                         />
-                                        {errors.password_confirmation && (
-                                            <p className="ml-1 text-xs text-red-500">
-                                                {errors.password_confirmation}
-                                            </p>
-                                        )}
+                                        <InputError
+                                            message={
+                                                errors.password_confirmation
+                                            }
+                                            className="ml-1 text-xs text-red-500"
+                                        />
                                     </div>
 
                                     <div className="flex items-center gap-4">

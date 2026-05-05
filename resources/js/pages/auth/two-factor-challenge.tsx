@@ -2,7 +2,9 @@ import { Form, Head } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { ArrowRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { InputError } from '@/components/core/input-error';
+import { AuthFormFieldBlock } from '@/components/auth/auth-form-field-block';
+import { Button } from '@/components/core/button';
+import { Input } from '@/components/core/input';
 import {
     InputOTP,
     InputOTPGroup,
@@ -60,25 +62,26 @@ export default function TwoFactorChallenge() {
                 {({ errors, processing, clearErrors }) => (
                     <>
                         {showRecoveryInput ? (
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                    Recovery Code
-                                </label>
-                                <input
+                            <AuthFormFieldBlock
+                                label="Recovery Code"
+                                error={errors.recovery_code}
+                            >
+                                <Input
                                     name="recovery_code"
                                     type="text"
                                     placeholder="Enter recovery code"
                                     autoFocus={showRecoveryInput}
                                     required
-                                    className="w-full rounded-2xl border-2 border-amber-100 bg-white px-4 py-3.5 font-medium text-amber-950 transition-colors placeholder:text-amber-300 focus:border-yellow-400 focus:outline-none"
+                                    error={errors.recovery_code}
+                                    className="border-2 border-amber-100 bg-white py-3.5 font-medium placeholder:text-amber-300 focus:border-yellow-400 focus:ring-0"
                                 />
-                                <InputError message={errors.recovery_code} />
-                            </div>
+                            </AuthFormFieldBlock>
                         ) : (
-                            <div className="space-y-3">
-                                <label className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                    Authentication Code
-                                </label>
+                            <AuthFormFieldBlock
+                                label="Authentication Code"
+                                error={errors.code}
+                                className="space-y-3"
+                            >
                                 <div className="flex justify-center">
                                     <InputOTP
                                         name="code"
@@ -104,29 +107,29 @@ export default function TwoFactorChallenge() {
                                         </InputOTPGroup>
                                     </InputOTP>
                                 </div>
-                                <InputError message={errors.code} />
-                            </div>
+                            </AuthFormFieldBlock>
                         )}
 
-                        <button
+                        <Button
                             type="submit"
                             disabled={processing}
-                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-yellow-400 py-4 text-lg font-bold text-yellow-950 transition-colors hover:bg-yellow-500 disabled:opacity-50"
+                            className="group w-full gap-2 rounded-2xl py-4 text-lg font-bold hover:bg-yellow-500"
                         >
                             {processing ? 'Verifying...' : 'Continue'}
                             {!processing && (
                                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                             )}
-                        </button>
+                        </Button>
 
                         <p className="text-center text-sm text-amber-800/50">
-                            <button
+                            <Button
                                 type="button"
-                                className="font-semibold text-amber-700 underline underline-offset-4 transition-colors hover:text-amber-950"
+                                variant="ghost"
+                                className="h-auto rounded-none p-0 text-sm font-semibold text-amber-700 underline underline-offset-4 transition-colors hover:bg-transparent hover:text-amber-950"
                                 onClick={() => toggleRecoveryMode(clearErrors)}
                             >
                                 {authConfigContent.toggleText}
-                            </button>
+                            </Button>
                         </p>
                     </>
                 )}
