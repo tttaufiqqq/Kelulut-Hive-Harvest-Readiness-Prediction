@@ -725,6 +725,25 @@ function AnimatedReadinessBadge({ level }: { level: string }) {
     );
 }
 
+function LiveBadge({ className = '' }: { className?: string }) {
+    return (
+        <span
+            className={`w-fit items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold tracking-[0.18em] text-emerald-700 uppercase ${className}`}
+        >
+            <motion.span
+                className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                }}
+            />
+            Live
+        </span>
+    );
+}
+
 export default function Predictions({
     hive,
     latestPrediction,
@@ -881,26 +900,18 @@ export default function Predictions({
                                 Live Predictions
                             </h1>
                             <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-                                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold tracking-[0.18em] text-emerald-700 uppercase">
-                                    <motion.span
-                                        className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"
-                                        animate={{ opacity: [1, 0.3, 1] }}
-                                        transition={{
-                                            duration: 1.2,
-                                            repeat: Infinity,
-                                            ease: 'easeInOut',
-                                        }}
-                                    />
-                                    Live
-                                </span>
-                                <div className="min-w-0 text-sm leading-relaxed text-amber-700">
-                                    <p className="truncate font-semibold text-amber-800">
-                                        {hive.name}
-                                    </p>
+                                <div className="min-w-0 flex-1 text-sm leading-relaxed text-amber-700">
+                                    <div className="flex items-center justify-between gap-3 sm:block">
+                                        <p className="truncate font-semibold text-amber-800">
+                                            {hive.name}
+                                        </p>
+                                        <LiveBadge className="inline-flex shrink-0 sm:hidden" />
+                                    </div>
                                     <p className="text-amber-700/75">
                                         ML Harvest Readiness
                                     </p>
                                 </div>
+                                <LiveBadge className="hidden sm:inline-flex" />
                             </div>
                         </div>
                     </div>
