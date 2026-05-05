@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { echo } from '@laravel/echo-react';
 import {
     Thermometer,
     Droplets,
@@ -482,6 +483,11 @@ export default function AdminSensors({
     history,
     last_seen,
 }: Props) {
+    const liveReloadInFlight = useRef(false);
+    const sensorChannelName = hives.some((hive) => hive.id === selected)
+        ? `hive.${selected}.sensors`
+        : null;
+
     const navigate = (params: Record<string, string | number | null>) =>
         router.get(route('admin.sensors.index'), {
             hive_id: selected,
@@ -499,17 +505,56 @@ export default function AdminSensors({
               )
             : [];
 
-    // Live polling — reload latest + history every 5s, pause when tab hidden
     useEffect(() => {
-        const tick = () => {
-            if (!document.hidden) {
-                router.reload({ only: ['latest', 'history'] });
-            }
+        const resetLiveReload = () => {
+            liveReloadInFlight.current = false;
         };
-        const id = setInterval(tick, 5000);
 
-        return () => clearInterval(id);
+        const removeStartListener = router.on('start', () => {
+            liveReloadInFlight.current = true;
+        });
+        const removeFinishListener = router.on('finish', resetLiveReload);
+
+        return () => {
+            removeStartListener();
+            removeFinishListener();
+        };
     }, []);
+
+    useEffect(() => {
+        if (!sensorChannelName) {
+            return;
+        }
+
+        const realtime = echo();
+        const channel = realtime.private(sensorChannelName);
+        const eventName = '.sensor.reading.created';
+        const resetLiveReload = () => {
+            liveReloadInFlight.current = false;
+        };
+        const reloadSensorProps = () => {
+            if (document.hidden || liveReloadInFlight.current) {
+                return;
+            }
+
+            liveReloadInFlight.current = true;
+
+            router.reload({
+                only: ['latest', 'history', 'last_seen'],
+                onCancel: resetLiveReload,
+                onError: resetLiveReload,
+                onFinish: resetLiveReload,
+                onSuccess: resetLiveReload,
+            });
+        };
+
+        channel.listen(eventName, reloadSensorProps);
+
+        return () => {
+            channel.stopListening(eventName, reloadSensorProps);
+            realtime.leave(sensorChannelName);
+        };
+    }, [sensorChannelName]);
 
     return (
         <AdminLayout>
