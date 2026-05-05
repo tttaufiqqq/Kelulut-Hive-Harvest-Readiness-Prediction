@@ -23,17 +23,61 @@ import { ProductivityBadge } from '@/components/core/productivity-badge';
 import { SelectField } from '@/components/core/select-field';
 import { TextareaField } from '@/components/core/textarea-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
-import {
-    EMPTY_CREATE_HARVEST_FORM,
-    PRODUCTIVITY_OPTIONS,
-} from './constants';
-import type { ActiveModal, HarvestRecord, Props } from './types';
-import {
-    buildColorOptions,
-    buildFlavorOptions,
-    buildHiveFilterOptions,
-    buildHiveFormOptions,
-} from './utils';
+import type {
+    Harvest,
+    MasterHoneyColor,
+    MasterHoneyFlavor,
+    PaginatedHarvests,
+} from '@/types';
+
+type Props = {
+    harvests: PaginatedHarvests;
+    hives: { id: number; name: string }[];
+    colors: MasterHoneyColor[];
+    flavors: MasterHoneyFlavor[];
+    filters: { hive_id?: string };
+};
+
+type ActiveModal =
+    | { type: 'create' }
+    | { type: 'view'; index: number }
+    | { type: 'edit'; harvest: Harvest }
+    | { type: 'delete'; harvest: Harvest }
+    | null;
+
+const PRODUCTIVITY_OPTIONS = [
+    { value: '', label: '— None —' },
+    { value: 'Low', label: 'Low' },
+    { value: 'Medium', label: 'Medium' },
+    { value: 'High', label: 'High' },
+];
+
+const emptyCreate = {
+    hive_id: '',
+    harvest_date: '',
+    weight: '',
+    productivity_level: '',
+    color_id: '',
+    flavor_id: '',
+    notes: '',
+};
+
+const hiveOptions = (hives: { id: number; name: string }[]) => [
+    { value: '', label: 'Select hive...' },
+    ...hives.map((h) => ({ value: String(h.id), label: h.name })),
+];
+const hiveFilterOptions = (hives: { id: number; name: string }[]) => [
+    { value: '', label: 'All Hives' },
+    ...hives.map((h) => ({ value: String(h.id), label: h.name })),
+];
+const colorOptions = (colors: MasterHoneyColor[]) => [
+    { value: '', label: '— None —' },
+    ...colors.map((c) => ({ value: String(c.id), label: c.name })),
+];
+const flavorOptions = (flavors: MasterHoneyFlavor[]) => [
+    { value: '', label: '— None —' },
+    ...flavors.map((f) => ({ value: String(f.id), label: f.name })),
+];
 
 export default function HarvestsIndex({
     harvests,
@@ -91,7 +135,7 @@ export default function HarvestsIndex({
         });
     };
 
-    const createForm = useForm({ ...EMPTY_CREATE_HARVEST_FORM });
+    const createForm = useForm({ ...emptyCreate });
 
     const editForm = useForm({
         harvest_date: '',
@@ -102,7 +146,7 @@ export default function HarvestsIndex({
         notes: '',
     });
 
-    const openEdit = (harvest: HarvestRecord) => {
+    const openEdit = (harvest: Harvest) => {
         editForm.setData({
             harvest_date: harvest.harvest_date.slice(0, 10),
             weight: String(harvest.weight),
@@ -190,7 +234,7 @@ export default function HarvestsIndex({
                             <SelectField
                                 value={filters.hive_id ?? ''}
                                 onChange={onHiveFilter}
-                            options={buildHiveFilterOptions(hives)}
+                                options={hiveFilterOptions(hives)}
                             />
                         </div>
                         <Button
@@ -364,7 +408,7 @@ export default function HarvestsIndex({
                         label="Hive"
                         value={createForm.data.hive_id}
                         onChange={(v) => createForm.setData('hive_id', v)}
-                                    options={buildHiveFormOptions(hives)}
+                        options={hiveOptions(hives)}
                         error={createForm.errors.hive_id}
                     />
 
@@ -405,14 +449,14 @@ export default function HarvestsIndex({
                             label="Honey Color (optional)"
                             value={createForm.data.color_id}
                             onChange={(v) => createForm.setData('color_id', v)}
-                                    options={buildColorOptions(colors)}
+                            options={colorOptions(colors)}
                             error={createForm.errors.color_id}
                         />
                         <SelectField
                             label="Honey Flavor (optional)"
                             value={createForm.data.flavor_id}
                             onChange={(v) => createForm.setData('flavor_id', v)}
-                                    options={buildFlavorOptions(flavors)}
+                            options={flavorOptions(flavors)}
                             error={createForm.errors.flavor_id}
                         />
                     </div>
@@ -645,7 +689,7 @@ export default function HarvestsIndex({
                                 onChange={(v) =>
                                     editForm.setData('color_id', v)
                                 }
-                                    options={buildColorOptions(colors)}
+                                options={colorOptions(colors)}
                                 error={editForm.errors.color_id}
                             />
                             <SelectField
@@ -654,7 +698,7 @@ export default function HarvestsIndex({
                                 onChange={(v) =>
                                     editForm.setData('flavor_id', v)
                                 }
-                                    options={buildFlavorOptions(flavors)}
+                                options={flavorOptions(flavors)}
                                 error={editForm.errors.flavor_id}
                             />
                         </div>
