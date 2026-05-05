@@ -1,51 +1,27 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Card } from '@/components/core/card';
-import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
-import { cn } from '@/lib/utils';
-
-interface ThresholdMatchSummary {
-    id: number;
-    sensor_type: string;
-    level: string;
-    meaning: string | null;
-    recommended_action: string | null;
-    min_value: number;
-    max_value: number;
-    reading: number | null;
-}
-
-interface OutOfDistributionFeature {
-    feature: string;
-    value: number;
-    min: number;
-    max: number;
-}
 
 interface PredictionEntry {
     id: number;
-    sensor_log_id: number | null;
-    device_identifier: string | null;
     readiness_level: string;
-    raw_readiness_level: string | null;
     hri_value: number;
-    raw_hri_value: number | null;
     confidence_score: number;
+    raw_readiness_level: string | null;
     model_version: string | null;
     warning_state: string;
     prediction_warning: string | null;
     guardrail_action: string | null;
-    threshold_warning_level: string | null;
     out_of_distribution: boolean;
-    out_of_distribution_features: OutOfDistributionFeature[];
     prediction_timestamp: string | null;
     prediction_timestamp_label: string | null;
     record_timestamp: string | null;
     record_timestamp_label: string | null;
+    device_identifier: string | null;
     sensor_values: {
         temp: number;
         humidity: number;
@@ -54,7 +30,6 @@ interface PredictionEntry {
         mq5_value: number;
         mq135_value: number;
     };
-    threshold_match_summaries: ThresholdMatchSummary[];
 }
 
 interface Props {
@@ -76,44 +51,11 @@ const READINESS_COLORS: Record<string, string> = {
     ready: '#16a34a',
 };
 
-const THRESHOLD_LEVEL_STYLES: Record<string, string> = {
+const TRUST_STYLES: Record<string, string> = {
     normal: 'bg-emerald-100 text-emerald-700',
-    warning: 'bg-amber-100 text-amber-700',
+    warning: 'bg-amber-100 text-amber-800',
     critical: 'bg-rose-100 text-rose-700',
 };
-
-const THRESHOLD_LEVEL_PRIORITY: Record<string, number> = {
-    normal: 1,
-    warning: 2,
-    critical: 3,
-};
-
-const PROCESS_STEPS = [
-    {
-        title: 'IoT Data Received',
-        description: 'ESP32 posts the latest hive reading.',
-    },
-    {
-        title: 'Sensor Log Saved',
-        description: 'The raw reading is stored for the hive.',
-    },
-    {
-        title: 'Thresholds Matched',
-        description: 'Sensor values are compared with rule ranges.',
-    },
-    {
-        title: 'ML Called',
-        description: 'The stored reading is sent to the Flask model.',
-    },
-    {
-        title: 'Prediction Returned',
-        description: 'The model responds with readiness and confidence.',
-    },
-    {
-        title: 'Result Stored',
-        description: 'The final readiness result is saved for the page.',
-    },
-];
 
 function getReadinessLabel(level: string) {
     return READINESS_LABELS[level] ?? level;
@@ -123,815 +65,89 @@ function getReadinessColor(level: string) {
     return READINESS_COLORS[level] ?? '#d97706';
 }
 
-function formatSensorLabel(sensorType: string) {
-    const labels: Record<string, string> = {
-        temp: 'Temperature',
-        humidity: 'Humidity',
-        mq2: 'MQ2',
-        mq3: 'MQ3',
-        mq5: 'MQ5',
-        mq135: 'MQ135',
-    };
-
-    return labels[sensorType] ?? sensorType.toUpperCase();
-}
-
-function formatSensorReading(
-    sensorType: string,
-    reading: number | null,
-    decimals = 1,
-) {
-    if (reading === null) {
-        return 'N/A';
+function formatRawConfidence(score: number) {
+    if (score >= 0.9995) {
+        return 'Approx. 99.9%+';
     }
 
-    if (sensorType === 'temp') {
-        return `${reading.toFixed(decimals)}°C`;
+    return `${(score * 100).toFixed(1)}%`;
+}
+
+function getConfidenceBarWidth(score: number) {
+    return `${Math.min(score * 100, 99.9).toFixed(1)}%`;
+}
+
+function getTrustLabel(prediction: PredictionEntry) {
+    if (prediction.warning_state === 'critical') {
+        return 'Low trust';
     }
 
-    if (sensorType === 'humidity') {
-        return `${reading.toFixed(decimals)}%`;
+    if (prediction.warning_state === 'warning') {
+        return 'Use caution';
     }
 
-    return `${Math.round(reading)} ADC`;
+    return 'Trusted';
 }
 
-function getThresholdOverview(matches: ThresholdMatchSummary[]) {
-    if (matches.length === 0) {
-        return {
-            highestLevel: null,
-            matchedSensors: [] as string[],
-            totalMatches: 0,
-        };
-    }
-
-    const highestLevel = matches.reduce(
-        (current, match) => {
-            if (!current) {
-                return match.level;
-            }
-
-            return THRESHOLD_LEVEL_PRIORITY[match.level] >
-                THRESHOLD_LEVEL_PRIORITY[current]
-                ? match.level
-                : current;
-        },
-        '' as string | null,
-    );
-
-    const matchedSensors = Array.from(
-        new Set(matches.map((match) => formatSensorLabel(match.sensor_type))),
-    );
-
-    return {
-        highestLevel,
-        matchedSensors,
-        totalMatches: matches.length,
-    };
+function getTrustStyle(state: string) {
+    return TRUST_STYLES[state] ?? 'bg-stone-100 text-stone-700';
 }
 
-function getWarningStateLabel(state: string) {
-    const labels: Record<string, string> = {
-        normal: 'Normal trust',
-        warning: 'Low trust',
-        critical: 'Critical warning',
-    };
-
-    return labels[state] ?? 'Model warning';
-}
-
-function getWarningStateStyles(state: string) {
-    const styles: Record<string, string> = {
-        normal: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-        warning: 'bg-amber-100 text-amber-800 border-amber-200',
-        critical: 'bg-rose-100 text-rose-700 border-rose-200',
-    };
-
-    return styles[state] ?? 'bg-stone-100 text-stone-700 border-stone-200';
-}
-
-function formatFeatureName(feature: string) {
-    const labels: Record<string, string> = {
-        mq2_value: 'MQ2',
-        mq3_value: 'MQ3',
-        mq5_value: 'MQ5',
-        mq135_value: 'MQ135',
-        temp: 'Temperature',
-        humidity: 'Humidity',
-    };
-
-    return labels[feature] ?? feature;
-}
-
-function hasPredictionTrustWarning(prediction: PredictionEntry) {
+function formatPredictionTime(prediction: PredictionEntry) {
     return (
-        prediction.warning_state !== 'normal' ||
-        prediction.out_of_distribution ||
-        prediction.prediction_warning !== null
+        prediction.prediction_timestamp_label ??
+        prediction.prediction_timestamp ??
+        'N/A'
     );
 }
 
-function PredictionTrustNotice({
-    prediction,
-    className,
-}: {
-    prediction: PredictionEntry;
-    className?: string;
-}) {
-    if (!hasPredictionTrustWarning(prediction)) {
-        return null;
-    }
-
-    const changedDecision =
-        prediction.raw_readiness_level &&
-        prediction.raw_readiness_level !== prediction.readiness_level;
-    const oodSummary = prediction.out_of_distribution_features
-        .map((feature) => formatFeatureName(feature.feature))
-        .join(', ');
-
+function formatCapturedTime(prediction: PredictionEntry) {
     return (
-        <div
-            className={cn(
-                'rounded-[1.5rem] border px-4 py-4 shadow-sm',
-                getWarningStateStyles(prediction.warning_state),
-                className,
-            )}
-        >
-            <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-current/20 bg-white/55 px-3 py-1 text-[11px] font-bold tracking-widest uppercase">
-                    {getWarningStateLabel(prediction.warning_state)}
-                </span>
-                {prediction.model_version && (
-                    <span className="text-xs font-semibold">
-                        Model {prediction.model_version}
-                    </span>
-                )}
-            </div>
-            {prediction.prediction_warning && (
-                <p className="mt-3 text-sm font-medium">
-                    {prediction.prediction_warning}
-                </p>
-            )}
-            <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
-                {changedDecision && (
-                    <span>
-                        Raw {getReadinessLabel(prediction.raw_readiness_level)}
-                        {' -> '}Guarded{' '}
-                        {getReadinessLabel(prediction.readiness_level)}
-                    </span>
-                )}
-                {prediction.out_of_distribution && oodSummary && (
-                    <span>OOD features: {oodSummary}</span>
-                )}
-                {prediction.guardrail_action &&
-                    prediction.guardrail_action !== 'none' && (
-                        <span>
-                            Action {prediction.guardrail_action.replaceAll(
-                                '_',
-                                ' ',
-                            )}
-                        </span>
-                    )}
-            </div>
-        </div>
-    );
-}
-
-function ReadinessBadge({
-    level,
-    className,
-}: {
-    level: string;
-    className?: string;
-}) {
-    return (
-        <span
-            className={cn(
-                'inline-flex items-center rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-sm',
-                className,
-            )}
-            style={{ backgroundColor: getReadinessColor(level) }}
-        >
-            {getReadinessLabel(level)}
-        </span>
-    );
-}
-
-function ProcessActionButton({
-    onClick,
-    className,
-}: {
-    onClick: () => void;
-    className?: string;
-}) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={cn(
-                'inline-flex items-center justify-center rounded-full border border-amber-200 bg-white/85 px-4 py-2 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-100',
-                className,
-            )}
-        >
-            View ML Process
-        </button>
-    );
-}
-
-function PredictionHeader({ hive }: Pick<Props, 'hive'>) {
-    return (
-        <div className="flex flex-col gap-2">
-            <Breadcrumbs
-                items={[
-                    { label: 'Home', href: '/' },
-                    { label: 'My Hives', href: '/dashboard' },
-                    { label: hive.name, href: '/dashboard' },
-                    { label: 'Live Predictions' },
-                ]}
-            />
-            <div className="flex items-center gap-3">
-                <Link
-                    href="/dashboard"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-900 transition-colors hover:bg-amber-200"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                </Link>
-                <div className="flex-1">
-                    <h1 className="text-2xl font-black text-amber-900">
-                        Live Predictions
-                    </h1>
-                    <div className="mt-1 flex items-center gap-2">
-                        <motion.div
-                            className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"
-                            animate={{ opacity: [1, 0.3, 1] }}
-                            transition={{
-                                duration: 1.2,
-                                repeat: Infinity,
-                                ease: 'easeInOut',
-                            }}
-                        />
-                        <span className="text-xs font-bold tracking-wider whitespace-nowrap text-emerald-600 uppercase">
-                            Live
-                        </span>
-                        <span className="text-amber-900/20">·</span>
-                        <p className="truncate text-sm text-amber-700">
-                            {hive.name} — ML Harvest Readiness
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function LatestPredictionHero({
-    prediction,
-    onViewProcess,
-}: {
-    prediction: PredictionEntry;
-    onViewProcess: () => void;
-}) {
-    const confidencePct = Math.round(prediction.confidence_score * 100);
-    const hriPct = Math.round(prediction.hri_value * 100);
-
-    return (
-        <Card className="space-y-6 overflow-hidden border-none bg-gradient-to-br from-[#f7c94a] via-[#eda521] to-[#d78914] p-8 text-amber-950 shadow-[0_30px_60px_-38px_rgba(120,53,15,0.75)]">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-4">
-                    <p className="text-[10px] font-black tracking-widest text-amber-950/55 uppercase">
-                        Latest Prediction
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3">
-                        {prediction.readiness_level === 'ready' ? (
-                            <motion.span
-                                className="inline-flex items-center rounded-full px-5 py-1.5 text-base font-bold text-white"
-                                style={{
-                                    backgroundColor: getReadinessColor(
-                                        prediction.readiness_level,
-                                    ),
-                                }}
-                                animate={{
-                                    boxShadow: [
-                                        '0 0 0px rgba(22,163,74,0.45)',
-                                        '0 0 18px rgba(22,163,74,0.55)',
-                                        '0 0 0px rgba(22,163,74,0.45)',
-                                    ],
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: 'easeInOut',
-                                }}
-                            >
-                                {getReadinessLabel(prediction.readiness_level)}
-                            </motion.span>
-                        ) : (
-                            <ReadinessBadge
-                                level={prediction.readiness_level}
-                                className="text-base"
-                            />
-                        )}
-                        <span className="rounded-full border border-white/35 bg-white/20 px-3 py-1 text-xs font-bold tracking-widest text-amber-950/70 uppercase">
-                            ML Result
-                        </span>
-                    </div>
-                    <p className="max-w-2xl text-sm text-amber-950/75">
-                        The latest hive reading has been stored, interpreted
-                        against sensor thresholds, and scored by the ML model
-                        for harvest readiness.
-                    </p>
-                    <PredictionTrustNotice
-                        prediction={prediction}
-                        className="border-white/45 bg-white/25 text-amber-950"
-                    />
-                    <ProcessActionButton
-                        onClick={onViewProcess}
-                        className="border-white/45 bg-white/70 hover:bg-white"
-                    />
-                </div>
-
-                <div className="grid gap-3 rounded-[2rem] border border-white/20 bg-white/12 p-4 text-sm text-amber-950/75 sm:grid-cols-2 lg:min-w-[320px]">
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
-                            Device
-                        </p>
-                        <p className="mt-1 font-semibold text-amber-950">
-                            {prediction.device_identifier ?? 'Unknown device'}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
-                            Sensor Log
-                        </p>
-                        <p className="mt-1 font-semibold text-amber-950">
-                            #{prediction.sensor_log_id ?? 'N/A'}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
-                            Reading Captured
-                        </p>
-                        <p className="mt-1 font-semibold text-amber-950">
-                            {prediction.record_timestamp_label ?? 'N/A'}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
-                            Prediction Stored
-                        </p>
-                        <p className="mt-1 font-semibold text-amber-950">
-                            {prediction.prediction_timestamp_label ?? 'N/A'}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
-                            Model Version
-                        </p>
-                        <p className="mt-1 font-semibold text-amber-950">
-                            {prediction.model_version ?? 'Unknown'}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-950/45 uppercase">
-                            Warning State
-                        </p>
-                        <p className="mt-1 font-semibold text-amber-950">
-                            {getWarningStateLabel(prediction.warning_state)}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <div className="mb-2 flex items-center justify-between text-[10px] font-bold tracking-wider text-amber-950/45 uppercase">
-                    <span>Confidence</span>
-                    <span>{confidencePct}%</span>
-                </div>
-                <div className="h-3 w-full overflow-hidden rounded-full bg-white/25">
-                    <motion.div
-                        className="h-full rounded-full bg-amber-950/75"
-                        initial={{ width: '0%' }}
-                        animate={{ width: `${confidencePct}%` }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                    />
-                </div>
-            </div>
-
-            <div className="grid gap-6 border-t border-white/20 pt-2 text-center sm:grid-cols-3">
-                <div>
-                    <p className="text-[10px] font-bold tracking-wider text-amber-950/45 uppercase">
-                        HRI Value
-                    </p>
-                    <p className="text-3xl font-black text-amber-950">
-                        {hriPct}%
-                    </p>
-                </div>
-                <div>
-                    <p className="text-[10px] font-bold tracking-wider text-amber-950/45 uppercase">
-                        Threshold Rules Matched
-                    </p>
-                    <p className="text-3xl font-black text-amber-950">
-                        {prediction.threshold_match_summaries.length}
-                    </p>
-                </div>
-                <div>
-                    <p className="text-[10px] font-bold tracking-wider text-amber-950/45 uppercase">
-                        Final Decision
-                    </p>
-                    <p className="text-lg font-bold text-amber-950">
-                        {getReadinessLabel(prediction.readiness_level)}
-                    </p>
-                </div>
-            </div>
-        </Card>
-    );
-}
-
-function PredictionProcessPanel({
-    prediction,
-}: {
-    prediction: PredictionEntry;
-}) {
-    const endStepIndex = PROCESS_STEPS.length - 1;
-
-    return (
-        <Card className="space-y-5 border border-amber-100/90 bg-white/95">
-            <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                        Prediction Process
-                    </p>
-                    <h2 className="mt-2 text-lg font-bold text-amber-900">
-                        How the latest reading becomes a stored ML result
-                    </h2>
-                </div>
-                <p className="max-w-xl text-sm text-amber-900/55">
-                    The rule-based threshold interpretation supports the story,
-                    while the final readiness result belongs to the ML
-                    prediction that is stored for this reading.
-                </p>
-            </div>
-
-            <div className="rounded-[2rem] border border-amber-100 bg-gradient-to-br from-amber-50/85 via-white to-amber-50/60 p-4 sm:p-5">
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(6,minmax(0,1fr))] xl:gap-0">
-                    {PROCESS_STEPS.map((step, index) => {
-                        const isEndStep = index === endStepIndex;
-
-                        return (
-                            <div
-                                key={step.title}
-                                className="flex items-stretch xl:min-w-0 xl:items-center"
-                            >
-                                <motion.div
-                                    className={cn(
-                                        'relative flex-1 rounded-[1.5rem] border border-amber-100 bg-white/90 p-4 shadow-[0_18px_30px_-28px_rgba(120,53,15,0.7)]',
-                                        isEndStep &&
-                                            'border-amber-200 bg-amber-50/90',
-                                    )}
-                                    initial={{ opacity: 0, y: 16 }}
-                                    animate={
-                                        isEndStep
-                                            ? {
-                                                  opacity: 1,
-                                                  y: 0,
-                                                  boxShadow: [
-                                                      '0 18px 30px -28px rgba(120,53,15,0.45)',
-                                                      '0 24px 38px -28px rgba(217,119,6,0.45)',
-                                                      '0 18px 30px -28px rgba(120,53,15,0.45)',
-                                                  ],
-                                              }
-                                            : { opacity: 1, y: 0 }
-                                    }
-                                    transition={
-                                        isEndStep
-                                            ? {
-                                                  opacity: {
-                                                      duration: 0.35,
-                                                      delay: index * 0.08,
-                                                      ease: 'easeOut',
-                                                  },
-                                                  y: {
-                                                      duration: 0.35,
-                                                      delay: index * 0.08,
-                                                      ease: 'easeOut',
-                                                  },
-                                                  boxShadow: {
-                                                      duration: 2.6,
-                                                      repeat: Infinity,
-                                                      ease: 'easeInOut',
-                                                  },
-                                              }
-                                            : {
-                                                  duration: 0.35,
-                                                  delay: index * 0.08,
-                                                  ease: 'easeOut',
-                                              }
-                                    }
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span
-                                            className={cn(
-                                                'flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-xs font-black text-amber-900',
-                                                isEndStep &&
-                                                    'bg-amber-900 text-amber-50',
-                                            )}
-                                        >
-                                            0{index + 1}
-                                        </span>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-bold text-amber-900">
-                                                {step.title}
-                                            </p>
-                                            <p className="mt-1 text-xs font-semibold tracking-widest text-amber-900/40 uppercase">
-                                                {isEndStep
-                                                    ? 'Stored output'
-                                                    : 'Pipeline step'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <p className="mt-3 text-sm leading-6 text-amber-900/60">
-                                        {step.description}
-                                    </p>
-
-                                    {isEndStep && (
-                                        <div className="mt-4 rounded-[1rem] border border-amber-200 bg-amber-100/70 px-3 py-2">
-                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/45 uppercase">
-                                                Final ML result
-                                            </p>
-                                            <p className="mt-1 text-sm font-semibold text-amber-900">
-                                                {getReadinessLabel(
-                                                    prediction.readiness_level,
-                                                )}{' '}
-                                                ·{' '}
-                                                {Math.round(
-                                                    prediction.confidence_score *
-                                                        100,
-                                                )}
-                                                % confidence
-                                            </p>
-                                        </div>
-                                    )}
-                                </motion.div>
-
-                                {index < endStepIndex && (
-                                    <div className="hidden xl:flex xl:w-8 xl:items-center xl:justify-center">
-                                        <motion.div
-                                            className="h-[2px] w-full rounded-full bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200"
-                                            initial={{
-                                                opacity: 0,
-                                                scaleX: 0.6,
-                                            }}
-                                            animate={{
-                                                opacity: [0.55, 1, 0.55],
-                                                scaleX: 1,
-                                            }}
-                                            transition={{
-                                                duration: 1.8,
-                                                delay: index * 0.1,
-                                                repeat: Infinity,
-                                                ease: 'easeInOut',
-                                            }}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            <div className="grid gap-4 rounded-[1.5rem] border border-dashed border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-900/65 lg:grid-cols-2">
-                <p>
-                    Reading captured at{' '}
-                    <span className="font-semibold text-amber-900">
-                        {prediction.record_timestamp_label ?? 'N/A'}
-                    </span>
-                    .
-                </p>
-                <p>
-                    ML result stored at{' '}
-                    <span className="font-semibold text-amber-900">
-                        {prediction.prediction_timestamp_label ?? 'N/A'}
-                    </span>
-                    .
-                </p>
-            </div>
-        </Card>
-    );
-}
-
-function ThresholdAnalysisCard({
-    prediction,
-}: {
-    prediction: PredictionEntry;
-}) {
-    const overview = getThresholdOverview(prediction.threshold_match_summaries);
-
-    return (
-        <Card className="space-y-5 border border-amber-100/90 bg-white/95">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
-                        Threshold Analysis
-                    </p>
-                    <h2 className="mt-2 text-lg font-bold text-amber-900">
-                        Rule-based sensor interpretation
-                    </h2>
-                </div>
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
-                    {overview.totalMatches} match
-                    {overview.totalMatches === 1 ? '' : 'es'}
-                </span>
-            </div>
-
-            {overview.highestLevel ? (
-                <div className="rounded-[1.5rem] border border-amber-100 bg-amber-50/80 p-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span
-                            className={cn(
-                                'rounded-full px-3 py-1 text-xs font-bold capitalize',
-                                THRESHOLD_LEVEL_STYLES[overview.highestLevel] ??
-                                    'bg-stone-100 text-stone-700',
-                            )}
-                        >
-                            {overview.highestLevel}
-                        </span>
-                        <p className="text-sm text-amber-900/70">
-                            Highest threshold severity seen for this reading.
-                        </p>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                        {overview.matchedSensors.map((sensor) => (
-                            <span
-                                key={sensor}
-                                className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-900 shadow-sm"
-                            >
-                                {sensor}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="rounded-[1.5rem] border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-900/60">
-                    No threshold matches were recorded for this reading. The
-                    pipeline can still proceed to the ML prediction stage.
-                </div>
-            )}
-
-            <div className="space-y-3">
-                {prediction.threshold_match_summaries
-                    .slice(0, 3)
-                    .map((match) => (
-                        <div
-                            key={match.id}
-                            className="rounded-[1.25rem] border border-amber-100 p-4"
-                        >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <p className="font-semibold text-amber-900">
-                                    {formatSensorLabel(match.sensor_type)}
-                                </p>
-                                <span
-                                    className={cn(
-                                        'rounded-full px-2.5 py-1 text-[11px] font-bold capitalize',
-                                        THRESHOLD_LEVEL_STYLES[match.level] ??
-                                            'bg-stone-100 text-stone-700',
-                                    )}
-                                >
-                                    {match.level}
-                                </span>
-                            </div>
-                            <p className="mt-2 text-sm text-amber-900/65">
-                                {match.meaning ??
-                                    'Threshold matched for this sensor.'}
-                            </p>
-                            <p className="mt-2 text-xs font-semibold text-amber-900/45 uppercase">
-                                Reading{' '}
-                                {formatSensorReading(
-                                    match.sensor_type,
-                                    match.reading,
-                                )}{' '}
-                                · Range {match.min_value} to {match.max_value}
-                            </p>
-                        </div>
-                    ))}
-            </div>
-        </Card>
-    );
-}
-
-function MlPredictionCard({ prediction }: { prediction: PredictionEntry }) {
-    const confidencePct = Math.round(prediction.confidence_score * 100);
-
-    return (
-        <Card className="space-y-5 border border-amber-100/90 bg-white/95">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
-                        ML Prediction
-                    </p>
-                    <h2 className="mt-2 text-lg font-bold text-amber-900">
-                        Final readiness decision
-                    </h2>
-                </div>
-                <ReadinessBadge level={prediction.readiness_level} />
-            </div>
-
-            <div className="rounded-[1.5rem] border border-amber-100 bg-gradient-to-br from-white to-amber-50/80 p-5">
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                            HRI Value
-                        </p>
-                        <p className="mt-1 text-3xl font-black text-amber-900">
-                            {Math.round(prediction.hri_value * 100)}%
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                            Confidence
-                        </p>
-                        <p className="mt-1 text-3xl font-black text-amber-900">
-                            {confidencePct}%
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                            Stored At
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-amber-900">
-                            {prediction.prediction_timestamp_label ?? 'N/A'}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                            Model
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-amber-900">
-                            {prediction.model_version ?? 'Unknown'}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                            Trust State
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-amber-900">
-                            {getWarningStateLabel(prediction.warning_state)}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mt-5">
-                    <div className="mb-2 flex items-center justify-between text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                        <span>Model confidence</span>
-                        <span>{confidencePct}%</span>
-                    </div>
-                    <div className="h-3 w-full overflow-hidden rounded-full bg-amber-100">
-                        <div
-                            className="h-full rounded-full"
-                            style={{
-                                width: `${confidencePct}%`,
-                                backgroundColor: getReadinessColor(
-                                    prediction.readiness_level,
-                                ),
-                            }}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <PredictionTrustNotice prediction={prediction} />
-
-            <p className="text-sm text-amber-900/60">
-                This panel owns the final harvest readiness result. Thresholds
-                provide rule-based context, but the stored outcome comes from
-                the ML model response.
-            </p>
-        </Card>
+        prediction.record_timestamp_label ??
+        prediction.record_timestamp ??
+        'N/A'
     );
 }
 
 function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
     const sensors = [
-        { label: 'Temp', value: `${prediction.sensor_values.temp}°C` },
-        { label: 'Humidity', value: `${prediction.sensor_values.humidity}%` },
-        { label: 'MQ2', value: `${prediction.sensor_values.mq2_value}` },
-        { label: 'MQ3', value: `${prediction.sensor_values.mq3_value}` },
-        { label: 'MQ5', value: `${prediction.sensor_values.mq5_value}` },
-        { label: 'MQ135', value: `${prediction.sensor_values.mq135_value}` },
+        {
+            label: 'Temp',
+            value: `${prediction.sensor_values.temp}°C`,
+        },
+        {
+            label: 'Humidity',
+            value: `${prediction.sensor_values.humidity}%`,
+        },
+        {
+            label: 'MQ2',
+            value: `${prediction.sensor_values.mq2_value}`,
+        },
+        {
+            label: 'MQ3',
+            value: `${prediction.sensor_values.mq3_value}`,
+        },
+        {
+            label: 'MQ5',
+            value: `${prediction.sensor_values.mq5_value}`,
+        },
+        {
+            label: 'MQ135',
+            value: `${prediction.sensor_values.mq135_value}`,
+        },
     ];
 
     return (
-        <div className="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
             {sensors.map((sensor) => (
                 <div
                     key={sensor.label}
-                    className="rounded-xl bg-amber-50 px-3 py-2 text-center"
+                    className="rounded-xl bg-amber-50 px-3 py-3 text-center"
                 >
                     <p className="text-[9px] font-bold tracking-wider text-amber-900/40 uppercase">
                         {sensor.label}
                     </p>
-                    <p className="text-sm font-bold text-amber-900">
+                    <p className="mt-1 text-sm font-bold text-amber-900">
                         {sensor.value}
                     </p>
                 </div>
@@ -940,566 +156,54 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
     );
 }
 
-function PredictionHistory({
-    predictions,
-    onViewProcess,
-}: Pick<Props, 'predictions'> & {
-    onViewProcess: (predictionId: number) => void;
-}) {
-    return (
-        <div className="space-y-3">
-            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
-                Recent Prediction History
-            </p>
-            <AnimatePresence initial={false}>
-                {predictions.map((prediction) => {
-                    const thresholdOverview = getThresholdOverview(
-                        prediction.threshold_match_summaries,
-                    );
-
-                    return (
-                        <motion.div
-                            key={prediction.id}
-                            initial={{ opacity: 0, y: -16, scale: 0.97 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.97 }}
-                            transition={{
-                                type: 'spring',
-                                stiffness: 300,
-                                damping: 30,
-                            }}
-                        >
-                            <Card className="space-y-4">
-                                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                                    <div className="space-y-3">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <ReadinessBadge
-                                                level={
-                                                    prediction.readiness_level
-                                                }
-                                            />
-                                            {hasPredictionTrustWarning(
-                                                prediction,
-                                            ) && (
-                                                <span
-                                                    className={cn(
-                                                        'rounded-full border px-3 py-1 text-[11px] font-bold uppercase',
-                                                        getWarningStateStyles(
-                                                            prediction.warning_state,
-                                                        ),
-                                                    )}
-                                                >
-                                                    {getWarningStateLabel(
-                                                        prediction.warning_state,
-                                                    )}
-                                                </span>
-                                            )}
-                                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
-                                                {prediction.device_identifier ??
-                                                    'Unknown device'}
-                                            </span>
-                                            <span className="text-xs font-semibold text-amber-900/55">
-                                                Sensor log #
-                                                {prediction.sensor_log_id ??
-                                                    'N/A'}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-amber-900/60">
-                                            <span>
-                                                HRI{' '}
-                                                {Math.round(
-                                                    prediction.hri_value * 100,
-                                                )}
-                                                %
-                                            </span>
-                                            <span>
-                                                Confidence{' '}
-                                                {Math.round(
-                                                    prediction.confidence_score *
-                                                        100,
-                                                )}
-                                                %
-                                            </span>
-                                            <span>
-                                                Rules matched{' '}
-                                                {
-                                                    prediction
-                                                        .threshold_match_summaries
-                                                        .length
-                                                }
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-[1.25rem] bg-amber-50/80 px-4 py-3 text-sm text-amber-900/65 xl:min-w-[270px]">
-                                        <p className="font-semibold text-amber-900">
-                                            {prediction.prediction_timestamp_label ??
-                                                'N/A'}
-                                        </p>
-                                        <p className="mt-1 text-xs">
-                                            {thresholdOverview.highestLevel
-                                                ? `Highest threshold severity: ${thresholdOverview.highestLevel}`
-                                                : 'No threshold matches recorded'}
-                                        </p>
-                                        {prediction.prediction_warning && (
-                                            <p className="mt-2 text-xs font-semibold text-amber-900/75">
-                                                {prediction.prediction_warning}
-                                            </p>
-                                        )}
-                                        <ProcessActionButton
-                                            onClick={() =>
-                                                onViewProcess(prediction.id)
-                                            }
-                                            className="mt-3 w-full bg-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <SensorSnapshot prediction={prediction} />
-                            </Card>
-                        </motion.div>
-                    );
-                })}
-            </AnimatePresence>
-        </div>
-    );
-}
-
 function EmptyPredictionState() {
     return (
-        <div className="space-y-6">
-            <Card className="border-none bg-gradient-to-br from-[#f7c94a] via-[#eda521] to-[#d78914] p-8 text-amber-950 shadow-[0_30px_60px_-38px_rgba(120,53,15,0.75)]">
-                <p className="text-[10px] font-black tracking-widest text-amber-950/55 uppercase">
-                    Waiting For Live Data
-                </p>
-                <h2 className="mt-3 text-2xl font-black text-amber-950">
-                    No predictions yet
-                </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-amber-950/75">
-                    This page will populate once the ESP32 sends a reading, the
-                    platform stores the sensor log, and the ML service returns a
-                    readiness result for the hive.
-                </p>
-            </Card>
-
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
-                <Card className="space-y-4 border border-amber-100/90 bg-white/95">
-                    <div>
-                        <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
-                            Prediction Process
-                        </p>
-                        <h3 className="mt-2 text-lg font-bold text-amber-900">
-                            What will appear here
-                        </h3>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        {PROCESS_STEPS.map((step, index) => (
-                            <div
-                                key={step.title}
-                                className="rounded-[1.25rem] border border-dashed border-amber-200 bg-amber-50/60 p-4"
-                            >
-                                <p className="text-[10px] font-black tracking-widest text-amber-900/40 uppercase">
-                                    Step 0{index + 1}
-                                </p>
-                                <p className="mt-2 text-sm font-semibold text-amber-900">
-                                    {step.title}
-                                </p>
-                                <p className="mt-2 text-sm text-amber-900/60">
-                                    {step.description}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-
-                <Card className="space-y-4 border border-amber-100/90 bg-white/95">
-                    <div>
-                        <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
-                            Threshold Analysis
-                        </p>
-                        <h3 className="mt-2 text-lg font-bold text-amber-900">
-                            Rule-based context
-                        </h3>
-                    </div>
-                    <p className="text-sm leading-6 text-amber-900/60">
-                        When a stored reading matches a configured sensor range,
-                        its threshold meaning and recommended action will appear
-                        here. If nothing matches, the UI will say that clearly.
-                    </p>
-                </Card>
-
-                <Card className="space-y-4 border border-amber-100/90 bg-white/95">
-                    <div>
-                        <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
-                            ML Prediction
-                        </p>
-                        <h3 className="mt-2 text-lg font-bold text-amber-900">
-                            Final readiness result
-                        </h3>
-                    </div>
-                    <p className="text-sm leading-6 text-amber-900/60">
-                        Once the Flask model returns readiness, HRI, and
-                        confidence, the final harvest decision will appear here
-                        together with the latest stored timestamp.
-                    </p>
-                </Card>
-            </div>
-        </div>
-    );
-}
-
-function ProcessSection({
-    eyebrow,
-    title,
-    children,
-    className,
-}: {
-    eyebrow: string;
-    title: string;
-    children: React.ReactNode;
-    className?: string;
-}) {
-    return (
-        <motion.section
-            className={cn(
-                'rounded-[1.75rem] border border-amber-100 bg-white p-5 shadow-sm xl:self-start',
-                className,
-            )}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-        >
-            <p className="text-[10px] font-black tracking-widest text-amber-900/40 uppercase">
-                {eyebrow}
+        <Card className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <p className="font-bold text-amber-900">No predictions yet</p>
+            <p className="max-w-xs text-sm text-amber-700/60">
+                Predictions appear once sensor data has been sent by the ESP32
+                and processed by the ML model.
             </p>
-            <h3 className="mt-2 text-lg font-bold text-amber-900">{title}</h3>
-            <div className="mt-4">{children}</div>
-        </motion.section>
+        </Card>
     );
 }
 
-function PredictionProcessModal({
+function PredictionTrustNotice({
     prediction,
-    onClose,
 }: {
-    prediction: PredictionEntry | null;
-    onClose: () => void;
+    prediction: PredictionEntry;
 }) {
-    const isOpen = prediction !== null;
+    if (
+        prediction.warning_state === 'normal' &&
+        !prediction.prediction_warning &&
+        !prediction.out_of_distribution
+    ) {
+        return null;
+    }
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title="ML Process Walkthrough"
-            maxWidth="4xl"
-        >
-            {prediction && (
-                <div className="space-y-5">
-                    <motion.div
-                        className="rounded-[1.75rem] border border-amber-100 bg-gradient-to-br from-amber-50 via-white to-amber-50/70 p-5"
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.22, ease: 'easeOut' }}
-                    >
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div>
-                                <p className="text-[10px] font-black tracking-widest text-amber-900/40 uppercase">
-                                    Reading Summary
-                                </p>
-                                <div className="mt-3 flex flex-wrap items-center gap-3">
-                                    <ReadinessBadge
-                                        level={prediction.readiness_level}
-                                    />
-                                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-amber-800 shadow-sm">
-                                        {prediction.device_identifier ??
-                                            'Unknown device'}
-                                    </span>
-                                    <span className="text-sm font-semibold text-amber-900/65">
-                                        Sensor log #
-                                        {prediction.sensor_log_id ?? 'N/A'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="grid gap-3 text-sm text-amber-900/70 sm:grid-cols-2">
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                        Captured
-                                    </p>
-                                    <p className="mt-1 font-semibold text-amber-900">
-                                        {prediction.record_timestamp_label ??
-                                            'N/A'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                        Stored
-                                    </p>
-                                    <p className="mt-1 font-semibold text-amber-900">
-                                        {prediction.prediction_timestamp_label ??
-                                            'N/A'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    <ProcessSection
-                        eyebrow="Step 1"
-                        title="Raw IoT input stored for this hive"
-                    >
-                        <SensorSnapshot prediction={prediction} />
-                    </ProcessSection>
-
-                    <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
-                        <ProcessSection
-                            eyebrow="Step 2"
-                            title="Threshold interpretation"
-                        >
-                            <div className="space-y-3">
-                                <p className="text-sm text-amber-900/60">
-                                    This is the rule-based context layer. It
-                                    helps explain the reading, but it does not
-                                    decide the final readiness label.
-                                </p>
-
-                                {prediction.threshold_match_summaries.length >
-                                0 ? (
-                                    prediction.threshold_match_summaries.map(
-                                        (match) => (
-                                            <div
-                                                key={match.id}
-                                                className="rounded-[1.25rem] border border-amber-100 bg-amber-50/60 p-4"
-                                            >
-                                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                                    <p className="font-semibold text-amber-900">
-                                                        {formatSensorLabel(
-                                                            match.sensor_type,
-                                                        )}
-                                                    </p>
-                                                    <span
-                                                        className={cn(
-                                                            'rounded-full px-2.5 py-1 text-[11px] font-bold capitalize',
-                                                            THRESHOLD_LEVEL_STYLES[
-                                                                match.level
-                                                            ] ??
-                                                                'bg-stone-100 text-stone-700',
-                                                        )}
-                                                    >
-                                                        {match.level}
-                                                    </span>
-                                                </div>
-                                                <p className="mt-2 text-sm text-amber-900/65">
-                                                    {match.meaning ??
-                                                        'Threshold matched for this sensor.'}
-                                                </p>
-                                                <p className="mt-2 text-xs font-semibold text-amber-900/45 uppercase">
-                                                    Reading{' '}
-                                                    {formatSensorReading(
-                                                        match.sensor_type,
-                                                        match.reading,
-                                                    )}{' '}
-                                                    · Range {match.min_value} to{' '}
-                                                    {match.max_value}
-                                                </p>
-                                                {match.recommended_action && (
-                                                    <p className="mt-2 text-sm text-amber-900/60">
-                                                        Recommended action:{' '}
-                                                        {
-                                                            match.recommended_action
-                                                        }
-                                                    </p>
-                                                )}
-                                            </div>
-                                        ),
-                                    )
-                                ) : (
-                                    <div className="rounded-[1.25rem] border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-900/60">
-                                        No threshold matches were recorded for
-                                        this reading.
-                                    </div>
-                                )}
-                            </div>
-                        </ProcessSection>
-
-                        <ProcessSection
-                            eyebrow="Step 3"
-                            title="ML features sent"
-                        >
-                            <div className="space-y-4">
-                                <p className="text-sm text-amber-900/60">
-                                    The stored reading is sent to the Flask
-                                    prediction service using the same six sensor
-                                    values shown below.
-                                </p>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {[
-                                        {
-                                            label: 'temp',
-                                            value: `${prediction.sensor_values.temp}°C`,
-                                        },
-                                        {
-                                            label: 'humidity',
-                                            value: `${prediction.sensor_values.humidity}%`,
-                                        },
-                                        {
-                                            label: 'mq2_value',
-                                            value: `${prediction.sensor_values.mq2_value}`,
-                                        },
-                                        {
-                                            label: 'mq3_value',
-                                            value: `${prediction.sensor_values.mq3_value}`,
-                                        },
-                                        {
-                                            label: 'mq5_value',
-                                            value: `${prediction.sensor_values.mq5_value}`,
-                                        },
-                                        {
-                                            label: 'mq135_value',
-                                            value: `${prediction.sensor_values.mq135_value}`,
-                                        },
-                                    ].map((feature) => (
-                                        <div
-                                            key={feature.label}
-                                            className="rounded-[1rem] border border-amber-100 px-3 py-3"
-                                        >
-                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                                {feature.label}
-                                            </p>
-                                            <p className="mt-1 text-sm font-semibold text-amber-900">
-                                                {feature.value}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </ProcessSection>
-                    </div>
-
-                    <div className="grid gap-5 xl:grid-cols-2 xl:items-stretch">
-                        <ProcessSection
-                            eyebrow="Step 4"
-                            title="ML response returned"
-                            className="h-full border-amber-200 bg-amber-50/60"
-                        >
-                            <div className="space-y-4">
-                                <p className="text-sm text-amber-900/60">
-                                    This is the model output returned by the ML
-                                    service for the stored reading.
-                                </p>
-                                <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-                                    <div className="min-w-0 rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
-                                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                            Readiness
-                                        </p>
-                                        <p className="mt-1 text-sm font-semibold text-amber-900">
-                                            {getReadinessLabel(
-                                                prediction.readiness_level,
-                                            )}
-                                        </p>
-                                    </div>
-                                    <div className="min-w-0 rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
-                                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                            HRI value
-                                        </p>
-                                        <p className="mt-1 text-sm font-semibold text-amber-900">
-                                            {Math.round(
-                                                prediction.hri_value * 100,
-                                            )}
-                                            %
-                                        </p>
-                                    </div>
-                                    <div className="min-w-0 rounded-[1rem] border border-amber-100 bg-white px-4 py-3">
-                                        <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                            Confidence
-                                        </p>
-                                        <p className="mt-1 text-sm font-semibold text-amber-900">
-                                            {Math.round(
-                                                prediction.confidence_score *
-                                                    100,
-                                            )}
-                                            %
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </ProcessSection>
-
-                        <ProcessSection
-                            eyebrow="Step 5"
-                            title="Final stored result"
-                            className="h-full border-amber-200 bg-white"
-                        >
-                            <div className="space-y-4">
-                                <p className="text-sm text-amber-900/60">
-                                    This is the persisted application result
-                                    that the live predictions page reads back
-                                    and refreshes every 10 seconds.
-                                </p>
-                                <div className="rounded-[1.5rem] border border-amber-100 bg-gradient-to-br from-white to-amber-50/80 p-5">
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <ReadinessBadge
-                                            level={prediction.readiness_level}
-                                        />
-                                        <span className="text-sm font-semibold text-amber-900/65">
-                                            Prediction #{prediction.id}
-                                        </span>
-                                    </div>
-                                    <div className="mt-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-                                        <div className="min-w-0">
-                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                                HRI value
-                                            </p>
-                                            <p className="mt-1 text-2xl font-black text-amber-900">
-                                                {Math.round(
-                                                    prediction.hri_value * 100,
-                                                )}
-                                                %
-                                            </p>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                                Confidence
-                                            </p>
-                                            <p className="mt-1 text-2xl font-black text-amber-900">
-                                                {Math.round(
-                                                    prediction.confidence_score *
-                                                        100,
-                                                )}
-                                                %
-                                            </p>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
-                                                Stored at
-                                            </p>
-                                            <p className="mt-1 text-sm font-semibold text-amber-900">
-                                                {prediction.prediction_timestamp_label ??
-                                                    'N/A'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </ProcessSection>
-                    </div>
-                </div>
-            )}
-        </Modal>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+                <span
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${getTrustStyle(prediction.warning_state)}`}
+                >
+                    {getTrustLabel(prediction)}
+                </span>
+                <span className="text-xs font-semibold text-amber-900/60">
+                    Raw model confidence{' '}
+                    {formatRawConfidence(prediction.confidence_score)}
+                </span>
+            </div>
+            <p className="mt-2 text-sm text-amber-900/75">
+                {prediction.prediction_warning ??
+                    'This result was flagged by the safety layer, so interpret the raw model score carefully.'}
+            </p>
+        </div>
     );
 }
 
 export default function Predictions({ hive, predictions }: Props) {
     const latest = predictions[0] ?? null;
-    const [selectedPredictionId, setSelectedPredictionId] = useState<
-        number | null
-    >(null);
-    const selectedPrediction =
-        predictions.find(
-            (prediction) => prediction.id === selectedPredictionId,
-        ) ?? null;
 
     useEffect(() => {
         const id = setInterval(() => {
@@ -1513,38 +217,264 @@ export default function Predictions({ hive, predictions }: Props) {
         <AuthenticatedLayout>
             <Head title={`Live Predictions — ${hive.name}`} />
 
-            <div className="mx-auto max-w-6xl space-y-8 p-6 md:p-10">
-                <PredictionHeader hive={hive} />
+            <div className="mx-auto max-w-4xl space-y-8 p-6 md:p-10">
+                <div className="flex flex-col gap-2">
+                    <Breadcrumbs
+                        items={[
+                            { label: 'Home', href: '/' },
+                            { label: 'My Hives', href: '/dashboard' },
+                            { label: hive.name, href: '/dashboard' },
+                            { label: 'Live Predictions' },
+                        ]}
+                    />
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/dashboard"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-900 transition-colors hover:bg-amber-200"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-black text-amber-900">
+                                Live Predictions
+                            </h1>
+                            <div className="mt-1 flex items-center gap-2">
+                                <motion.div
+                                    className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"
+                                    animate={{ opacity: [1, 0.3, 1] }}
+                                    transition={{
+                                        duration: 1.2,
+                                        repeat: Infinity,
+                                        ease: 'easeInOut',
+                                    }}
+                                />
+                                <span className="text-xs font-bold tracking-wider whitespace-nowrap text-emerald-600 uppercase">
+                                    Live
+                                </span>
+                                <span className="text-amber-900/20">·</span>
+                                <p className="truncate text-sm text-amber-700">
+                                    {hive.name} — ML Harvest Readiness
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {latest ? (
                     <>
-                        <LatestPredictionHero
-                            prediction={latest}
-                            onViewProcess={() =>
-                                setSelectedPredictionId(latest.id)
-                            }
-                        />
-                        <PredictionProcessPanel prediction={latest} />
+                        <Card className="space-y-6 p-8">
+                            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                                Latest Prediction
+                            </p>
 
-                        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                            <ThresholdAnalysisCard prediction={latest} />
-                            <MlPredictionCard prediction={latest} />
+                            {latest.readiness_level === 'ready' ? (
+                                <motion.span
+                                    className="inline-block rounded-full px-5 py-1.5 text-base font-bold text-white"
+                                    style={{
+                                        backgroundColor: getReadinessColor(
+                                            latest.readiness_level,
+                                        ),
+                                    }}
+                                    animate={{
+                                        boxShadow: [
+                                            '0 0 0px #16a34a',
+                                            '0 0 18px #16a34a',
+                                            '0 0 0px #16a34a',
+                                        ],
+                                    }}
+                                    transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: 'easeInOut',
+                                    }}
+                                >
+                                    {getReadinessLabel(latest.readiness_level)}
+                                </motion.span>
+                            ) : (
+                                <span
+                                    className="inline-block rounded-full px-5 py-1.5 text-base font-bold text-white"
+                                    style={{
+                                        backgroundColor: getReadinessColor(
+                                            latest.readiness_level,
+                                        ),
+                                    }}
+                                >
+                                    {getReadinessLabel(latest.readiness_level)}
+                                </span>
+                            )}
+
+                            <div>
+                                <p className="mb-2 text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                    Raw Model Confidence —{' '}
+                                    {formatRawConfidence(
+                                        latest.confidence_score,
+                                    )}
+                                </p>
+                                <div className="h-3 w-full overflow-hidden rounded-full bg-amber-100">
+                                    <motion.div
+                                        className="h-full rounded-full"
+                                        style={{
+                                            backgroundColor: getReadinessColor(
+                                                latest.readiness_level,
+                                            ),
+                                        }}
+                                        initial={{ width: '0%' }}
+                                        animate={{
+                                            width: getConfidenceBarWidth(
+                                                latest.confidence_score,
+                                            ),
+                                        }}
+                                        transition={{
+                                            duration: 0.8,
+                                            ease: 'easeOut',
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-6 pt-2 text-center sm:grid-cols-2 lg:grid-cols-4">
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                        HRI Value
+                                    </p>
+                                    <p className="text-3xl font-black text-amber-900">
+                                        {Math.round(latest.hri_value * 100)}%
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                        Trust
+                                    </p>
+                                    <span
+                                        className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ${getTrustStyle(latest.warning_state)}`}
+                                    >
+                                        {getTrustLabel(latest)}
+                                    </span>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                        Captured
+                                    </p>
+                                    <p className="mt-1 text-sm font-semibold text-amber-900">
+                                        {formatCapturedTime(latest)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                                        Device
+                                    </p>
+                                    <p className="mt-1 text-sm font-semibold text-amber-900">
+                                        {latest.device_identifier ??
+                                            'Unknown device'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <PredictionTrustNotice prediction={latest} />
+                        </Card>
+
+                        <Card className="space-y-4 p-6">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                                        Current Sensor Snapshot
+                                    </p>
+                                    <p className="mt-1 text-sm text-amber-700">
+                                        Latest reading used for the most recent
+                                        prediction.
+                                    </p>
+                                </div>
+                                <p className="text-sm font-semibold text-amber-900/70">
+                                    {formatPredictionTime(latest)}
+                                </p>
+                            </div>
+                            <SensorSnapshot prediction={latest} />
+                        </Card>
+
+                        <div className="space-y-3">
+                            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                                Recent Predictions
+                            </p>
+                            <AnimatePresence initial={false}>
+                                {predictions.map((prediction) => (
+                                    <motion.div
+                                        key={prediction.id}
+                                        initial={{ opacity: 0, y: -12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        transition={{
+                                            duration: 0.2,
+                                            ease: 'easeOut',
+                                        }}
+                                    >
+                                        <Card className="space-y-4 p-5">
+                                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                                <span
+                                                    className="rounded-full px-3 py-1 text-xs font-bold text-white"
+                                                    style={{
+                                                        backgroundColor:
+                                                            getReadinessColor(
+                                                                prediction.readiness_level,
+                                                            ),
+                                                    }}
+                                                >
+                                                    {getReadinessLabel(
+                                                        prediction.readiness_level,
+                                                    )}
+                                                </span>
+                                                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-amber-900/60">
+                                                    <span>
+                                                        HRI{' '}
+                                                        {Math.round(
+                                                            prediction.hri_value *
+                                                                100,
+                                                        )}
+                                                        %
+                                                    </span>
+                                                    <span>
+                                                        Raw confidence{' '}
+                                                        {formatRawConfidence(
+                                                            prediction.confidence_score,
+                                                        )}
+                                                    </span>
+                                                    <span
+                                                        className={`rounded-full px-2 py-0.5 ${getTrustStyle(prediction.warning_state)}`}
+                                                    >
+                                                        {getTrustLabel(
+                                                            prediction,
+                                                        )}
+                                                    </span>
+                                                    <span>
+                                                        {formatPredictionTime(
+                                                            prediction,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {prediction.warning_state !==
+                                                'normal' &&
+                                                prediction.prediction_warning && (
+                                                    <p className="text-sm text-amber-900/70">
+                                                        {
+                                                            prediction.prediction_warning
+                                                        }
+                                                    </p>
+                                                )}
+
+                                            <SensorSnapshot
+                                                prediction={prediction}
+                                            />
+                                        </Card>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                         </div>
-
-                        <PredictionHistory
-                            predictions={predictions}
-                            onViewProcess={setSelectedPredictionId}
-                        />
                     </>
                 ) : (
                     <EmptyPredictionState />
                 )}
             </div>
-
-            <PredictionProcessModal
-                prediction={selectedPrediction}
-                onClose={() => setSelectedPredictionId(null)}
-            />
         </AuthenticatedLayout>
     );
 }
