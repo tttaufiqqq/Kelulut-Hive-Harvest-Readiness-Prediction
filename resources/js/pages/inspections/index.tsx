@@ -9,8 +9,10 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
+import { BloomingBadge } from '@/components/core/blooming-badge';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { DataTable } from '@/components/core/content';
 import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
@@ -19,8 +21,9 @@ import { Modal } from '@/components/core/modal';
 import { MultiSelectField } from '@/components/core/multi-select-field';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { SelectField } from '@/components/core/select-field';
+import { TextareaField } from '@/components/core/textarea-field';
+import { WeatherPills } from '@/components/core/weather-pills';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
-import { cn } from '@/lib/utils';
 import type {
     Inspection,
     MasterWeatherCondition,
@@ -69,62 +72,6 @@ const DAMAGE_OPTIONS = [
     { value: 'moderate', label: 'Moderate' },
     { value: 'severe', label: 'Severe' },
 ];
-
-const BLOOMING_STYLES: Record<string, string> = {
-    pre_bloom: 'bg-sky-100 text-sky-700',
-    early_bloom: 'bg-lime-100 text-lime-700',
-    peak_bloom: 'bg-emerald-100 text-emerald-700',
-    post_bloom: 'bg-amber-100 text-amber-700',
-    dormant: 'bg-gray-100 text-gray-500',
-};
-
-const BLOOMING_LABELS: Record<string, string> = {
-    pre_bloom: 'Pre-Bloom',
-    early_bloom: 'Early Bloom',
-    peak_bloom: 'Peak Bloom',
-    post_bloom: 'Post-Bloom',
-    dormant: 'Dormant',
-};
-
-function BloomingBadge({ status }: { status: string | null }) {
-    if (!status) {
-        return <span className="text-amber-900/30">—</span>;
-    }
-
-    return (
-        <span
-            className={cn(
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold',
-                BLOOMING_STYLES[status] ?? 'bg-gray-100 text-gray-500',
-            )}
-        >
-            {BLOOMING_LABELS[status] ?? status}
-        </span>
-    );
-}
-
-function WeatherPills({
-    conditions,
-}: {
-    conditions?: MasterWeatherCondition[];
-}) {
-    if (!conditions?.length) {
-        return <span className="text-amber-900/30">—</span>;
-    }
-
-    return (
-        <div className="flex flex-wrap gap-1">
-            {conditions.map((c) => (
-                <span
-                    key={c.id}
-                    className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
-                >
-                    {c.name}
-                </span>
-            ))}
-        </div>
-    );
-}
 
 const hiveOptions = (hives: { id: number; name: string }[]) => [
     { value: '', label: 'All Hives' },
@@ -369,115 +316,111 @@ export default function InspectionsIndex({
 
                 {/* Table */}
                 <Card className="overflow-hidden p-0">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-yellow-100 bg-yellow-50/50">
-                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Hive
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Date
-                                    </th>
-                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase md:table-cell">
-                                        Blooming
-                                    </th>
-                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase lg:table-cell">
-                                        Weather
-                                    </th>
-                                    <th className="px-6 py-3" />
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-yellow-50">
-                                {inspections.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            className="px-6 py-10 text-center text-sm text-amber-900/40"
-                                        >
-                                            No inspection records yet. Add one
-                                            to get started.
-                                        </td>
-                                    </tr>
-                                )}
-                                {inspections.data.map((inspection, index) => (
-                                    <tr
-                                        key={inspection.id}
-                                        className="cursor-pointer transition-colors hover:bg-yellow-50/30"
-                                        onClick={() =>
-                                            setActiveModal({
-                                                type: 'view',
-                                                index,
-                                            })
+                    <DataTable
+                        tableClassName="w-full text-sm"
+                        bodyClassName="divide-y divide-yellow-50"
+                        rowClassName="transition-colors hover:bg-yellow-50/30"
+                        data={inspections.data}
+                        onRowClick={(_, index) =>
+                            setActiveModal({ type: 'view', index })
+                        }
+                        emptyColSpan={5}
+                        emptyState={
+                            <div className="px-6 py-10 text-center text-sm text-amber-900/40">
+                                No inspection records yet. Add one to get
+                                started.
+                            </div>
+                        }
+                        columns={[
+                            {
+                                key: 'hive',
+                                header: 'Hive',
+                                cellClassName:
+                                    'px-6 py-4 font-medium text-amber-950',
+                                render: (inspection) =>
+                                    inspection.hive?.name ?? '—',
+                            },
+                            {
+                                key: 'date',
+                                header: 'Date',
+                                cellClassName: 'px-6 py-4 text-amber-900/70',
+                                render: (inspection) =>
+                                    new Date(
+                                        inspection.inspection_date,
+                                    ).toLocaleDateString(),
+                            },
+                            {
+                                key: 'blooming',
+                                header: 'Blooming',
+                                headerClassName: 'hidden md:table-cell',
+                                cellClassName: 'hidden px-6 py-4 md:table-cell',
+                                render: (inspection) => (
+                                    <BloomingBadge
+                                        status={inspection.blooming_status}
+                                    />
+                                ),
+                            },
+                            {
+                                key: 'weather',
+                                header: 'Weather',
+                                headerClassName: 'hidden lg:table-cell',
+                                cellClassName: 'hidden px-6 py-4 lg:table-cell',
+                                render: (inspection) => (
+                                    <WeatherPills
+                                        conditions={
+                                            inspection.weather_conditions
                                         }
-                                    >
-                                        <td className="px-6 py-4 font-medium text-amber-950">
-                                            {inspection.hive?.name ?? '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-amber-900/70">
-                                            {new Date(
-                                                inspection.inspection_date,
-                                            ).toLocaleDateString()}
-                                        </td>
-                                        <td className="hidden px-6 py-4 md:table-cell">
-                                            <BloomingBadge
-                                                status={
-                                                    inspection.blooming_status
-                                                }
-                                            />
-                                        </td>
-                                        <td className="hidden px-6 py-4 lg:table-cell">
-                                            <WeatherPills
-                                                conditions={
-                                                    inspection.weather_conditions
-                                                }
-                                            />
-                                        </td>
-                                        <td
-                                            className="px-6 py-4 text-right"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <Dropdown
-                                                align="right"
-                                                trigger={
-                                                    <button className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100">
-                                                        <MoreVertical className="h-4 w-4 text-amber-900/50" />
-                                                    </button>
-                                                }
-                                                items={[
-                                                    {
-                                                        id: 'edit',
-                                                        label: 'Edit',
-                                                        icon: (
-                                                            <Edit2 className="h-4 w-4" />
-                                                        ),
-                                                        onClick: () =>
-                                                            openEdit(
-                                                                inspection,
-                                                            ),
-                                                    },
-                                                    {
-                                                        id: 'delete',
-                                                        label: 'Delete',
-                                                        icon: (
-                                                            <Trash2 className="h-4 w-4" />
-                                                        ),
-                                                        variant:
-                                                            'danger' as const,
-                                                        onClick: () =>
-                                                            setActiveModal({
-                                                                type: 'delete',
-                                                                inspection,
-                                                            }),
-                                                    },
-                                                ]}
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                    />
+                                ),
+                            },
+                            {
+                                key: 'actions',
+                                header: '',
+                                headerClassName: 'px-6 py-3',
+                                cellClassName: 'px-6 py-4 text-right',
+                                render: (inspection) => (
+                                    <div onClick={(e) => e.stopPropagation()}>
+                                        <Dropdown
+                                            align="right"
+                                            trigger={
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    className="h-auto rounded-xl p-1.5 text-amber-900/50 hover:bg-yellow-100 hover:text-amber-900/50"
+                                                >
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            }
+                                            items={[
+                                                {
+                                                    id: 'edit',
+                                                    label: 'Edit',
+                                                    icon: (
+                                                        <Edit2 className="h-4 w-4" />
+                                                    ),
+                                                    onClick: () =>
+                                                        openEdit(inspection),
+                                                },
+                                                {
+                                                    id: 'delete',
+                                                    label: 'Delete',
+                                                    icon: (
+                                                        <Trash2 className="h-4 w-4" />
+                                                    ),
+                                                    variant: 'danger' as const,
+                                                    onClick: () =>
+                                                        setActiveModal({
+                                                            type: 'delete',
+                                                            inspection,
+                                                        }),
+                                                },
+                                            ]}
+                                        />
+                                    </div>
+                                ),
+                            },
+                        ]}
+                    />
                 </Card>
 
                 {/* Pagination */}
@@ -600,57 +543,29 @@ export default function InspectionsIndex({
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div className="space-y-1.5">
-                            <label className="ml-1 text-sm font-medium text-amber-900">
-                                Food Source Observation
-                            </label>
-                            <textarea
-                                value={createForm.data.food_source_observation}
-                                onChange={(e) =>
-                                    createForm.setData(
-                                        'food_source_observation',
-                                        e.target.value,
-                                    )
-                                }
-                                placeholder="Describe food source observations..."
-                                rows={3}
-                                className={cn(
-                                    'w-full rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm',
-                                    'resize-none text-amber-950 placeholder:text-amber-900/30 focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
-                                    createForm.errors.food_source_observation &&
-                                        'border-red-400 focus:ring-red-400/50',
-                                )}
-                            />
-                            {createForm.errors.food_source_observation && (
-                                <p className="ml-1 text-xs text-red-500">
-                                    {createForm.errors.food_source_observation}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="ml-1 text-sm font-medium text-amber-900">
-                                Notes
-                            </label>
-                            <textarea
-                                value={createForm.data.notes}
-                                onChange={(e) =>
-                                    createForm.setData('notes', e.target.value)
-                                }
-                                placeholder="Any additional observations..."
-                                rows={3}
-                                className={cn(
-                                    'w-full rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm',
-                                    'resize-none text-amber-950 placeholder:text-amber-900/30 focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
-                                    createForm.errors.notes &&
-                                        'border-red-400 focus:ring-red-400/50',
-                                )}
-                            />
-                            {createForm.errors.notes && (
-                                <p className="ml-1 text-xs text-red-500">
-                                    {createForm.errors.notes}
-                                </p>
-                            )}
-                        </div>
+                        <TextareaField
+                            label="Food Source Observation"
+                            value={createForm.data.food_source_observation}
+                            onChange={(e) =>
+                                createForm.setData(
+                                    'food_source_observation',
+                                    e.target.value,
+                                )
+                            }
+                            placeholder="Describe food source observations..."
+                            rows={3}
+                            error={createForm.errors.food_source_observation}
+                        />
+                        <TextareaField
+                            label="Notes"
+                            value={createForm.data.notes}
+                            onChange={(e) =>
+                                createForm.setData('notes', e.target.value)
+                            }
+                            placeholder="Any additional observations..."
+                            rows={3}
+                            error={createForm.errors.notes}
+                        />
                     </div>
 
                     <div className="flex gap-3 pt-2">
@@ -686,7 +601,9 @@ export default function InspectionsIndex({
                 >
                     <div className="space-y-4">
                         <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
                                 onClick={() =>
                                     setActiveModal((prev) =>
                                         prev?.type === 'view' && prev.index > 0
@@ -698,14 +615,16 @@ export default function InspectionsIndex({
                                     )
                                 }
                                 disabled={!hasPrev}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
+                                className="h-auto rounded-xl p-1.5 text-amber-900 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
                                 <ChevronLeft className="h-4 w-4 text-amber-900" />
-                            </button>
+                            </Button>
                             <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
                                 {viewIndex! + 1} / {inspections.data.length}
                             </span>
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
                                 onClick={() =>
                                     setActiveModal((prev) =>
                                         prev?.type === 'view' &&
@@ -718,10 +637,10 @@ export default function InspectionsIndex({
                                     )
                                 }
                                 disabled={!hasNext}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
+                                className="h-auto rounded-xl p-1.5 text-amber-900 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
                                 <ChevronRight className="h-4 w-4 text-amber-900" />
-                            </button>
+                            </Button>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -940,64 +859,27 @@ export default function InspectionsIndex({
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div className="space-y-1.5">
-                                <label className="ml-1 text-sm font-medium text-amber-900">
-                                    Food Source Observation
-                                </label>
-                                <textarea
-                                    value={
-                                        editForm.data.food_source_observation
-                                    }
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'food_source_observation',
-                                            e.target.value,
-                                        )
-                                    }
-                                    rows={3}
-                                    className={cn(
-                                        'w-full rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm',
-                                        'resize-none text-amber-950 placeholder:text-amber-900/30 focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
-                                        editForm.errors
-                                            .food_source_observation &&
-                                            'border-red-400 focus:ring-red-400/50',
-                                    )}
-                                />
-                                {editForm.errors.food_source_observation && (
-                                    <p className="ml-1 text-xs text-red-500">
-                                        {
-                                            editForm.errors
-                                                .food_source_observation
-                                        }
-                                    </p>
-                                )}
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="ml-1 text-sm font-medium text-amber-900">
-                                    Notes
-                                </label>
-                                <textarea
-                                    value={editForm.data.notes}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'notes',
-                                            e.target.value,
-                                        )
-                                    }
-                                    rows={3}
-                                    className={cn(
-                                        'w-full rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm',
-                                        'resize-none text-amber-950 placeholder:text-amber-900/30 focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
-                                        editForm.errors.notes &&
-                                            'border-red-400 focus:ring-red-400/50',
-                                    )}
-                                />
-                                {editForm.errors.notes && (
-                                    <p className="ml-1 text-xs text-red-500">
-                                        {editForm.errors.notes}
-                                    </p>
-                                )}
-                            </div>
+                            <TextareaField
+                                label="Food Source Observation"
+                                value={editForm.data.food_source_observation}
+                                onChange={(e) =>
+                                    editForm.setData(
+                                        'food_source_observation',
+                                        e.target.value,
+                                    )
+                                }
+                                rows={3}
+                                error={editForm.errors.food_source_observation}
+                            />
+                            <TextareaField
+                                label="Notes"
+                                value={editForm.data.notes}
+                                onChange={(e) =>
+                                    editForm.setData('notes', e.target.value)
+                                }
+                                rows={3}
+                                error={editForm.errors.notes}
+                            />
                         </div>
 
                         <div className="flex gap-3 pt-2">

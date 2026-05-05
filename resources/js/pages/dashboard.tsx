@@ -18,6 +18,10 @@ import { Progress } from '@/components/core/feedback';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Breadcrumbs } from '@/components/core/navigation';
+import {
+    MetricCard,
+    ReadinessBadge,
+} from '@/components/core/readiness-chart-cards';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { cn } from '@/lib/utils';
 
@@ -41,20 +45,6 @@ type HiveCard = {
 
 type Props = {
     hives: HiveCard[];
-};
-
-const READINESS_LABELS: Record<string, string> = {
-    not_ready: 'Not Ready',
-    approaching: 'Approaching',
-    nearly_ready: 'Nearly Ready',
-    ready: 'Ready to Harvest',
-};
-
-const READINESS_STYLES: Record<string, string> = {
-    not_ready: 'bg-rose-100 text-rose-700',
-    approaching: 'bg-amber-100 text-amber-700',
-    nearly_ready: 'bg-yellow-100 text-yellow-700',
-    ready: 'bg-emerald-100 text-emerald-700',
 };
 
 const READINESS_BAR_COLOR: Record<string, string> = {
@@ -201,31 +191,6 @@ function HiveListCard({
                 </div>
             </Card>
         </motion.div>
-    );
-}
-
-function ReadinessBadge({
-    level,
-    className,
-}: {
-    level: string | null;
-    className?: string;
-}) {
-    const label = level ? (READINESS_LABELS[level] ?? level) : 'Awaiting Data';
-    const tone = level
-        ? (READINESS_STYLES[level] ?? 'bg-stone-100 text-stone-700')
-        : 'bg-stone-100 text-stone-700';
-
-    return (
-        <span
-            className={cn(
-                'inline-flex items-center rounded-full px-3.5 py-1.5 text-sm font-bold shadow-sm',
-                tone,
-                className,
-            )}
-        >
-            {label}
-        </span>
     );
 }
 
@@ -513,32 +478,21 @@ export default function Dashboard({ hives }: Props) {
                                                     : '—',
                                         },
                                     ].map((sensor) => (
-                                        <Card
+                                        <MetricCard
                                             key={sensor.label}
-                                            className="group flex h-full flex-col justify-between border border-amber-100/80 bg-white/95 transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_22px_40px_-34px_rgba(120,53,15,0.75)]"
-                                        >
-                                            <div className="mb-4 flex items-start justify-between gap-3">
-                                                <div className="rounded-2xl bg-amber-50 p-2.5">
-                                                    <sensor.icon
-                                                        className={`h-5 w-5 ${sensor.color}`}
-                                                    />
-                                                </div>
-                                                <div className="min-w-0 text-right">
-                                                    <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                                        {sensor.label}
-                                                    </p>
-                                                    <p className="mt-1 text-sm text-amber-900/50">
-                                                        {sensor.subtitle}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <p
-                                                className="text-3xl font-black text-amber-900"
-                                                title={sensor.adcTooltip}
-                                            >
-                                                {sensor.value}
-                                            </p>
-                                        </Card>
+                                            icon={
+                                                <sensor.icon
+                                                    className={`h-5 w-5 ${sensor.color}`}
+                                                />
+                                            }
+                                            label={sensor.label}
+                                            subtitle={sensor.subtitle}
+                                            value={
+                                                <span title={sensor.adcTooltip}>
+                                                    {sensor.value}
+                                                </span>
+                                            }
+                                        />
                                     ))}
                                 </div>
                             )}

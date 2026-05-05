@@ -122,44 +122,115 @@ export const HiveChart = ({ data }: { data: any[] }) => (
     </div>
 );
 
+type DataTableColumn = {
+    key: string;
+    header: React.ReactNode;
+    headerClassName?: string;
+    cellClassName?: string;
+    render: (row: any, index: number) => React.ReactNode;
+};
+
 export const DataTable = ({
     headers,
     rows,
+    columns,
+    data,
+    className,
+    tableClassName,
+    headerRowClassName,
+    bodyClassName,
+    rowClassName,
+    onRowClick,
+    emptyState,
+    emptyColSpan,
 }: {
-    headers: string[];
-    rows: any[][];
-}) => (
-    <div className="w-full overflow-x-auto rounded-2xl border border-yellow-100 bg-white">
-        <table className="w-full border-collapse text-left">
-            <thead>
-                <tr className="border-b border-yellow-100 bg-yellow-50/50">
-                    {headers.map((h, i) => (
-                        <th
-                            key={i}
-                            className="px-6 py-4 text-[10px] font-black tracking-widest text-amber-900/50 uppercase"
-                        >
-                            {h}
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {rows.map((row, i) => (
+    headers?: string[];
+    rows?: React.ReactNode[][];
+    columns?: DataTableColumn[];
+    data?: any[];
+    className?: string;
+    tableClassName?: string;
+    headerRowClassName?: string;
+    bodyClassName?: string;
+    rowClassName?: string | ((row: any, index: number) => string);
+    onRowClick?: (row: any, index: number) => void;
+    emptyState?: React.ReactNode;
+    emptyColSpan?: number;
+}) => {
+    const resolvedColumns =
+        columns ??
+        headers?.map((header, index) => ({
+            key: String(index),
+            header,
+            render: (row: React.ReactNode[]) => row[index],
+        })) ??
+        [];
+    const finalColumns = resolvedColumns as DataTableColumn[];
+    const resolvedRows = data ?? rows ?? [];
+    const resolvedEmptyColSpan = emptyColSpan ?? finalColumns.length;
+
+    return (
+        <div className={cn('w-full overflow-x-auto', className)}>
+            <table
+                className={cn(
+                    'w-full border-collapse text-left',
+                    tableClassName,
+                )}
+            >
+                <thead>
                     <tr
-                        key={i}
-                        className="border-b border-yellow-50 transition-colors last:border-0 hover:bg-yellow-50/20"
+                        className={cn(
+                            'border-b border-yellow-100 bg-yellow-50/50',
+                            headerRowClassName,
+                        )}
                     >
-                        {row.map((cell, j) => (
-                            <td
-                                key={j}
-                                className="px-6 py-4 text-sm font-medium text-amber-900"
+                        {finalColumns.map((column) => (
+                            <th
+                                key={column.key}
+                                className={cn(
+                                    'px-6 py-4 text-[10px] font-black tracking-widest text-amber-900/50 uppercase',
+                                    column.headerClassName,
+                                )}
                             >
-                                {cell}
-                            </td>
+                                {column.header}
+                            </th>
                         ))}
                     </tr>
-                ))}
-            </tbody>
-        </table>
-    </div>
-);
+                </thead>
+                <tbody className={bodyClassName}>
+                    {resolvedRows.length === 0 && emptyState ? (
+                        <tr>
+                            <td colSpan={resolvedEmptyColSpan}>{emptyState}</td>
+                        </tr>
+                    ) : (
+                        resolvedRows.map((row, rowIndex) => (
+                            <tr
+                                key={rowIndex}
+                                className={cn(
+                                    'border-b border-yellow-50 transition-colors last:border-0 hover:bg-yellow-50/20',
+                                    typeof rowClassName === 'function'
+                                        ? rowClassName(row, rowIndex)
+                                        : rowClassName,
+                                    onRowClick && 'cursor-pointer',
+                                )}
+                                onClick={() => onRowClick?.(row, rowIndex)}
+                            >
+                                {finalColumns.map((column) => (
+                                    <td
+                                        key={column.key}
+                                        className={cn(
+                                            'px-6 py-4 text-sm font-medium text-amber-900',
+                                            column.cellClassName,
+                                        )}
+                                    >
+                                        {column.render(row, rowIndex)}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+};

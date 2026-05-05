@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { DataTable } from '@/components/core/content';
 import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
@@ -18,9 +19,10 @@ import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { NumberInput } from '@/components/core/number-input';
+import { ProductivityBadge } from '@/components/core/productivity-badge';
 import { SelectField } from '@/components/core/select-field';
+import { TextareaField } from '@/components/core/textarea-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
-import { cn } from '@/lib/utils';
 import type {
     Harvest,
     MasterHoneyColor,
@@ -42,29 +44,6 @@ type ActiveModal =
     | { type: 'edit'; harvest: Harvest }
     | { type: 'delete'; harvest: Harvest }
     | null;
-
-function ProductivityBadge({ level }: { level: string | null }) {
-    if (!level) {
-        return <span className="text-amber-900/30">—</span>;
-    }
-
-    const styles: Record<string, string> = {
-        Low: 'bg-rose-100 text-rose-700',
-        Medium: 'bg-amber-100 text-amber-700',
-        High: 'bg-emerald-100 text-emerald-700',
-    };
-
-    return (
-        <span
-            className={cn(
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold',
-                styles[level] ?? 'bg-gray-100 text-gray-500',
-            )}
-        >
-            {level}
-        </span>
-    );
-}
 
 const PRODUCTIVITY_OPTIONS = [
     { value: '', label: '— None —' },
@@ -271,121 +250,119 @@ export default function HarvestsIndex({
 
                 {/* Table */}
                 <Card className="overflow-hidden p-0">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-yellow-100 bg-yellow-50/50">
-                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Hive
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Date
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Weight (kg)
-                                    </th>
-                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase md:table-cell">
-                                        Productivity
-                                    </th>
-                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase lg:table-cell">
-                                        Color
-                                    </th>
-                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase lg:table-cell">
-                                        Flavor
-                                    </th>
-                                    <th className="px-6 py-3" />
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-yellow-50">
-                                {harvests.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="px-6 py-10 text-center text-sm text-amber-900/40"
-                                        >
-                                            No harvest records yet. Add one to
-                                            get started.
-                                        </td>
-                                    </tr>
-                                )}
-                                {harvests.data.map((harvest, index) => (
-                                    <tr
-                                        key={harvest.id}
-                                        className="cursor-pointer transition-colors hover:bg-yellow-50/30"
-                                        onClick={() =>
-                                            setActiveModal({
-                                                type: 'view',
-                                                index,
-                                            })
-                                        }
-                                    >
-                                        <td className="px-6 py-4 font-medium text-amber-950">
-                                            {harvest.hive?.name ?? '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-amber-900/70">
-                                            {new Date(
-                                                harvest.harvest_date,
-                                            ).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-amber-900/70">
-                                            {harvest.weight} kg
-                                        </td>
-                                        <td className="hidden px-6 py-4 md:table-cell">
-                                            <ProductivityBadge
-                                                level={
-                                                    harvest.productivity_level
-                                                }
-                                            />
-                                        </td>
-                                        <td className="hidden px-6 py-4 text-amber-900/70 lg:table-cell">
-                                            {harvest.color?.name ?? '—'}
-                                        </td>
-                                        <td className="hidden px-6 py-4 text-amber-900/70 lg:table-cell">
-                                            {harvest.flavor?.name ?? '—'}
-                                        </td>
-                                        <td
-                                            className="px-6 py-4 text-right"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <Dropdown
-                                                align="right"
-                                                trigger={
-                                                    <button className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100">
-                                                        <MoreVertical className="h-4 w-4 text-amber-900/50" />
-                                                    </button>
-                                                }
-                                                items={[
-                                                    {
-                                                        id: 'edit',
-                                                        label: 'Edit',
-                                                        icon: (
-                                                            <Edit2 className="h-4 w-4" />
-                                                        ),
-                                                        onClick: () =>
-                                                            openEdit(harvest),
-                                                    },
-                                                    {
-                                                        id: 'delete',
-                                                        label: 'Delete',
-                                                        icon: (
-                                                            <Trash2 className="h-4 w-4" />
-                                                        ),
-                                                        variant:
-                                                            'danger' as const,
-                                                        onClick: () =>
-                                                            setActiveModal({
-                                                                type: 'delete',
-                                                                harvest,
-                                                            }),
-                                                    },
-                                                ]}
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <DataTable
+                        tableClassName="w-full text-sm"
+                        bodyClassName="divide-y divide-yellow-50"
+                        rowClassName="transition-colors hover:bg-yellow-50/30"
+                        data={harvests.data}
+                        onRowClick={(_, index) =>
+                            setActiveModal({ type: 'view', index })
+                        }
+                        emptyColSpan={7}
+                        emptyState={
+                            <div className="px-6 py-10 text-center text-sm text-amber-900/40">
+                                No harvest records yet. Add one to get started.
+                            </div>
+                        }
+                        columns={[
+                            {
+                                key: 'hive',
+                                header: 'Hive',
+                                cellClassName:
+                                    'px-6 py-4 font-medium text-amber-950',
+                                render: (harvest) => harvest.hive?.name ?? '—',
+                            },
+                            {
+                                key: 'date',
+                                header: 'Date',
+                                cellClassName: 'px-6 py-4 text-amber-900/70',
+                                render: (harvest) =>
+                                    new Date(
+                                        harvest.harvest_date,
+                                    ).toLocaleDateString(),
+                            },
+                            {
+                                key: 'weight',
+                                header: 'Weight (kg)',
+                                cellClassName: 'px-6 py-4 text-amber-900/70',
+                                render: (harvest) => `${harvest.weight} kg`,
+                            },
+                            {
+                                key: 'productivity',
+                                header: 'Productivity',
+                                headerClassName: 'hidden md:table-cell',
+                                cellClassName: 'hidden px-6 py-4 md:table-cell',
+                                render: (harvest) => (
+                                    <ProductivityBadge
+                                        level={harvest.productivity_level}
+                                    />
+                                ),
+                            },
+                            {
+                                key: 'color',
+                                header: 'Color',
+                                headerClassName: 'hidden lg:table-cell',
+                                cellClassName:
+                                    'hidden px-6 py-4 text-amber-900/70 lg:table-cell',
+                                render: (harvest) => harvest.color?.name ?? '—',
+                            },
+                            {
+                                key: 'flavor',
+                                header: 'Flavor',
+                                headerClassName: 'hidden lg:table-cell',
+                                cellClassName:
+                                    'hidden px-6 py-4 text-amber-900/70 lg:table-cell',
+                                render: (harvest) =>
+                                    harvest.flavor?.name ?? '—',
+                            },
+                            {
+                                key: 'actions',
+                                header: '',
+                                headerClassName: 'px-6 py-3',
+                                cellClassName: 'px-6 py-4 text-right',
+                                render: (harvest) => (
+                                    <div onClick={(e) => e.stopPropagation()}>
+                                        <Dropdown
+                                            align="right"
+                                            trigger={
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    className="h-auto rounded-xl p-1.5 text-amber-900/50 hover:bg-yellow-100 hover:text-amber-900/50"
+                                                >
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            }
+                                            items={[
+                                                {
+                                                    id: 'edit',
+                                                    label: 'Edit',
+                                                    icon: (
+                                                        <Edit2 className="h-4 w-4" />
+                                                    ),
+                                                    onClick: () =>
+                                                        openEdit(harvest),
+                                                },
+                                                {
+                                                    id: 'delete',
+                                                    label: 'Delete',
+                                                    icon: (
+                                                        <Trash2 className="h-4 w-4" />
+                                                    ),
+                                                    variant: 'danger' as const,
+                                                    onClick: () =>
+                                                        setActiveModal({
+                                                            type: 'delete',
+                                                            harvest,
+                                                        }),
+                                                },
+                                            ]}
+                                        />
+                                    </div>
+                                ),
+                            },
+                        ]}
+                    />
                 </Card>
 
                 {/* Pagination */}
@@ -484,30 +461,16 @@ export default function HarvestsIndex({
                         />
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="ml-1 text-sm font-medium text-amber-900">
-                            Notes (optional)
-                        </label>
-                        <textarea
-                            value={createForm.data.notes}
-                            onChange={(e) =>
-                                createForm.setData('notes', e.target.value)
-                            }
-                            placeholder="Any observations about this harvest..."
-                            rows={3}
-                            className={cn(
-                                'w-full rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm',
-                                'resize-none text-amber-950 placeholder:text-amber-900/30 focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
-                                createForm.errors.notes &&
-                                    'border-red-400 focus:ring-red-400/50',
-                            )}
-                        />
-                        {createForm.errors.notes && (
-                            <p className="ml-1 text-xs text-red-500">
-                                {createForm.errors.notes}
-                            </p>
-                        )}
-                    </div>
+                    <TextareaField
+                        label="Notes (optional)"
+                        value={createForm.data.notes}
+                        onChange={(e) =>
+                            createForm.setData('notes', e.target.value)
+                        }
+                        placeholder="Any observations about this harvest..."
+                        rows={3}
+                        error={createForm.errors.notes}
+                    />
 
                     <div className="flex gap-3 pt-2">
                         <Button
@@ -542,7 +505,9 @@ export default function HarvestsIndex({
                 >
                     <div className="space-y-4">
                         <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
                                 onClick={() =>
                                     setActiveModal((prev) =>
                                         prev?.type === 'view' && prev.index > 0
@@ -554,14 +519,16 @@ export default function HarvestsIndex({
                                     )
                                 }
                                 disabled={!hasPrev}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
+                                className="h-auto rounded-xl p-1.5 text-amber-900 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
                                 <ChevronLeft className="h-4 w-4 text-amber-900" />
-                            </button>
+                            </Button>
                             <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
                                 {viewIndex! + 1} / {harvests.data.length}
                             </span>
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
                                 onClick={() =>
                                     setActiveModal((prev) =>
                                         prev?.type === 'view' &&
@@ -574,10 +541,10 @@ export default function HarvestsIndex({
                                     )
                                 }
                                 disabled={!hasNext}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
+                                className="h-auto rounded-xl p-1.5 text-amber-900 hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
                                 <ChevronRight className="h-4 w-4 text-amber-900" />
-                            </button>
+                            </Button>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -736,29 +703,15 @@ export default function HarvestsIndex({
                             />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="ml-1 text-sm font-medium text-amber-900">
-                                Notes (optional)
-                            </label>
-                            <textarea
-                                value={editForm.data.notes}
-                                onChange={(e) =>
-                                    editForm.setData('notes', e.target.value)
-                                }
-                                rows={3}
-                                className={cn(
-                                    'w-full rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm',
-                                    'resize-none text-amber-950 placeholder:text-amber-900/30 focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
-                                    editForm.errors.notes &&
-                                        'border-red-400 focus:ring-red-400/50',
-                                )}
-                            />
-                            {editForm.errors.notes && (
-                                <p className="ml-1 text-xs text-red-500">
-                                    {editForm.errors.notes}
-                                </p>
-                            )}
-                        </div>
+                        <TextareaField
+                            label="Notes (optional)"
+                            value={editForm.data.notes}
+                            onChange={(e) =>
+                                editForm.setData('notes', e.target.value)
+                            }
+                            rows={3}
+                            error={editForm.errors.notes}
+                        />
 
                         <div className="flex gap-3 pt-2">
                             <Button
