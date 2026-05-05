@@ -835,7 +835,7 @@ export default function AdminSensors({
                                     value={normalizedLatest?.temperature ?? 0}
                                     max={45}
                                     color={
-                                        normalizedLatest?.temperature !== null
+                                        normalizedLatest?.temperature != null
                                             ? tempColor(
                                                   normalizedLatest.temperature,
                                               )
@@ -843,7 +843,7 @@ export default function AdminSensors({
                                     }
                                     noData={!normalizedLatest}
                                 />
-                                {normalizedLatest?.temperature !== null && (
+                                {normalizedLatest?.temperature != null && (
                                     <StatusBadge
                                         color={tempColor(
                                             normalizedLatest.temperature,
@@ -877,7 +877,7 @@ export default function AdminSensors({
                                 <ProgressBar
                                     value={normalizedLatest?.humidity ?? 0}
                                     color={
-                                        normalizedLatest?.humidity !== null
+                                        normalizedLatest?.humidity != null
                                             ? humidColor(
                                                   normalizedLatest.humidity,
                                               )
@@ -885,7 +885,7 @@ export default function AdminSensors({
                                     }
                                     noData={!normalizedLatest}
                                 />
-                                {normalizedLatest?.humidity !== null && (
+                                {normalizedLatest?.humidity != null && (
                                     <StatusBadge
                                         color={humidColor(
                                             normalizedLatest.humidity,
@@ -976,7 +976,7 @@ export default function AdminSensors({
                                                 }
                                                 max={MQ_GAUGE_MAX}
                                                 color={
-                                                    normalizedLatest?.[key] !==
+                                                    normalizedLatest?.[key] !=
                                                     null
                                                         ? mqColor(
                                                               normalizedLatest[
@@ -987,7 +987,7 @@ export default function AdminSensors({
                                                 }
                                                 noData={!normalizedLatest}
                                             />
-                                            {normalizedLatest?.[key] !==
+                                            {normalizedLatest?.[key] !=
                                                 null && (
                                                 <StatusBadge
                                                     color={mqColor(
