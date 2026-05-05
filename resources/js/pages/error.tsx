@@ -132,7 +132,7 @@ export default function ErrorPage({ status }: Props) {
                                 <BeeIcon className="h-6 w-6 text-yellow-950" />
                             </div>
                             <span className="hidden text-xl font-bold tracking-tight text-amber-900 sm:block">
-                                BuzzyHive2.0
+                                BuzzyHive 2.0
                             </span>
                         </Link>
                     </div>

@@ -95,7 +95,7 @@ export function AuthenticatedLayout({
                             <BeeIcon className="h-6 w-6 text-yellow-950" />
                         </div>
                         <h1 className="hidden text-xl font-bold tracking-tight text-amber-900 sm:block">
-                            BuzzyHive2.0
+                            BuzzyHive 2.0
                         </h1>
                     </Link>
 
