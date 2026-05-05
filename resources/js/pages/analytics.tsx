@@ -90,6 +90,29 @@ const SENSOR_GROUP_OPTIONS = [
     { value: 'gas', label: 'Gas Sensors (MQ2 – MQ135)' },
 ];
 
+const SENSOR_SERIES = {
+    environment: [
+        { dataKey: 'temp', name: 'Temp', stroke: '#ef4444', yAxisId: 'env' },
+        {
+            dataKey: 'humidity',
+            name: 'Humidity',
+            stroke: '#3b82f6',
+            yAxisId: 'env',
+        },
+    ],
+    gas: [
+        { dataKey: 'mq2', name: 'MQ2', stroke: '#8b5cf6', yAxisId: 'gas' },
+        { dataKey: 'mq3', name: 'MQ3', stroke: '#f97316', yAxisId: 'gas' },
+        { dataKey: 'mq5', name: 'MQ5', stroke: '#10b981', yAxisId: 'gas' },
+        {
+            dataKey: 'mq135',
+            name: 'MQ135',
+            stroke: '#f59e0b',
+            yAxisId: 'gas',
+        },
+    ],
+} as const;
+
 const READINESS_BAR_STYLES: Record<string, string> = {
     not_ready: 'bg-rose-400',
     approaching: 'bg-amber-400',
@@ -229,6 +252,10 @@ function SensorChart({
 
     const showEnvironment = group === 'all' || group === 'environment';
     const showGas = group === 'all' || group === 'gas';
+    const visibleSeries = [
+        ...(showEnvironment ? SENSOR_SERIES.environment : []),
+        ...(showGas ? SENSOR_SERIES.gas : []),
+    ];
 
     return (
         <ChartCard
@@ -236,14 +263,14 @@ function SensorChart({
             title="Daily sensor curves"
             description="Filter the selected date into environment or gas sensor groups."
             actions={
-                <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
                     <DatePicker
-                        className="w-[124px] shrink-0"
+                        className="w-full shrink-0 sm:w-[152px]"
                         value={selectedDate}
                         onChange={onDateChange}
                         defaultValue={todayYMD}
                     />
-                    <div className="min-w-0 flex-1 sm:w-[190px] sm:flex-none">
+                    <div className="min-w-0 sm:w-[210px] sm:flex-none">
                         <SelectField
                             value={group}
                             onChange={setGroup}
@@ -253,14 +280,23 @@ function SensorChart({
                 </div>
             }
         >
-            <div className="w-full">
+            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                 {mounted && (
-                    <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={data}>
+                    <ResponsiveContainer width="100%" height={290}>
+                        <LineChart
+                            data={data}
+                            margin={{
+                                top: 8,
+                                right: showGas ? 8 : 0,
+                                left: -18,
+                                bottom: 18,
+                            }}
+                        >
                             <CartesianGrid
                                 strokeDasharray="3 3"
                                 vertical={false}
-                                stroke="#FEF3C7"
+                                stroke="#FDE68A"
+                                strokeOpacity={0.55}
                             />
                             <XAxis
                                 dataKey="time"
@@ -268,82 +304,85 @@ function SensorChart({
                                 tickLine={false}
                                 tick={{
                                     fill: '#78350F',
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     fontWeight: 600,
                                 }}
                                 dy={8}
                             />
-                            <YAxis
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{
-                                    fill: '#78350F',
-                                    fontSize: 10,
-                                    fontWeight: 600,
+                            {showEnvironment && (
+                                <YAxis
+                                    yAxisId="env"
+                                    domain={[0, 100]}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    width={34}
+                                    tick={{
+                                        fill: '#78350F',
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                    }}
+                                    tickFormatter={(value) => `${value}`}
+                                />
+                            )}
+                            {showGas && (
+                                <YAxis
+                                    yAxisId="gas"
+                                    orientation="right"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    width={40}
+                                    domain={[
+                                        (dataMin: number) =>
+                                            Math.max(0, dataMin - 40),
+                                        (dataMax: number) => dataMax + 40,
+                                    ]}
+                                    tick={{
+                                        fill: '#92400E',
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                    }}
+                                />
+                            )}
+                            <Tooltip
+                                contentStyle={TOOLTIP_STYLE}
+                                formatter={(value: number, name: string) => {
+                                    if (name === 'Temp') {
+                                        return [`${value}°C`, name];
+                                    }
+
+                                    if (name === 'Humidity') {
+                                        return [`${value}%`, name];
+                                    }
+
+                                    return [value, `${name} ADC`];
                                 }}
                             />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} />
-                            <Legend wrapperStyle={{ fontSize: 11 }} />
-                            {showEnvironment && (
+                            <Legend
+                                iconType="circle"
+                                wrapperStyle={{
+                                    fontSize: 12,
+                                    paddingTop: 16,
+                                    lineHeight: '20px',
+                                }}
+                            />
+                            {visibleSeries.map((series) => (
                                 <Line
+                                    key={series.dataKey}
                                     type="monotone"
-                                    dataKey="temp"
-                                    name="Temp (°C)"
-                                    stroke="#ef4444"
-                                    strokeWidth={2}
+                                    dataKey={series.dataKey}
+                                    name={series.name}
+                                    stroke={series.stroke}
+                                    strokeWidth={2.5}
+                                    yAxisId={series.yAxisId}
                                     dot={false}
+                                    activeDot={{
+                                        r: 4,
+                                        stroke: series.stroke,
+                                        strokeWidth: 2,
+                                        fill: '#fff',
+                                    }}
                                 />
-                            )}
-                            {showEnvironment && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="humidity"
-                                    name="Humidity (%)"
-                                    stroke="#3b82f6"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            )}
-                            {showGas && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="mq2"
-                                    name="MQ2 ADC"
-                                    stroke="#8b5cf6"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            )}
-                            {showGas && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="mq3"
-                                    name="MQ3 ADC"
-                                    stroke="#f97316"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            )}
-                            {showGas && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="mq5"
-                                    name="MQ5 ADC"
-                                    stroke="#10b981"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            )}
-                            {showGas && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="mq135"
-                                    name="MQ135 ADC"
-                                    stroke="#f59e0b"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            )}
+                            ))}
                         </LineChart>
                     </ResponsiveContainer>
                 )}

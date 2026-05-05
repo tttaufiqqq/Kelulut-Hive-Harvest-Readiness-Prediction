@@ -134,22 +134,31 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
     }
 
     return (
-        <ChartCard
-            eyebrow="Readiness Trend"
-            title="30-day HRI movement"
-            description="Review how each hive's average readiness has shifted over time."
-            actions={
-                hiveNames.length > 1 ? (
-                    <div className="w-full sm:w-[220px]">
-                        <SelectField
-                            value={selectedHive}
-                            onChange={setSelectedHive}
-                            options={hiveOptions}
-                        />
-                    </div>
-                ) : null
-            }
-        >
+        <Card className="h-full">
+            <div className="mb-4">
+                <p className="text-[11px] font-black tracking-[0.22em] text-amber-900/45 uppercase">
+                    Readiness Trend
+                </p>
+                <div className="mt-1 flex flex-col gap-3 md:grid md:grid-cols-[minmax(0,1fr)_220px] md:items-start md:gap-x-4 md:gap-y-0">
+                    <p className="order-1 text-lg leading-tight font-black text-amber-950 sm:text-base">
+                        30-day HRI movement
+                    </p>
+                    <p className="order-2 max-w-xl text-sm leading-7 text-amber-700 md:order-3 md:-mt-1 md:leading-6">
+                        Review how each hive&apos;s average readiness has shifted
+                        over time.
+                    </p>
+                    {hiveNames.length > 1 ? (
+                        <div className="order-3 w-full md:order-2 md:w-[220px] md:flex-shrink-0">
+                            <SelectField
+                                value={selectedHive}
+                                onChange={setSelectedHive}
+                                options={hiveOptions}
+                            />
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+
             {mounted && (
                 <ResponsiveContainer width="100%" height={220}>
                     <AreaChart
@@ -220,7 +229,7 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
                     </AreaChart>
                 </ResponsiveContainer>
             )}
-        </ChartCard>
+        </Card>
     );
 }
 

@@ -2,6 +2,31 @@
 
 use Illuminate\Contracts\Console\Kernel;
 
+register_shutdown_function(static function (): void {
+    $error = error_get_last();
+
+    if ($error === null) {
+        return;
+    }
+
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR];
+
+    if (! in_array($error['type'] ?? 0, $fatalTypes, true)) {
+        return;
+    }
+
+    if (http_response_code() < 400) {
+        http_response_code(500);
+    }
+
+    echo sprintf(
+        "deploy-hook fatal: %s in %s:%d\n",
+        $error['message'] ?? 'unknown error',
+        $error['file'] ?? 'unknown file',
+        $error['line'] ?? 0,
+    );
+});
+
 function readEnvValue(string $envPath, string $key): string
 {
     if (! file_exists($envPath)) {
@@ -60,23 +85,12 @@ $hashFile = $laravelRoot.'/.composer-lock-hash';
 $previousHash = file_exists($hashFile) ? trim(file_get_contents($hashFile)) : '';
 
 if ($lockHash !== $previousHash) {
-    $composerOutput = [];
-    $composerExitCode = 0;
-    $composerCommand = sprintf(
-        'cd %s && /home/urbanale/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1',
-        escapeshellarg($laravelRoot),
+    failDeploy(
+        "composer install required: composer.lock changed.\n"
+        ."Run '/home/urbanale/bin/composer install --no-dev --optimize-autoloader --no-interaction' manually on the server,\n"
+        ."then sync .composer-lock-hash with composer.lock before retrying the deploy.",
+        409,
     );
-
-    exec($composerCommand, $composerOutput, $composerExitCode);
-
-    echo implode("\n", $composerOutput)."\n";
-
-    if ($composerExitCode !== 0) {
-        failDeploy("composer install: FAILED (exit $composerExitCode)");
-    }
-
-    file_put_contents($hashFile, $lockHash);
-    echo "composer install: OK\n";
 } else {
     echo "composer install: skipped (no changes)\n";
 }

@@ -113,25 +113,29 @@ export function ChartCard({
     return (
         <Card className={cn('h-full', className)}>
             {(eyebrow || title || description || actions) && (
-                <div className="mb-4 flex items-start justify-between gap-3">
-                    <div>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
                         {eyebrow && (
-                            <p className="text-[10px] font-black tracking-widest text-amber-900/50 uppercase">
+                            <p className="text-[11px] font-black tracking-[0.22em] text-amber-900/45 uppercase">
                                 {eyebrow}
                             </p>
                         )}
                         {title && (
-                            <p className="mt-1 font-bold text-amber-900">
+                            <p className="mt-1 text-lg leading-tight font-black text-amber-950 sm:text-base">
                                 {title}
                             </p>
                         )}
                         {description && (
-                            <p className="mt-1 text-sm text-amber-700">
+                            <p className="mt-1 max-w-xl text-sm leading-7 text-amber-700 sm:leading-6">
                                 {description}
                             </p>
                         )}
                     </div>
-                    {actions}
+                    {actions && (
+                        <div className="w-full sm:w-auto sm:flex-shrink-0">
+                            {actions}
+                        </div>
+                    )}
                 </div>
             )}
             <div className={cn(contentClassName)}>{children}</div>

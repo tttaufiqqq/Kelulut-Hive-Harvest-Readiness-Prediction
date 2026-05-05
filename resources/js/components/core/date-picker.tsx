@@ -108,7 +108,8 @@ export function DatePicker({
                 type="button"
                 onClick={() => setOpen((o) => !o)}
                 className={cn(
-                    'flex w-full items-center justify-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm whitespace-nowrap transition-all',
+                    'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm whitespace-nowrap transition-all',
+                    value && value !== defaultValue && 'pr-11',
                     'focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
                     open && 'ring-2 ring-yellow-400/50',
                     hasCustomValue
@@ -130,11 +131,15 @@ export function DatePicker({
             {/* ── Clear badge ── */}
             {value && value !== defaultValue && (
                 <button
-                    onClick={() => onChange(null)}
-                    className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700"
+                    type="button"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onChange(null);
+                    }}
+                    className="absolute top-1/2 right-3 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700"
                     aria-label="Clear date"
                 >
-                    <X className="h-2.5 w-2.5 text-white" />
+                    <X className="h-3 w-3 text-white" />
                 </button>
             )}
 
