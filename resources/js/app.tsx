@@ -1,11 +1,11 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { configureEcho } from '@laravel/echo-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { route } from 'ziggy-js';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
-import { configureEcho } from '@laravel/echo-react';
 
 const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
 const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;

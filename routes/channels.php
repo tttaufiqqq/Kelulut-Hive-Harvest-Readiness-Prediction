@@ -3,16 +3,8 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::channel('hive.{hiveId}.sensors', function (User $user, int $hiveId) {
-    return canAccessHiveChannel($user, $hiveId);
-});
-
-Broadcast::channel('hive.{hiveId}.predictions', function (User $user, int $hiveId) {
-    return canAccessHiveChannel($user, $hiveId);
-});
-
-function canAccessHiveChannel(User $user, int $hiveId): bool
-{
+/** @var \Closure(User, int): bool $canAccessHiveChannel */
+$canAccessHiveChannel = static function (User $user, int $hiveId): bool {
     if ($user->hasRole('admin')) {
         return true;
     }
@@ -22,4 +14,12 @@ function canAccessHiveChannel(User $user, int $hiveId): bool
     }
 
     return $user->hives()->whereKey($hiveId)->exists();
-}
+};
+
+Broadcast::channel('hive.{hiveId}.sensors', function (User $user, int $hiveId) {
+    return $canAccessHiveChannel($user, $hiveId);
+});
+
+Broadcast::channel('hive.{hiveId}.predictions', function (User $user, int $hiveId) {
+    return $canAccessHiveChannel($user, $hiveId);
+});

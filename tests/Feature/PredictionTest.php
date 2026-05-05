@@ -37,7 +37,9 @@ test('live predictions response supports empty prediction state', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('predictions')
             ->where('hive.id', $hive->id)
-            ->has('predictions', 0)
+            ->where('latestPrediction', null)
+            ->has('historyPredictions.data', 0)
+            ->has('predictionTrends', 0)
         );
 });
 
@@ -103,20 +105,21 @@ test('live predictions response includes enriched process payload', function () 
         ->assertInertia(fn (Assert $page) => $page
             ->component('predictions')
             ->where('hive.id', $hive->id)
-            ->has('predictions', 1)
-            ->where('predictions.0.sensor_log_id', $sensorLog->id)
-            ->where('predictions.0.device_identifier', 'NODE-001')
-            ->where('predictions.0.sensor_values.temp', 33.5)
-            ->where('predictions.0.sensor_values.mq2_value', 250)
-            ->where('predictions.0.model_version', 'synthetic-flat-knn-k7-distance')
-            ->where('predictions.0.warning_state', 'warning')
-            ->where('predictions.0.out_of_distribution', true)
-            ->where('predictions.0.raw_readiness_level', 'ready')
-            ->where('predictions.0.out_of_distribution_features.0.feature', 'temp')
-            ->has('predictions.0.threshold_match_summaries', 1)
-            ->where('predictions.0.threshold_match_summaries.0.sensor_type', 'temp')
-            ->where('predictions.0.threshold_match_summaries.0.level', 'normal')
-            ->where('predictions.0.threshold_match_summaries.0.reading', 33.5)
+            ->where('latestPrediction.sensor_log_id', $sensorLog->id)
+            ->where('latestPrediction.device_identifier', 'NODE-001')
+            ->where('latestPrediction.sensor_values.temp', 33.5)
+            ->where('latestPrediction.sensor_values.mq2_value', 250)
+            ->where('latestPrediction.model_version', 'synthetic-flat-knn-k7-distance')
+            ->where('latestPrediction.warning_state', 'warning')
+            ->where('latestPrediction.out_of_distribution', true)
+            ->where('latestPrediction.raw_readiness_level', 'ready')
+            ->where('latestPrediction.out_of_distribution_features.0.feature', 'temp')
+            ->has('latestPrediction.threshold_match_summaries', 1)
+            ->where('latestPrediction.threshold_match_summaries.0.sensor_type', 'temp')
+            ->where('latestPrediction.threshold_match_summaries.0.level', 'normal')
+            ->where('latestPrediction.threshold_match_summaries.0.reading', 33.5)
+            ->has('historyPredictions.data', 0)
+            ->has('predictionTrends', 1)
         );
 });
 
@@ -174,9 +177,12 @@ test('live predictions response returns the newest results first', function () {
         ->get(route('predictions.live', $hive))
         ->assertInertia(fn (Assert $page) => $page
             ->component('predictions')
-            ->has('predictions', 2)
-            ->where('predictions.0.id', $newerPrediction->id)
-            ->where('predictions.1.id', $olderPrediction->id)
+            ->where('latestPrediction.id', $newerPrediction->id)
+            ->has('historyPredictions.data', 1)
+            ->where('historyPredictions.data.0.id', $olderPrediction->id)
+            ->has('predictionTrends', 2)
+            ->where('predictionTrends.0.id', $olderPrediction->id)
+            ->where('predictionTrends.1.id', $newerPrediction->id)
         );
 });
 

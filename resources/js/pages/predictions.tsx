@@ -441,7 +441,7 @@ function MobilePredictionHistoryList({
                     No older predictions yet.
                 </Card>
             ) : (
-                predictions.map((prediction, index) => (
+                predictions.map((prediction) => (
                     <button
                         key={prediction.id}
                         type="button"
@@ -622,20 +622,6 @@ export default function Predictions({
             realtime.leave(predictionChannelName);
         };
     }, [predictionChannelName]);
-
-    useEffect(() => {
-        if (activeHistoryId === null) {
-            return;
-        }
-
-        if (
-            !historyPredictions.data.some(
-                (prediction) => prediction.id === activeHistoryId,
-            )
-        ) {
-            setActiveHistoryId(null);
-        }
-    }, [activeHistoryId, historyPredictions.data]);
 
     useEffect(() => {
         if (activeHistoryIndex === null || activeHistoryIndex < 0) {
