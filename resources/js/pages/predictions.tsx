@@ -84,6 +84,7 @@ interface Props {
     filters: {
         page: number;
         chart_date: string;
+        default_chart_date: string;
     };
 }
 
@@ -309,12 +310,8 @@ function PredictionWarningAlert({
 
 function PredictionTrendChart({
     data,
-    selectedDate,
-    onDateChange,
 }: {
     data: Props['predictionTrends'];
-    selectedDate: string;
-    onDateChange: (date: string | null) => void;
 }) {
     const [mounted, setMounted] = useState(false);
 
@@ -328,12 +325,6 @@ function PredictionTrendChart({
             eyebrow="HRI Trend"
             title="Recent readiness movement"
             description="Monitor how HRI and raw confidence are changing across the latest live readings."
-            actions={
-                <ChartDateFilter
-                    selectedDate={selectedDate}
-                    onDateChange={onDateChange}
-                />
-            }
         >
             <div className="w-full">
                 {mounted ? (
@@ -421,12 +412,8 @@ function PredictionTrendChart({
 
 function SensorTrendChart({
     data,
-    selectedDate,
-    onDateChange,
 }: {
     data: Props['predictionTrends'];
-    selectedDate: string;
-    onDateChange: (date: string | null) => void;
 }) {
     const [mounted, setMounted] = useState(false);
 
@@ -440,12 +427,6 @@ function SensorTrendChart({
             eyebrow="Conditions Trend"
             title="Environmental context"
             description="Review temperature and humidity shifts alongside readiness changes."
-            actions={
-                <ChartDateFilter
-                    selectedDate={selectedDate}
-                    onDateChange={onDateChange}
-                />
-            }
         >
             <div className="w-full">
                 {mounted ? (
@@ -508,21 +489,33 @@ function SensorTrendChart({
     );
 }
 
-function ChartDateFilter({
+function ChartsFilterBar({
     selectedDate,
+    defaultDate,
     onDateChange,
 }: {
     selectedDate: string;
+    defaultDate: string;
     onDateChange: (date: string | null) => void;
 }) {
     return (
-        <div className="w-full sm:w-auto">
-            <DatePicker
-                className="w-full sm:w-[124px]"
-                value={selectedDate}
-                onChange={onDateChange}
-                defaultValue={selectedDate}
-            />
+        <div className="flex flex-col gap-3 rounded-3xl border border-yellow-100 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div>
+                <p className="text-[10px] font-black tracking-widest text-amber-900/45 uppercase">
+                    Chart Filter
+                </p>
+                <p className="mt-1 text-sm text-amber-700">
+                    Choose one date to update both trend charts together.
+                </p>
+            </div>
+            <div className="w-full sm:w-auto">
+                <DatePicker
+                    className="w-full sm:w-[160px]"
+                    value={selectedDate}
+                    onChange={onDateChange}
+                    defaultValue={defaultDate}
+                />
+            </div>
         </div>
     );
 }
@@ -670,6 +663,9 @@ export default function Predictions({
     const [showHistory, setShowHistory] = useState(filters.page > 1);
     const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
     const [chartDate, setChartDate] = useState(filters.chart_date);
+    const [defaultChartDate, setDefaultChartDate] = useState(
+        filters.default_chart_date,
+    );
     const activeHistoryIndex =
         activeHistoryId === null
             ? null
@@ -688,7 +684,8 @@ export default function Predictions({
 
     useEffect(() => {
         setChartDate(filters.chart_date);
-    }, [filters.chart_date]);
+        setDefaultChartDate(filters.default_chart_date);
+    }, [filters.chart_date, filters.default_chart_date]);
 
     useEffect(() => {
         const resetLiveReload = () => {
@@ -770,7 +767,7 @@ export default function Predictions({
     }, [activeHistoryId, activeHistoryIndex, historyPredictions.data]);
 
     function handleChartDateChange(date: string | null) {
-        const resolved = date ?? filters.chart_date;
+        const resolved = date ?? defaultChartDate;
         setChartDate(resolved);
         router.get(
             route('predictions.live', { hive: hive.id }),
@@ -921,17 +918,19 @@ export default function Predictions({
                             </div>
                         </ChartCard>
 
-                        <div className="grid gap-6 xl:grid-cols-2">
-                            <PredictionTrendChart
-                                data={predictionTrends}
+                        <div className="space-y-6">
+                            <ChartsFilterBar
                                 selectedDate={chartDate}
+                                defaultDate={defaultChartDate}
                                 onDateChange={handleChartDateChange}
                             />
-                            <SensorTrendChart
-                                data={predictionTrends}
-                                selectedDate={chartDate}
-                                onDateChange={handleChartDateChange}
-                            />
+
+                            <div className="grid gap-6 xl:grid-cols-2">
+                                <PredictionTrendChart
+                                    data={predictionTrends}
+                                />
+                                <SensorTrendChart data={predictionTrends} />
+                            </div>
                         </div>
 
                         <ChartCard
@@ -1104,7 +1103,7 @@ export default function Predictions({
                                     )
                                 }
                                 disabled={!hasPrevHistory}
-                                className="h-9 w-9 rounded-xl p-0 text-amber-900 hover:bg-yellow-100 hover:text-amber-900"
+                                className="h-9 w-9 rounded-xl p-0 text-amber-900 transition-none active:scale-100 hover:bg-yellow-100 hover:text-amber-900"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
@@ -1124,7 +1123,7 @@ export default function Predictions({
                                     )
                                 }
                                 disabled={!hasNextHistory}
-                                className="h-9 w-9 rounded-xl p-0 text-amber-900 hover:bg-yellow-100 hover:text-amber-900"
+                                className="h-9 w-9 rounded-xl p-0 text-amber-900 transition-none active:scale-100 hover:bg-yellow-100 hover:text-amber-900"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </Button>

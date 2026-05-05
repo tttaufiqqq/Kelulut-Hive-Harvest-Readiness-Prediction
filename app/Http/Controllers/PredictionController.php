@@ -36,9 +36,8 @@ class PredictionController extends Controller
         $latestPrediction = (clone $baseQuery)
             ->orderByDesc('predictions.prediction_timestamp')
             ->first();
-        $chartDate = $request->date('chart_date')
-            ?? $latestPrediction?->prediction_timestamp
-            ?? now();
+        $defaultChartDate = $latestPrediction?->prediction_timestamp ?? now();
+        $chartDate = $request->date('chart_date') ?? $defaultChartDate;
 
         $historyQuery = (clone $baseQuery)
             ->orderByDesc('predictions.prediction_timestamp');
@@ -71,6 +70,7 @@ class PredictionController extends Controller
             'filters' => [
                 'page' => (int) $request->integer('page', 1),
                 'chart_date' => Carbon::parse($chartDate)->toDateString(),
+                'default_chart_date' => Carbon::parse($defaultChartDate)->toDateString(),
             ],
         ]);
     }
