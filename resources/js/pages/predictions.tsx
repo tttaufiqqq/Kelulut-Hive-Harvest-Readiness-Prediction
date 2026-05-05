@@ -151,6 +151,7 @@ function useAnimatedNumber(value: number, durationMs = 700) {
 
         if (startValue === value) {
             setDisplayValue(value);
+
             return;
         }
 
@@ -736,10 +737,6 @@ export default function Predictions({
     const predictionChannelName = `hive.${hive.id}.predictions`;
     const [showHistory, setShowHistory] = useState(filters.page > 1);
     const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
-    const [chartDate, setChartDate] = useState(filters.chart_date);
-    const [defaultChartDate, setDefaultChartDate] = useState(
-        filters.default_chart_date,
-    );
     const activeHistoryIndex =
         activeHistoryId === null
             ? null
@@ -755,11 +752,6 @@ export default function Predictions({
     const hasNextHistory =
         activeHistoryIndex !== null &&
         activeHistoryIndex < historyPredictions.data.length - 1;
-
-    useEffect(() => {
-        setChartDate(filters.chart_date);
-        setDefaultChartDate(filters.default_chart_date);
-    }, [filters.chart_date, filters.default_chart_date]);
 
     useEffect(() => {
         const resetLiveReload = () => {
@@ -841,8 +833,7 @@ export default function Predictions({
     }, [activeHistoryId, activeHistoryIndex, historyPredictions.data]);
 
     function handleChartDateChange(date: string | null) {
-        const resolved = date ?? defaultChartDate;
-        setChartDate(resolved);
+        const resolved = date ?? filters.default_chart_date;
         router.get(
             route('predictions.live', { hive: hive.id }),
             {
@@ -1001,8 +992,8 @@ export default function Predictions({
 
                         <div className="space-y-6">
                             <ChartsFilterBar
-                                selectedDate={chartDate}
-                                defaultDate={defaultChartDate}
+                                selectedDate={filters.chart_date}
+                                defaultDate={filters.default_chart_date}
                                 onDateChange={handleChartDateChange}
                             />
 
