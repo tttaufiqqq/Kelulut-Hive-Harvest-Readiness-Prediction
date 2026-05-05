@@ -14,6 +14,12 @@ if (empty($expectedSecret) || ! hash_equals($expectedSecret, $providedSecret)) {
     exit('Forbidden');
 }
 
+function failDeploy(string $message, int $httpStatus = 500): never
+{
+    http_response_code($httpStatus);
+    exit($message."\n");
+}
+
 // Install composer dependencies only when composer.lock has changed
 $laravelRoot = dirname(__DIR__);
 $lockHash = md5_file($laravelRoot.'/composer.lock');
@@ -21,7 +27,21 @@ $hashFile = $laravelRoot.'/.composer-lock-hash';
 $previousHash = file_exists($hashFile) ? trim(file_get_contents($hashFile)) : '';
 
 if ($lockHash !== $previousHash) {
-    shell_exec("cd $laravelRoot && /home/urbanale/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1");
+    $composerOutput = [];
+    $composerExitCode = 0;
+    $composerCommand = sprintf(
+        'cd %s && /home/urbanale/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1',
+        escapeshellarg($laravelRoot),
+    );
+
+    exec($composerCommand, $composerOutput, $composerExitCode);
+
+    echo implode("\n", $composerOutput)."\n";
+
+    if ($composerExitCode !== 0) {
+        failDeploy("composer install: FAILED (exit $composerExitCode)");
+    }
+
     file_put_contents($hashFile, $lockHash);
     echo "composer install: OK\n";
 } else {
@@ -45,4 +65,8 @@ $commands = [
 foreach ($commands as [$command, $args]) {
     $status = $kernel->call($command, $args);
     echo "$command: ".($status === 0 ? 'OK' : "FAILED (exit $status)")."\n";
+
+    if ($status !== 0) {
+        failDeploy("$command: FAILED (exit $status)");
+    }
 }

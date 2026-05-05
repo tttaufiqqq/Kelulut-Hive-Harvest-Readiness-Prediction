@@ -36,7 +36,7 @@ class PredictionController extends Controller
         $latestPrediction = (clone $baseQuery)
             ->orderByDesc('predictions.prediction_timestamp')
             ->first();
-        $defaultChartDate = $latestPrediction?->prediction_timestamp ?? now();
+        $defaultChartDate = Carbon::today();
         $chartDate = $request->date('chart_date') ?? $defaultChartDate;
 
         $historyQuery = (clone $baseQuery)

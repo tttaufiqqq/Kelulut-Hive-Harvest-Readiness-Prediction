@@ -5,6 +5,7 @@ use App\Models\IotNode;
 use App\Models\Prediction;
 use App\Models\SensorLog;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -184,6 +185,52 @@ test('live predictions response returns the newest results first', function () {
             ->where('predictionTrends.0.id', $olderPrediction->id)
             ->where('predictionTrends.1.id', $newerPrediction->id)
         );
+});
+
+test('live predictions defaults the chart filter to today even when latest data is from yesterday', function () {
+    Carbon::setTestNow('2026-05-05 14:00:00');
+
+    try {
+        $beekeeper = User::factory()->create();
+        $beekeeper->assignRole('beekeeper');
+        $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
+        $node = IotNode::create([
+            'hive_id' => $hive->id,
+            'device_id' => 'NODE-001',
+            'device_status' => 'active',
+        ]);
+
+        $sensorLog = SensorLog::create([
+            'hive_id' => $hive->id,
+            'device_id' => $node->id,
+            'temp' => 18.5,
+            'humidity' => 91.0,
+            'mq2_value' => 150,
+            'mq3_value' => 95,
+            'mq5_value' => 110,
+            'mq135_value' => 175,
+            'record_timestamp' => Carbon::now()->subDay()->setTime(22, 2),
+        ]);
+
+        Prediction::create([
+            'sensor_log_id' => $sensorLog->id,
+            'readiness_level' => 'not_ready',
+            'hri_value' => 0.25,
+            'confidence_score' => 0.565,
+            'prediction_timestamp' => Carbon::now()->subDay()->setTime(22, 2),
+        ]);
+
+        $this->actingAs($beekeeper)
+            ->get(route('predictions.live', $hive))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('predictions')
+                ->where('filters.chart_date', '2026-05-05')
+                ->where('filters.default_chart_date', '2026-05-05')
+                ->has('predictionTrends', 0)
+            );
+    } finally {
+        Carbon::setTestNow();
+    }
 });
 
 test('beekeeper cannot view another beekeepers live predictions', function () {
