@@ -16,10 +16,5 @@ $canAccessHiveChannel = static function (User $user, int $hiveId): bool {
     return $user->hives()->whereKey($hiveId)->exists();
 };
 
-Broadcast::channel('hive.{hiveId}.sensors', function (User $user, int $hiveId) {
-    return $canAccessHiveChannel($user, $hiveId);
-});
-
-Broadcast::channel('hive.{hiveId}.predictions', function (User $user, int $hiveId) {
-    return $canAccessHiveChannel($user, $hiveId);
-});
+Broadcast::channel('hive.{hiveId}.sensors', $canAccessHiveChannel);
+Broadcast::channel('hive.{hiveId}.predictions', $canAccessHiveChannel);

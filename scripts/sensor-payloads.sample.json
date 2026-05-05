@@ -1,0 +1,112 @@
+[
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 32.8,
+    "humidity": 68,
+    "mq2_value": 180,
+    "mq3_value": 150,
+    "mq5_value": 160,
+    "mq135_value": 190
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 33.5,
+    "humidity": 70,
+    "mq2_value": 250,
+    "mq3_value": 200,
+    "mq5_value": 180,
+    "mq135_value": 220
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 34.6,
+    "humidity": 73,
+    "mq2_value": 260,
+    "mq3_value": 210,
+    "mq5_value": 195,
+    "mq135_value": 230
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 35.4,
+    "humidity": 76,
+    "mq2_value": 340,
+    "mq3_value": 280,
+    "mq5_value": 320,
+    "mq135_value": 360
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 35.1,
+    "humidity": 75,
+    "mq2_value": 325,
+    "mq3_value": 266,
+    "mq5_value": 305,
+    "mq135_value": 342
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 34.8,
+    "humidity": 74,
+    "mq2_value": 310,
+    "mq3_value": 252,
+    "mq5_value": 288,
+    "mq135_value": 330
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 34.4,
+    "humidity": 72,
+    "mq2_value": 292,
+    "mq3_value": 236,
+    "mq5_value": 268,
+    "mq135_value": 308
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 34.0,
+    "humidity": 71,
+    "mq2_value": 274,
+    "mq3_value": 224,
+    "mq5_value": 244,
+    "mq135_value": 286
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 33.6,
+    "humidity": 70,
+    "mq2_value": 256,
+    "mq3_value": 212,
+    "mq5_value": 224,
+    "mq135_value": 264
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 33.2,
+    "humidity": 69,
+    "mq2_value": 238,
+    "mq3_value": 198,
+    "mq5_value": 206,
+    "mq135_value": 244
+  },
+  {
+    "device_id": "NODE-001",
+    "hive_id": 1,
+    "temp": 32.9,
+    "humidity": 68,
+    "mq2_value": 220,
+    "mq3_value": 184,
+    "mq5_value": 188,
+    "mq135_value": 224
+  }
+]

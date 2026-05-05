@@ -57,6 +57,157 @@ type Props = {
     last_seen: string | null;
 };
 
+function formatAnimatedReading(value: number, maxFractionDigits = 1): string {
+    return value.toFixed(maxFractionDigits).replace(/\.0$/, '');
+}
+
+function useAnimatedNumber(value: number, durationMs = 900) {
+    const [displayValue, setDisplayValue] = useState(0);
+    const animationFrameRef = useRef<number | null>(null);
+    const displayedValueRef = useRef(0);
+
+    useEffect(() => {
+        if (animationFrameRef.current !== null) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+
+        const startValue = displayedValueRef.current;
+        const targetValue = value;
+
+        if (startValue === targetValue) {
+            return;
+        }
+
+        const startedAt = performance.now();
+        const tick = (now: number) => {
+            const progress = Math.min((now - startedAt) / durationMs, 1);
+            const easedProgress =
+                progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            const nextValue =
+                startValue + (targetValue - startValue) * easedProgress;
+
+            displayedValueRef.current = nextValue;
+            setDisplayValue(nextValue);
+
+            if (progress < 1) {
+                animationFrameRef.current = requestAnimationFrame(tick);
+            } else {
+                displayedValueRef.current = targetValue;
+                animationFrameRef.current = null;
+                setDisplayValue(targetValue);
+            }
+        };
+
+        animationFrameRef.current = requestAnimationFrame(tick);
+
+        return () => {
+            if (animationFrameRef.current !== null) {
+                cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
+            }
+        };
+    }, [durationMs, value]);
+
+    return displayValue;
+}
+
+function AnimatedMetricValue({
+    value,
+    suffix = '',
+    maxFractionDigits = 0,
+    className = '',
+}: {
+    value: number | null;
+    suffix?: string;
+    maxFractionDigits?: number;
+    className?: string;
+}) {
+    const [displayValue, setDisplayValue] = useState<number | null>(value);
+    const previousValueRef = useRef<number | null>(value);
+    const animationFrameRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (animationFrameRef.current !== null) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+
+        if (value === null) {
+            previousValueRef.current = null;
+            animationFrameRef.current = requestAnimationFrame(() => {
+                setDisplayValue(null);
+                animationFrameRef.current = null;
+            });
+
+            return;
+        }
+
+        if (previousValueRef.current === null) {
+            previousValueRef.current = value;
+            animationFrameRef.current = requestAnimationFrame(() => {
+                setDisplayValue(value);
+                animationFrameRef.current = null;
+            });
+
+            return;
+        }
+
+        const startValue = previousValueRef.current;
+
+        if (startValue === value) {
+            animationFrameRef.current = requestAnimationFrame(() => {
+                setDisplayValue(value);
+                animationFrameRef.current = null;
+            });
+
+            return;
+        }
+
+        previousValueRef.current = value;
+
+        const durationMs = 700;
+        const startedAt = performance.now();
+        const tick = (now: number) => {
+            const progress = Math.min((now - startedAt) / durationMs, 1);
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+            const nextValue =
+                startValue + (value - startValue) * easedProgress;
+
+            setDisplayValue(nextValue);
+
+            if (progress < 1) {
+                animationFrameRef.current = requestAnimationFrame(tick);
+            } else {
+                animationFrameRef.current = null;
+                setDisplayValue(value);
+            }
+        };
+
+        animationFrameRef.current = requestAnimationFrame(tick);
+
+        return () => {
+            if (animationFrameRef.current !== null) {
+                cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
+            }
+        };
+    }, [value]);
+
+    if (displayValue === null) {
+        return <span className={className}>—</span>;
+    }
+
+    return (
+        <span className={`tabular-nums ${className}`}>
+            {formatAnimatedReading(displayValue, maxFractionDigits)}
+            {suffix}
+        </span>
+    );
+}
+
 // ── ArcGauge ────────────────────────────────────────────────────────────
 // Needle drawn pointing right (+x), rotated by -(1-ratio)*180° around pivot.
 // displayValue starts at 0 on mount so the transition plays from zero on load.
@@ -71,20 +222,7 @@ function ArcGauge({
     color: string;
     noData?: boolean;
 }) {
-    const [displayValue, setDisplayValue] = useState(0);
-    const mounted = useRef(false);
-
-    useEffect(() => {
-        if (!mounted.current) {
-            mounted.current = true;
-            const t = setTimeout(() => setDisplayValue(value), 80);
-
-            return () => clearTimeout(t);
-        }
-
-        setDisplayValue(value);
-    }, [value]);
-
+    const displayValue = useAnimatedNumber(value, 950);
     const cx = 60;
     const cy = 58;
     const radius = 46;
@@ -116,8 +254,7 @@ function ArcGauge({
                     strokeDasharray: noData
                         ? `0 ${arcLength}`
                         : `${fill} ${arcLength}`,
-                    transition:
-                        'stroke-dasharray 0.7s ease-out, stroke 0.4s ease',
+                    transition: 'stroke 0.3s ease',
                 }}
             />
             {/* Needle — rotates around pivot, drawn pointing right at rest */}
@@ -125,8 +262,8 @@ function ArcGauge({
                 style={{
                     transformOrigin: `${cx}px ${cy}px`,
                     transform: `rotate(${rotateDeg}deg)`,
-                    transition: 'transform 0.7s ease-out',
                     opacity: noData ? 0 : 1,
+                    transition: 'opacity 0.2s ease',
                 }}
             >
                 <line
@@ -179,19 +316,7 @@ function ProgressBar({
     color: string;
     noData?: boolean;
 }) {
-    const [displayValue, setDisplayValue] = useState(0);
-    const mounted = useRef(false);
-
-    useEffect(() => {
-        if (!mounted.current) {
-            mounted.current = true;
-            const t = setTimeout(() => setDisplayValue(value), 80);
-
-            return () => clearTimeout(t);
-        }
-
-        setDisplayValue(value);
-    }, [value]);
+    const displayValue = useAnimatedNumber(value, 950);
 
     return (
         <>
@@ -206,8 +331,7 @@ function ProgressBar({
                             ? '0%'
                             : `${Math.min(displayValue, 100)}%`,
                         backgroundColor: color,
-                        transition:
-                            'width 0.7s ease-out, background-color 0.4s ease',
+                        transition: 'background-color 0.3s ease',
                     }}
                 />
             </div>
@@ -369,7 +493,7 @@ function SensorHeader({
 }: {
     icon: React.ReactNode;
     label: string;
-    value?: string;
+    value?: React.ReactNode;
     iconBg: string;
     iconColor: string;
 }) {
@@ -389,16 +513,10 @@ function SensorHeader({
                     {label}
                 </span>
             </div>
-            {value && (
-                <motion.span
-                    key={value}
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-xl font-black text-amber-950 sm:text-2xl"
-                >
+            {value !== undefined && value !== null && (
+                <div className="text-xl font-black text-amber-950 sm:text-2xl">
                     {value}
-                </motion.span>
+                </div>
             )}
         </div>
     );
@@ -661,7 +779,11 @@ export default function AdminSensors({
                                     icon={<Thermometer className="h-4 w-4" />}
                                     label="Temperature"
                                     value={
-                                        latest ? `${latest.temperature}°C` : '—'
+                                        <AnimatedMetricValue
+                                            value={latest?.temperature ?? null}
+                                            suffix="°C"
+                                            maxFractionDigits={1}
+                                        />
                                     }
                                     iconBg="bg-amber-100"
                                     iconColor="#B45309"
@@ -692,7 +814,13 @@ export default function AdminSensors({
                                 <SensorHeader
                                     icon={<Droplets className="h-4 w-4" />}
                                     label="Humidity"
-                                    value={latest ? `${latest.humidity}%` : '—'}
+                                    value={
+                                        <AnimatedMetricValue
+                                            value={latest?.humidity ?? null}
+                                            suffix="%"
+                                            maxFractionDigits={1}
+                                        />
+                                    }
                                     iconBg="bg-blue-50"
                                     iconColor="#3B82F6"
                                 />
@@ -775,25 +903,12 @@ export default function AdminSensors({
                                                         {desc}
                                                     </p>
                                                 </div>
-                                                {latest && (
-                                                    <motion.span
-                                                        key={latest[key]}
-                                                        initial={{
-                                                            opacity: 0,
-                                                            y: -4,
-                                                        }}
-                                                        animate={{
-                                                            opacity: 1,
-                                                            y: 0,
-                                                        }}
-                                                        transition={{
-                                                            duration: 0.3,
-                                                        }}
-                                                        className="text-2xl font-black text-amber-950"
-                                                    >
-                                                        {latest[key]}
-                                                    </motion.span>
-                                                )}
+                                                <AnimatedMetricValue
+                                                    value={
+                                                        latest?.[key] ?? null
+                                                    }
+                                                    className="text-2xl font-black text-amber-950"
+                                                />
                                             </div>
                                             <ArcGauge
                                                 value={latest?.[key] ?? 0}
