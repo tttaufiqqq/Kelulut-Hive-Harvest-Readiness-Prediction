@@ -2,10 +2,43 @@
 
 use Illuminate\Contracts\Console\Kernel;
 
-// Load .env manually to get DEPLOY_SECRET
+function readEnvValue(string $envPath, string $key): string
+{
+    if (! file_exists($envPath)) {
+        return '';
+    }
+
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+    if ($lines === false) {
+        return '';
+    }
+
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+
+        if ($trimmed === '' || str_starts_with($trimmed, '#')) {
+            continue;
+        }
+
+        if (str_starts_with($trimmed, 'export ')) {
+            $trimmed = trim(substr($trimmed, 7));
+        }
+
+        [$name, $value] = array_pad(explode('=', $trimmed, 2), 2, null);
+
+        if (trim((string) $name) !== $key || $value === null) {
+            continue;
+        }
+
+        return trim($value, " \t\n\r\0\x0B\"'");
+    }
+
+    return '';
+}
+
 $envPath = dirname(__DIR__).'/.env';
-$env = file_exists($envPath) ? parse_ini_file($envPath) : [];
-$expectedSecret = $env['DEPLOY_SECRET'] ?? '';
+$expectedSecret = readEnvValue($envPath, 'DEPLOY_SECRET');
 
 // Reject if secret missing or doesn't match
 $providedSecret = $_SERVER['HTTP_X_DEPLOY_SECRET'] ?? '';
