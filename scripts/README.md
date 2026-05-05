@@ -23,6 +23,9 @@ This folder contains:
     - ML `/health`
     - ML `/predict`
     - optional `POST /api/sensor-data`
+- `test-prod-broadcast.php`
+  - server-side broadcast diagnostics for production
+  - checks active Laravel Pusher config and whether the built frontend bundle contains the expected Pusher values
 
 ---
 
@@ -58,6 +61,29 @@ Use the ingest check only when:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -MlUrl "https://ml.buzzyhive.urban-alert.com" -SkipSensorIngest
 ```
+
+---
+
+## Production Broadcast Diagnostics
+
+Run this on the production server from the Laravel project root:
+
+```bash
+php scripts/test-prod-broadcast.php
+```
+
+What it checks:
+
+- active Laravel `broadcasting` config is using `pusher`
+- `PUSHER_APP_ID`, `PUSHER_APP_KEY`, `PUSHER_APP_SECRET`, `PUSHER_APP_CLUSTER`, `PUSHER_SCHEME`, and `PUSHER_PORT` are present in runtime config
+- Laravel can instantiate the Pusher broadcaster
+- `public/build` exists and the compiled app bundle contains the active Pusher key and cluster
+
+How to read the result:
+
+- if Laravel config checks fail: production `.env` or config cache is wrong
+- if Laravel config passes but bundle checks fail: the frontend was built without `VITE_PUSHER_APP_KEY` and/or `VITE_PUSHER_APP_CLUSTER`
+- if both pass: the next place to inspect is `/broadcasting/auth` and the browser websocket connection
 
 ---
 
