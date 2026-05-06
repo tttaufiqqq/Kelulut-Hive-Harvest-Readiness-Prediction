@@ -154,7 +154,7 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
             title="Harvest readiness over 30 days"
             description="Compare the daily score with the rolling 7-day average."
         >
-            <div className="w-full">
+            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                 {mounted && (
                     <ResponsiveContainer width="100%" height={220}>
                         <AreaChart

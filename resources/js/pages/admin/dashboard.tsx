@@ -384,10 +384,10 @@ export default function AdminDashboard({
                                 layout="vertical"
                                 data={productivityRanking}
                                 margin={{
-                                    left: 16,
+                                    left: 20,
                                     right: 24,
-                                    top: 4,
-                                    bottom: 4,
+                                    top: 8,
+                                    bottom: 8,
                                 }}
                             >
                                 <CartesianGrid
@@ -401,14 +401,16 @@ export default function AdminDashboard({
                                     tick={{ fontSize: 11, fill: '#92400e' }}
                                     axisLine={false}
                                     tickLine={false}
+                                    tickMargin={8}
                                 />
                                 <YAxis
                                     dataKey="hive_name"
                                     type="category"
-                                    width={80}
+                                    width={92}
                                     tick={{ fontSize: 11, fill: '#92400e' }}
                                     axisLine={false}
                                     tickLine={false}
+                                    tickMargin={8}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -441,10 +443,10 @@ export default function AdminDashboard({
                             <BarChart
                                 data={crossSiteComparison}
                                 margin={{
-                                    left: 0,
-                                    right: 16,
-                                    top: 4,
-                                    bottom: 4,
+                                    left: 12,
+                                    right: 20,
+                                    top: 8,
+                                    bottom: 18,
                                 }}
                             >
                                 <CartesianGrid
@@ -456,6 +458,8 @@ export default function AdminDashboard({
                                     tick={{ fontSize: 11, fill: '#92400e' }}
                                     axisLine={false}
                                     tickLine={false}
+                                    tickMargin={8}
+                                    dy={8}
                                 />
                                 <YAxis
                                     yAxisId="hri"
@@ -464,6 +468,8 @@ export default function AdminDashboard({
                                     tick={{ fontSize: 11, fill: '#92400e' }}
                                     axisLine={false}
                                     tickLine={false}
+                                    width={36}
+                                    tickMargin={8}
                                 />
                                 <YAxis
                                     yAxisId="weight"
@@ -472,6 +478,8 @@ export default function AdminDashboard({
                                     tick={{ fontSize: 11, fill: '#92400e' }}
                                     axisLine={false}
                                     tickLine={false}
+                                    width={44}
+                                    tickMargin={8}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -482,8 +490,9 @@ export default function AdminDashboard({
                                 />
                                 <Legend
                                     wrapperStyle={{
-                                        fontSize: 11,
-                                        paddingTop: 8,
+                                        fontSize: 12,
+                                        paddingTop: 16,
+                                        lineHeight: '20px',
                                     }}
                                 />
                                 <Bar

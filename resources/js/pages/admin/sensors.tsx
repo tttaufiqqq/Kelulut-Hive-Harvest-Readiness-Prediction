@@ -21,7 +21,6 @@ import {
 } from 'recharts';
 import { Card } from '@/components/core/card';
 import { DatePicker } from '@/components/core/date-picker';
-import { ScrollArea } from '@/components/core/scroll-area';
 import { AdminLayout } from '@/layouts/admin-layout';
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -448,7 +447,7 @@ function StatusBadge({ color }: { color: string }) {
 }
 
 // ── Shared LineChart style ────────────────────────────────────────────────
-const AXIS_TICK = { fill: '#78350F', fontSize: 10, fontWeight: 600 };
+const AXIS_TICK = { fill: '#78350F', fontSize: 11, fontWeight: 600 };
 const TOOLTIP_STYLE = {
     backgroundColor: '#FFFBEB',
     border: '1px solid #FEF3C7',
@@ -468,7 +467,15 @@ function SensorLine({
     return (
         <div className="mt-4 w-full min-w-0">
             <ResponsiveContainer width="100%" height={140}>
-                <LineChart data={data}>
+                <LineChart
+                    data={data}
+                    margin={{
+                        top: 8,
+                        right: 8,
+                        left: 8,
+                        bottom: 18,
+                    }}
+                >
                     <CartesianGrid
                         strokeDasharray="3 3"
                         vertical={false}
@@ -481,12 +488,14 @@ function SensorLine({
                         tick={AXIS_TICK}
                         dy={8}
                         interval="preserveStartEnd"
+                        tickMargin={8}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
                         tick={AXIS_TICK}
-                        width={32}
+                        width={36}
+                        tickMargin={8}
                     />
                     <Tooltip contentStyle={TOOLTIP_STYLE} />
                     <Line
@@ -900,91 +909,80 @@ export default function AdminSensors({
                                     Gas Sensors
                                 </span>
                             </div>
-                            <ScrollArea
-                                direction="horizontal"
-                                className="-mx-1 px-1 pb-3"
-                            >
-                                <div className="flex min-w-max gap-4">
-                                    {(
-                                        [
-                                            {
-                                                key: 'mq2' as const,
-                                                label: 'MQ-2',
-                                                desc: 'Smoke / LPG',
-                                            },
-                                            {
-                                                key: 'mq3' as const,
-                                                label: 'MQ-3',
-                                                desc: 'Alcohol / Benzene',
-                                            },
-                                            {
-                                                key: 'mq5' as const,
-                                                label: 'MQ-5',
-                                                desc: 'LPG / Natural Gas',
-                                            },
-                                            {
-                                                key: 'mq135' as const,
-                                                label: 'MQ-135',
-                                                desc: 'Air Quality / CO₂',
-                                            },
-                                        ] as const
-                                    ).map(({ key, label, desc }) => (
-                                        <Card
-                                            key={key}
-                                            className="flex w-[min(18rem,85vw)] flex-shrink-0 flex-col p-4 sm:w-64 sm:p-6"
-                                        >
-                                            <div className="mb-1 flex items-center justify-between">
-                                                <div>
-                                                    <span className="text-xs font-black tracking-widest text-amber-900/60 uppercase">
-                                                        {label}
-                                                    </span>
-                                                    <p className="mt-0.5 text-[10px] font-medium text-amber-900/40">
-                                                        {desc}
-                                                    </p>
-                                                </div>
-                                                <AnimatedMetricValue
-                                                    value={
-                                                        normalizedLatest?.[
-                                                            key
-                                                        ] ?? null
-                                                    }
-                                                    className="text-2xl font-black text-amber-950"
-                                                />
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                {(
+                                    [
+                                        {
+                                            key: 'mq2' as const,
+                                            label: 'MQ-2',
+                                            desc: 'Smoke / LPG',
+                                        },
+                                        {
+                                            key: 'mq3' as const,
+                                            label: 'MQ-3',
+                                            desc: 'Alcohol / Benzene',
+                                        },
+                                        {
+                                            key: 'mq5' as const,
+                                            label: 'MQ-5',
+                                            desc: 'LPG / Natural Gas',
+                                        },
+                                        {
+                                            key: 'mq135' as const,
+                                            label: 'MQ-135',
+                                            desc: 'Air Quality / CO₂',
+                                        },
+                                    ] as const
+                                ).map(({ key, label, desc }) => (
+                                    <Card
+                                        key={key}
+                                        className="flex h-full min-w-0 flex-col p-4 sm:p-6"
+                                    >
+                                        <div className="mb-1 flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <span className="text-xs font-black tracking-widest text-amber-900/60 uppercase">
+                                                    {label}
+                                                </span>
+                                                <p className="mt-0.5 text-[10px] font-medium text-amber-900/40">
+                                                    {desc}
+                                                </p>
                                             </div>
-                                            <ArcGauge
+                                            <AnimatedMetricValue
                                                 value={
                                                     normalizedLatest?.[key] ??
-                                                    0
-                                                }
-                                                max={MQ_GAUGE_MAX}
-                                                color={
-                                                    normalizedLatest?.[key] !=
                                                     null
-                                                        ? mqColor(
-                                                              normalizedLatest[
-                                                                  key
-                                                              ],
-                                                          )
-                                                        : '#FEF3C7'
                                                 }
-                                                noData={!normalizedLatest}
+                                                className="shrink-0 text-2xl font-black text-amber-950"
                                             />
-                                            {normalizedLatest?.[key] !=
-                                                null && (
-                                                <StatusBadge
-                                                    color={mqColor(
-                                                        normalizedLatest[key],
-                                                    )}
-                                                />
-                                            )}
-                                            <SensorLine
-                                                data={normalizedHistory}
-                                                dataKey={key}
+                                        </div>
+                                        <ArcGauge
+                                            value={normalizedLatest?.[key] ?? 0}
+                                            max={MQ_GAUGE_MAX}
+                                            color={
+                                                normalizedLatest?.[key] != null
+                                                    ? mqColor(
+                                                          normalizedLatest[
+                                                              key
+                                                          ],
+                                                      )
+                                                    : '#FEF3C7'
+                                            }
+                                            noData={!normalizedLatest}
+                                        />
+                                        {normalizedLatest?.[key] != null && (
+                                            <StatusBadge
+                                                color={mqColor(
+                                                    normalizedLatest[key],
+                                                )}
                                             />
-                                        </Card>
-                                    ))}
-                                </div>
-                            </ScrollArea>
+                                        )}
+                                        <SensorLine
+                                            data={normalizedHistory}
+                                            dataKey={key}
+                                        />
+                                    </Card>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
