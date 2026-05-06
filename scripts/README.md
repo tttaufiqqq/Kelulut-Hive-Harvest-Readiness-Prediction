@@ -24,7 +24,7 @@ This folder contains:
     - ML `/predict`
     - optional `POST /api/sensor-data`
 - `test-prod-telegram-ready.ps1`
-  - dev-PC runner for the internal production Telegram diagnostic endpoint
+  - dev-PC runner for the internal Telegram diagnostic endpoint
   - supports both real-ML `full_pipeline` checks and forced `synthetic_ready` alert checks
 - `test-prod-broadcast.php`
   - server-side broadcast diagnostics for production
@@ -90,17 +90,56 @@ How to read the result:
 
 ---
 
-## Production Telegram Diagnostic
+## Telegram Diagnostic From A Dev PC
 
 This flow is internal-only and requires the `X-Test-Secret` header backed by `TELEGRAM_TEST_SECRET`.
 
-Run it from a Windows dev PC:
+Route behavior:
+
+- `POST /api/internal/test-telegram-ready` always stores a real `sensor_logs` row first so the diagnostic run is traceable.
+- `mode=full_pipeline` calls the real ML service, persists the resulting prediction, and returns:
+  - `201` when the final guarded `readiness_level` is `ready`
+  - `409` when ML runs but the final guarded readiness is not `ready`
+  - `503` when ML is unavailable or fails before a prediction can be created
+- `mode=synthetic_ready` skips ML, creates a clearly marked synthetic prediction (`prediction_source=synthetic_diagnostic`), and returns `201` after queueing the normal Telegram alert job.
+
+### Local Run From A Dev PC
+
+Before running the script locally:
+
+- make sure `php artisan serve` is running
+- make sure the ML app is running if you want to test `full_pipeline`
+- set `TELEGRAM_TEST_SECRET` in local `.env`
+- use a real local `device_id` + `hive_id` pair whose `iot_nodes.device_status` is `active`
+- run `php artisan queue:work` if you want the queued Telegram job to actually execute after the HTTP request
+
+Test the safe forced-ready path locally:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "http://127.0.0.1:8000" -TestSecret "<local-telegram-test-secret>" -DeviceId "NODE-DEV-001" -HiveId 5 -Mode synthetic_ready
+```
+
+Test the real local ML path:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "http://127.0.0.1:8000" -TestSecret "<local-telegram-test-secret>" -DeviceId "NODE-DEV-001" -HiveId 5 -Mode full_pipeline
+```
+
+What success means locally:
+
+- `synthetic_ready` success means the local endpoint forced a diagnostic-only ready prediction and queued `SendTelegramAlert`
+- `full_pipeline` success means the local ML service produced a final guarded `ready` prediction and queued `SendTelegramAlert`
+- if `queue:work` is running and `TELEGRAM_BOT_TOKEN` points to a real bot, you should also see the Telegram message delivered to the configured chat
+
+### Production Run From A Dev PC
+
+Run the safe forced-ready production path first:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -TestSecret "<telegram-test-secret>" -DeviceId "NODE-001" -HiveId 1 -Mode synthetic_ready
 ```
 
-Run the real ML path:
+Then run the real production ML path:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -TestSecret "<telegram-test-secret>" -DeviceId "NODE-001" -HiveId 1 -Mode full_pipeline
@@ -112,16 +151,14 @@ Optional ML override:
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -MlUrl "https://ml.buzzyhive.urban-alert.com" -TestSecret "<telegram-test-secret>" -DeviceId "NODE-001" -HiveId 1 -Mode full_pipeline
 ```
 
-Route behavior:
+Use the production script only when:
 
-- `POST /api/internal/test-telegram-ready` always stores a real `sensor_logs` row first so the diagnostic run is traceable.
-- `mode=full_pipeline` calls the real ML service, persists the resulting prediction, and returns:
-  - `201` when the final guarded `readiness_level` is `ready`
-  - `409` when ML runs but the final guarded readiness is not `ready`
-  - `503` when ML is unavailable or fails before a prediction can be created
-- `mode=synthetic_ready` skips ML, creates a clearly marked synthetic prediction (`prediction_source=synthetic_diagnostic`), and returns `201` after queueing the normal Telegram alert job.
+- the `DeviceId` exists in production
+- that device is assigned to the provided `HiveId`
+- the node is active in production
+- `TELEGRAM_TEST_SECRET` is configured in production
 
-What success means:
+What success means in production:
 
 - `full_pipeline` success means production ML produced a final guarded `ready` prediction and Laravel queued `SendTelegramAlert`.
 - `synthetic_ready` success means the endpoint forced a diagnostic-only ready prediction and Laravel queued `SendTelegramAlert` without relying on ML output.

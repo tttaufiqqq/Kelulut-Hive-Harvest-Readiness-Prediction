@@ -27,17 +27,21 @@ class SendTelegramAlert implements ShouldQueue
             return;
         }
 
-        $hive = $prediction->sensorLog->hive;
+        $telegram->sendMessage($user->telegram_id, $this->buildMessage($prediction));
+    }
+
+    private function buildMessage(Prediction $prediction): string
+    {
+        $hiveName = htmlspecialchars((string) $prediction->sensorLog?->hive?->name, ENT_QUOTES, 'UTF-8');
         $score = round($prediction->confidence_score * 100);
         $time = $prediction->prediction_timestamp->format('d M Y, H:i');
 
-        $message = "<b>BuzzyHive Alert</b>\n\n"
-            ."Hive: <b>{$hive->name}</b>\n"
-            ."Status: <b>Ready to Harvest</b>\n"
-            ."Confidence: {$score}%\n"
-            ."Time: {$time}\n\n"
-            .'Your kelulut hive is ready for harvesting!';
-
-        $telegram->sendMessage($user->telegram_id, $message);
+        return "<b>BuzzyHive Harvest Alert</b>\n\n"
+            ."<b>{$hiveName}</b> is ready for harvesting.\n\n"
+            ."<b>Hive</b>: {$hiveName}\n"
+            ."<b>Status</b>: Ready to Harvest\n"
+            ."<b>Confidence</b>: {$score}%\n"
+            ."<b>Predicted At</b>: {$time}\n\n"
+            .'Suggested action: Inspect the hive and plan harvesting soon.';
     }
 }
