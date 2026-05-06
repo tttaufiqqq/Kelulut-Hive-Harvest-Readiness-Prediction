@@ -54,8 +54,20 @@ class PredictionRunResult
             'raw_readiness_level' => $this->prediction?->raw_readiness_level,
             'warning_state' => $this->prediction?->warning_state,
             'guardrail_action' => $this->prediction?->guardrail_action,
+            'prediction_source' => $this->predictionSource(),
             'telegram_dispatch' => $this->telegramDispatch,
             'failure_reason' => $this->failureReason,
         ];
+    }
+
+    public function predictionSource(): ?string
+    {
+        if (! $this->prediction) {
+            return null;
+        }
+
+        return str_starts_with((string) $this->prediction->model_version, 'synthetic_diagnostic')
+            ? 'synthetic_diagnostic'
+            : 'ml_pipeline';
     }
 }

@@ -60,12 +60,14 @@ class SensorController extends Controller
         $this->dispatchSensorReadingCreated($log);
         $this->matchThresholds($log, $data);
 
-        if ($data['mode'] !== 'full_pipeline') {
+        if ($data['mode'] === 'synthetic_ready') {
+            $result = $this->mlService->createSyntheticReadyPrediction($log);
+
             return response()->json([
-                'message' => 'Internal diagnostic sensor log stored. Synthetic prediction wiring will be added in the next phase.',
+                'message' => 'Internal diagnostic synthetic-ready run created a marked ready prediction and queued the Telegram alert job.',
                 'mode' => $data['mode'],
-                'sensor_log_id' => $log->id,
-            ], 202);
+                ...$this->formatPredictionRunResult($result),
+            ], 201);
         }
 
         $result = $this->mlService->runPrediction($log);
