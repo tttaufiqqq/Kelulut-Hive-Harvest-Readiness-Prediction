@@ -503,16 +503,13 @@ export default function DevicesIndex({
                         options={STATUS_OPTIONS}
                         error={createForm.errors.device_status}
                     />
-                    <Input
+                    <DatePickerField
                         label="Installation Date"
-                        type="date"
-                        value={createForm.data.installation_date}
-                        onChange={(e) =>
-                            createForm.setData(
-                                'installation_date',
-                                e.target.value,
-                            )
+                        value={createForm.data.installation_date || null}
+                        onChange={(v) =>
+                            createForm.setData('installation_date', v ?? '')
                         }
+                        maxDate="today"
                         error={createForm.errors.installation_date}
                     />
                     <DatePickerField
@@ -524,12 +521,12 @@ export default function DevicesIndex({
                         maxDate="today"
                         error={createForm.errors.last_maintenance_date}
                     />
-                    <div className="flex gap-3 pt-2">
+                    <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
                         <Button
                             type="button"
                             variant="ghost"
                             onClick={close}
-                            className="flex-1"
+                            className="w-full"
                         >
                             Cancel
                         </Button>
@@ -537,7 +534,7 @@ export default function DevicesIndex({
                             type="submit"
                             variant="primary"
                             disabled={createForm.processing}
-                            className="flex-1"
+                            className="w-full"
                         >
                             {createForm.processing
                                 ? 'Registering...'
@@ -576,16 +573,13 @@ export default function DevicesIndex({
                             options={STATUS_OPTIONS}
                             error={editForm.errors.device_status}
                         />
-                        <Input
+                        <DatePickerField
                             label="Installation Date"
-                            type="date"
-                            value={editForm.data.installation_date}
-                            onChange={(e) =>
-                                editForm.setData(
-                                    'installation_date',
-                                    e.target.value,
-                                )
+                            value={editForm.data.installation_date || null}
+                            onChange={(v) =>
+                                editForm.setData('installation_date', v ?? '')
                             }
+                            maxDate="today"
                             error={editForm.errors.installation_date}
                         />
                         <DatePickerField
@@ -600,12 +594,12 @@ export default function DevicesIndex({
                             maxDate="today"
                             error={editForm.errors.last_maintenance_date}
                         />
-                        <div className="flex gap-3 pt-2">
+                        <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
                             <Button
                                 type="button"
                                 variant="ghost"
                                 onClick={close}
-                                className="flex-1"
+                                className="w-full"
                             >
                                 Cancel
                             </Button>
@@ -613,7 +607,7 @@ export default function DevicesIndex({
                                 type="submit"
                                 variant="primary"
                                 disabled={editForm.processing}
-                                className="flex-1"
+                                className="w-full"
                             >
                                 {editForm.processing
                                     ? 'Saving...'

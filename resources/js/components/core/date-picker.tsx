@@ -249,6 +249,43 @@ export function DatePickerField({
     const triggerRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
+    const updateMenuStyle = () => {
+        if (!triggerRef.current || typeof window === 'undefined') {
+            return;
+        }
+
+        const rect = triggerRef.current.getBoundingClientRect();
+        const viewportPadding = 12;
+        const minWidth = 288;
+        const width = Math.min(
+            Math.max(rect.width, minWidth),
+            window.innerWidth - viewportPadding * 2,
+        );
+        const estimatedHeight = 320;
+        const belowTop = rect.bottom + 8;
+        const fitsBelow =
+            belowTop + estimatedHeight <=
+            window.innerHeight - viewportPadding;
+        const top = fitsBelow
+            ? belowTop
+            : Math.max(viewportPadding, rect.top - estimatedHeight - 8);
+        const left = Math.min(
+            Math.max(viewportPadding, rect.left),
+            Math.max(
+                viewportPadding,
+                window.innerWidth - width - viewportPadding,
+            ),
+        );
+
+        setMenuStyle({
+            position: 'fixed',
+            top,
+            left,
+            width,
+            zIndex: 9999,
+        });
+    };
+
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             const t = e.target as Node;
@@ -265,16 +302,27 @@ export function DatePickerField({
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    useEffect(() => {
+        if (!open || typeof window === 'undefined') {
+            return;
+        }
+
+        updateMenuStyle();
+
+        const syncMenuPosition = () => updateMenuStyle();
+
+        window.addEventListener('resize', syncMenuPosition);
+        window.addEventListener('scroll', syncMenuPosition, true);
+
+        return () => {
+            window.removeEventListener('resize', syncMenuPosition);
+            window.removeEventListener('scroll', syncMenuPosition, true);
+        };
+    }, [open]);
+
     const handleOpen = () => {
-        if (!open && triggerRef.current) {
-            const rect = triggerRef.current.getBoundingClientRect();
-            setMenuStyle({
-                position: 'fixed',
-                top: rect.bottom + 4,
-                left: rect.left,
-                width: Math.max(rect.width, 288),
-                zIndex: 9999,
-            });
+        if (!open) {
+            updateMenuStyle();
         }
 
         setOpen((o) => !o);
@@ -353,17 +401,17 @@ export function DatePickerField({
                 type="button"
                 onClick={handleOpen}
                 className={cn(
-                    'w-full rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5',
-                    'flex items-center gap-2 text-sm transition-all focus:outline-none',
+                    'flex min-h-12 w-full items-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-left text-sm transition-all focus:outline-none',
                     open && 'ring-2 ring-yellow-400/50',
                     error && 'border-red-400 focus:ring-red-400/50',
                 )}
             >
                 <Calendar className="h-4 w-4 flex-shrink-0 text-amber-900/40" />
                 <span
-                    className={
+                    className={cn(
+                        'truncate',
                         displayLabel ? 'text-amber-950' : 'text-amber-900/40'
-                    }
+                    )}
                 >
                     {displayLabel ?? placeholder}
                 </span>
@@ -377,7 +425,7 @@ export function DatePickerField({
                         <div
                             ref={menuRef}
                             style={menuStyle}
-                            className="rounded-2xl border border-yellow-100 bg-white p-4 shadow-xl"
+                            className="max-w-[calc(100vw-1.5rem)] rounded-2xl border border-yellow-100 bg-white p-4 shadow-xl"
                         >
                             <div className="mb-4 flex items-center justify-between">
                                 <button

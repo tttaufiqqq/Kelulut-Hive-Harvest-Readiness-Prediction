@@ -706,12 +706,12 @@ function AnimatedReadinessBadge({ level }: { level: string }) {
 
     return (
         <motion.div
-            className="inline-block"
+            className="inline-flex rounded-full"
             animate={{
-                boxShadow: [
-                    '0 0 0px rgba(22,163,74,0.5)',
-                    '0 0 18px rgba(22,163,74,0.55)',
-                    '0 0 0px rgba(22,163,74,0.5)',
+                filter: [
+                    'drop-shadow(0 0 0 rgba(22,163,74,0.0))',
+                    'drop-shadow(0 0 12px rgba(22,163,74,0.38)) drop-shadow(0 0 20px rgba(110,231,183,0.26))',
+                    'drop-shadow(0 0 0 rgba(22,163,74,0.0))',
                 ],
             }}
             transition={{
