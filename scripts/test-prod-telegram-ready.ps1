@@ -39,11 +39,54 @@ function ConvertFrom-JsonSafe {
         return $null
     }
 
-    try {
-        return $Text | ConvertFrom-Json -Depth 10
-    } catch {
-        return $Text
+    $normalizedText = $Text.Trim()
+    if ($normalizedText.Length -gt 0 -and [int][char] $normalizedText[0] -eq 65279) {
+        $normalizedText = $normalizedText.Substring(1)
     }
+
+    try {
+        return $normalizedText | ConvertFrom-Json -Depth 10
+    } catch {
+        return $normalizedText
+    }
+}
+
+function Get-PropertyValue {
+    param(
+        $Object,
+        [string] $PropertyName
+    )
+
+    if ($null -eq $Object) {
+        return $null
+    }
+
+    if ($Object -is [System.Collections.IDictionary]) {
+        if ($Object.Contains($PropertyName)) {
+            return $Object[$PropertyName]
+        }
+
+        return $null
+    }
+
+    if ($Object -is [string]) {
+        $trimmed = $Object.Trim()
+        if ($trimmed.StartsWith("{") -or $trimmed.StartsWith("[")) {
+            $parsed = ConvertFrom-JsonSafe -Text $trimmed
+            if ($parsed -ne $Object) {
+                return Get-PropertyValue -Object $parsed -PropertyName $PropertyName
+            }
+        }
+
+        return $null
+    }
+
+    $property = $Object.PSObject.Properties[$PropertyName]
+    if ($null -eq $property) {
+        return $null
+    }
+
+    return $property.Value
 }
 
 function Invoke-JsonPost {
@@ -68,24 +111,30 @@ function Invoke-JsonPost {
         return [pscustomobject]@{
             StatusCode = [int] $response.StatusCode
             Body = ConvertFrom-JsonSafe -Text $response.Content
+            RawBody = $response.Content
         }
     } catch {
+        $exceptionMessage = Get-PropertyValue -Object $_.Exception -PropertyName "Message"
+
         if (-not $_.Exception.Response) {
             return [pscustomobject]@{
                 StatusCode = 0
                 Body = [pscustomobject]@{
                     message = "Request failed before an HTTP response was returned."
-                    failure_reason = $_.Exception.Message
+                    failure_reason = $(if ($exceptionMessage) { $exceptionMessage } else { [string] $_ })
                 }
+                RawBody = $null
             }
         }
 
         $statusCode = [int] $_.Exception.Response.StatusCode
-        $bodyText = $_.ErrorDetails.Message
+        $errorDetailsMessage = Get-PropertyValue -Object $_.ErrorDetails -PropertyName "Message"
+        $bodyText = if ($errorDetailsMessage) { $errorDetailsMessage } else { [string] $_ }
 
         return [pscustomobject]@{
             StatusCode = $statusCode
             Body = ConvertFrom-JsonSafe -Text $bodyText
+            RawBody = $bodyText
         }
     }
 }
@@ -161,8 +210,11 @@ function Select-FullPipelinePayload {
             continue
         }
 
-        if ($body.readiness_level -eq "ready") {
-            Write-Host ("PRECHECK candidate={0} readiness={1} guardrail={2}" -f $candidate.name, $body.readiness_level, $body.guardrail_action) -ForegroundColor Green
+        $readinessLevel = Get-ObjectValue -Object $body -PropertyName "readiness_level"
+        $guardrailAction = Get-ObjectValue -Object $body -PropertyName "guardrail_action"
+
+        if ($readinessLevel -eq "ready") {
+            Write-Host ("PRECHECK candidate={0} readiness={1} guardrail={2}" -f $candidate.name, (Format-Value -Value $readinessLevel), (Format-Value -Value $guardrailAction)) -ForegroundColor Green
 
             return [pscustomobject]@{
                 Candidate = $candidate
@@ -170,7 +222,7 @@ function Select-FullPipelinePayload {
             }
         }
 
-        Write-Host ("PRECHECK candidate={0} readiness={1} guardrail={2}" -f $candidate.name, $body.readiness_level, $body.guardrail_action) -ForegroundColor DarkYellow
+        Write-Host ("PRECHECK candidate={0} readiness={1} guardrail={2}" -f $candidate.name, (Format-Value -Value $readinessLevel), (Format-Value -Value $guardrailAction)) -ForegroundColor DarkYellow
     }
 
     Write-Host ("WARN no preflight candidate returned ready; using fallback candidate {0}" -f $fallback.name) -ForegroundColor Yellow
@@ -197,16 +249,7 @@ function Get-ObjectValue {
         [string] $PropertyName
     )
 
-    if ($null -eq $Object) {
-        return $null
-    }
-
-    $property = $Object.PSObject.Properties[$PropertyName]
-    if ($null -eq $property) {
-        return $null
-    }
-
-    return $property.Value
+    return Get-PropertyValue -Object $Object -PropertyName $PropertyName
 }
 
 if ([string]::IsNullOrWhiteSpace($TestSecret)) {
@@ -267,6 +310,19 @@ $summary = "{0} mode={1} http={2} sensor_log_id={3} prediction_id={4} readiness=
 
 Write-Host $summary -ForegroundColor ($(if ($passed) { "Green" } else { "Red" }))
 Write-Host ("DETAIL mode={0} candidate={1} preflight={2} message={3}" -f $Mode, $selection.Candidate.name, $selection.Preflight, (Format-Value -Value (Get-ObjectValue -Object $body -PropertyName "message")))
+
+$hasParsedSummaryFields = @(
+    (Get-ObjectValue -Object $body -PropertyName "sensor_log_id"),
+    (Get-ObjectValue -Object $body -PropertyName "prediction_id"),
+    (Get-ObjectValue -Object $body -PropertyName "readiness_level"),
+    (Get-ObjectValue -Object $body -PropertyName "prediction_source"),
+    (Get-ObjectValue -Object $body -PropertyName "telegram_dispatch")
+) | Where-Object { $null -ne $_ }
+$hasParsedSummaryFields = @($hasParsedSummaryFields)
+
+if ($response.RawBody -and $hasParsedSummaryFields.Count -eq 0) {
+    Write-Host ("DETAIL raw_response={0}" -f $response.RawBody)
+}
 
 if (-not $passed -and (Get-ObjectValue -Object $body -PropertyName "failure_reason")) {
     Write-Host ("DETAIL failure_reason={0}" -f (Get-ObjectValue -Object $body -PropertyName "failure_reason")) -ForegroundColor Red
