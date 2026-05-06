@@ -49,7 +49,7 @@ export default function AcceptInvite({
             }
             description="Create your password to get started."
         >
-            <Head title="Set Up Your Account — BuzzyHive 2.0" />
+            <Head title="Set Up Your Account" />
 
             <form onSubmit={submit} className="space-y-5">
                 <AuthFormFieldBlock label="Email">

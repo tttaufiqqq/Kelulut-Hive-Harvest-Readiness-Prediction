@@ -79,7 +79,7 @@ export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
 
     return (
         <AdminLayout>
-            <Head title="Thesis — Admin BuzzyHive 2.0" />
+            <Head title="Thesis — Admin" />
 
             <div className="space-y-6">
                 <div>

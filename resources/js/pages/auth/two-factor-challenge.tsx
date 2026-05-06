@@ -51,7 +51,7 @@ export default function TwoFactorChallenge() {
             title={authConfigContent.title}
             description={authConfigContent.description}
         >
-            <Head title="Two-Factor Authentication — BuzzyHive 2.0" />
+            <Head title="Two-Factor Authentication" />
 
             <Form
                 {...store()}

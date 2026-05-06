@@ -709,7 +709,7 @@ export default function AdminSensors({
 
     return (
         <AdminLayout>
-            <Head title="Sensor Readings — BuzzyHive 2.0" />
+            <Head title="Sensor Readings" />
 
             <div className="space-y-6">
                 {/* ── Controls ────────────────────────────────────── */}

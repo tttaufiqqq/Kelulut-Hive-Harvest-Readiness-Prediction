@@ -19,7 +19,7 @@ export default function ResetPassword({ token, email }: Props) {
             title="Reset Password"
             description="Enter your new password below."
         >
-            <Head title="Reset Password — BuzzyHive 2.0" />
+            <Head title="Reset Password" />
 
             <Form
                 {...update()}

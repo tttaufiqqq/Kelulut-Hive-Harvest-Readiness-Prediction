@@ -43,7 +43,7 @@ export default function Login({
             }
             description="Access your apiary dashboard and hive insights."
         >
-            <Head title="Log in — BuzzyHive 2.0" />
+            <Head title="Log in" />
 
             {status && (
                 <div className="mb-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">

@@ -236,7 +236,7 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
 export default function Reporting({ hriGauges, readinessTrends }: Props) {
     return (
         <AuthenticatedLayout>
-            <Head title="Reporting — BuzzyHive 2.0" />
+            <Head title="Reporting" />
 
             <div className="mx-auto max-w-6xl space-y-6 px-6 py-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

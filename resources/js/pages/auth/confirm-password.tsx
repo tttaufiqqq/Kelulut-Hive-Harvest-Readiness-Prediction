@@ -21,7 +21,7 @@ export default function ConfirmPassword() {
             }
             description="Please confirm your password before continuing."
         >
-            <Head title="Confirm Password — BuzzyHive 2.0" />
+            <Head title="Confirm Password" />
 
             <Form {...store()} resetOnSuccess={['password']}>
                 {({ processing }) => (

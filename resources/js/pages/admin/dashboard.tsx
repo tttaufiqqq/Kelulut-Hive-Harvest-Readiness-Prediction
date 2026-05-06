@@ -173,7 +173,7 @@ export default function AdminDashboard({
 
     return (
         <AdminLayout>
-            <Head title="Admin Dashboard — BuzzyHive 2.0" />
+            <Head title="Admin Dashboard" />
 
             <div className="space-y-6">
                 {/* ── Action Cards ───────────────────────────────────────── */}

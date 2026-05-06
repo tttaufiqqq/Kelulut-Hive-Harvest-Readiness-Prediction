@@ -15,7 +15,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             title="Forgot Password"
             description="Enter your email to receive a password reset link."
         >
-            <Head title="Forgot Password — BuzzyHive 2.0" />
+            <Head title="Forgot Password" />
 
             {status && (
                 <Alert className="mb-6 rounded-2xl border-green-200 bg-green-50 text-green-700">

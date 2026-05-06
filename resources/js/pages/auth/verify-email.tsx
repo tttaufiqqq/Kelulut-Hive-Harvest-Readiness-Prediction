@@ -13,7 +13,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
             title="Verify Email"
             description="Please verify your email address by clicking the link we sent you."
         >
-            <Head title="Email Verification — BuzzyHive 2.0" />
+            <Head title="Email Verification" />
 
             {status === 'verification-link-sent' && (
                 <Alert className="mb-6 rounded-2xl border-green-200 bg-green-50 text-green-700">
