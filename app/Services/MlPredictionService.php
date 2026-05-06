@@ -15,6 +15,11 @@ class MlPredictionService
 {
     public function predict(SensorLog $log): ?Prediction
     {
+        return $this->runPrediction($log)->prediction;
+    }
+
+    public function runPrediction(SensorLog $log): PredictionRunResult
+    {
         try {
             $payload = [
                 'mq2_value' => $log->mq2_value,
@@ -30,7 +35,7 @@ class MlPredictionService
             if (! $response->successful()) {
                 Log::warning('ML API error', ['status' => $response->status(), 'sensor_log_id' => $log->id]);
 
-                return null;
+                return PredictionRunResult::mlUnavailable($log->id, 'ml_http_'.$response->status());
             }
 
             $data = $response->json();
@@ -38,7 +43,7 @@ class MlPredictionService
             if (isset($data['error'])) {
                 Log::warning('ML API returned error', ['error' => $data['error'], 'sensor_log_id' => $log->id]);
 
-                return null;
+                return PredictionRunResult::mlUnavailable($log->id, 'ml_error_response');
             }
 
             $warningState = $data['warning_state'] ?? 'normal';
@@ -84,9 +89,7 @@ class MlPredictionService
                 $prediction->prediction_timestamp->toIso8601String(),
             );
 
-            if ($prediction->readiness_level === 'ready') {
-                SendTelegramAlert::dispatch($prediction->id);
-            }
+            $telegramDispatch = $this->queueReadyAlert($prediction);
 
             // ── HRI Summary update (non-blocking) ────────────────────────
             try {
@@ -121,14 +124,25 @@ class MlPredictionService
                 ]);
             }
 
-            return $prediction;
+            return PredictionRunResult::predictionCreated($prediction, $telegramDispatch);
         } catch (\Throwable $e) {
             Log::warning('ML prediction failed', [
                 'error' => $e->getMessage(),
                 'sensor_log_id' => $log->id,
             ]);
 
-            return null;
+            return PredictionRunResult::mlUnavailable($log->id, 'ml_exception');
         }
+    }
+
+    private function queueReadyAlert(Prediction $prediction): string
+    {
+        if ($prediction->readiness_level !== 'ready') {
+            return 'not_ready';
+        }
+
+        SendTelegramAlert::dispatch($prediction->id);
+
+        return 'queued';
     }
 }

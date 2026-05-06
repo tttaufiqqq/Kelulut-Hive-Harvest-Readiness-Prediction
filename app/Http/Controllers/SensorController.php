@@ -6,6 +6,7 @@ use App\Events\SensorReadingCreated;
 use App\Models\IotNode;
 use App\Models\SensorLog;
 use App\Services\MlPredictionService;
+use App\Services\PredictionRunResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -59,12 +60,37 @@ class SensorController extends Controller
         $this->dispatchSensorReadingCreated($log);
         $this->matchThresholds($log, $data);
 
-        // Internal-only endpoint: Phase 2 establishes guarded ingress and traceable logs.
+        if ($data['mode'] !== 'full_pipeline') {
+            return response()->json([
+                'message' => 'Internal diagnostic sensor log stored. Synthetic prediction wiring will be added in the next phase.',
+                'mode' => $data['mode'],
+                'sensor_log_id' => $log->id,
+            ], 202);
+        }
+
+        $result = $this->mlService->runPrediction($log);
+
+        if (! $result->hasPrediction()) {
+            return response()->json([
+                'message' => 'Internal diagnostic full-pipeline run could not create a prediction because ML was unavailable.',
+                'mode' => $data['mode'],
+                ...$this->formatPredictionRunResult($result),
+            ], 503);
+        }
+
+        if (! $result->isReady()) {
+            return response()->json([
+                'message' => 'Internal diagnostic full-pipeline run created a prediction, but the final guarded readiness was not ready.',
+                'mode' => $data['mode'],
+                ...$this->formatPredictionRunResult($result),
+            ], 409);
+        }
+
         return response()->json([
-            'message' => 'Internal diagnostic sensor log stored. Prediction handling will be wired in the next phase.',
+            'message' => 'Internal diagnostic full-pipeline run created a ready prediction and queued the Telegram alert job.',
             'mode' => $data['mode'],
-            'sensor_log_id' => $log->id,
-        ], 202);
+            ...$this->formatPredictionRunResult($result),
+        ], 201);
     }
 
     private function hasValidInternalTestSecret(Request $request): bool
@@ -161,5 +187,10 @@ class SensorController extends Controller
                 'sensor_log_id' => $log->id,
             ]);
         }
+    }
+
+    private function formatPredictionRunResult(PredictionRunResult $result): array
+    {
+        return $result->toArray();
     }
 }
