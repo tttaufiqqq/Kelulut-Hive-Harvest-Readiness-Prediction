@@ -32,9 +32,9 @@ git push main
     ┌──────────▼──────────┐
     │      TESTS JOB      │  ← runs twice in parallel (PHP 8.3 + 8.4)
     │─────────────────────│
-    │  checkout            │
+    │  checkout@v5         │
     │  setup PHP           │
-    │  composer cache      │  ← keyed on composer.lock hash
+    │  cache@v5 (composer) │  ← keyed on composer.lock hash
     │  composer install    │  ← skipped if cache hit
     │  cp .env.example     │  ← CI-only ephemeral env
     │  php artisan key:gen │
@@ -46,23 +46,24 @@ git push main
     ┌──────────▼──────────┐
     │      BUILD JOB      │  ← runs once after tests pass
     │─────────────────────│
-    │  checkout            │
+    │  checkout@v5         │
     │  setup PHP 8.3       │
-    │  composer cache      │  ← same key as deploy, --no-dev
+    │  cache@v5 (composer) │  ← same key as deploy, --no-dev
     │  composer install    │
-    │  setup Node 22       │
-    │  npm cache           │  ← keyed on package-lock.json hash
+    │  setup-node@v5       │  ← installs Node 22
+    │  cache@v5 (npm)      │  ← keyed on package-lock.json hash
     │  npm ci              │
+    │  inject VITE_APP_NAME│  ← frontend title / branding from GH variable
     │  inject VITE_PUSHER_*│  ← prod frontend websocket config from GH secrets
     │  npm run build       │  ← compiles React/TS → public/build/
-    │  upload artifact     │  ← public/build/ stored in GH for 1 day
+    │  upload-artifact@v6  │  ← public/build/ stored in GH for 1 day
     └──────────┬──────────┘
                │
     ┌──────────▼──────────┐
     │     DEPLOY JOB      │
     │─────────────────────│
-    │  checkout            │
-    │  download artifact   │  ← public/build/ from build job
+    │  checkout@v5         │
+    │  download-artifact@v6│  ← public/build/ from build job
     │  FTP upload          │  ← changed files only (sync state)
     │  curl deploy-hook    │  ← POST /deploy-hook.php
     └──────────┬──────────┘
@@ -197,6 +198,10 @@ Extracting build into its own job means:
 - **No npm in deploy job** — the deploy job becomes a pure "move files to server" step
 
 If the frontend needs build-time environment variables, they must exist in GitHub Actions as secrets or variables. This matters for Pusher because `VITE_PUSHER_APP_KEY` and `VITE_PUSHER_APP_CLUSTER` are read by Vite during `npm run build`; values that exist only in the server `.env` are too late for the compiled JavaScript bundle.
+
+The same rule applies to the browser tab title and other frontend branding. `VITE_APP_NAME` is injected during the CI build, so the GitHub Actions build job must receive it as a repository or environment variable. The current workflow uses `vars.VITE_APP_NAME` and falls back to `BuzzyHive 2.0` if the variable is missing, which avoids accidental `Laravel` titles in compiled production assets.
+
+The workflow also now uses newer GitHub-maintained action versions (`checkout@v5`, `cache@v5`, `setup-node@v5`, `upload-artifact@v6`, `download-artifact@v6`) to stay ahead of the GitHub Actions Node 20 deprecation warnings.
 
 The artifact has `retention-days: 1` — it only needs to survive the duration of the pipeline run.
 
