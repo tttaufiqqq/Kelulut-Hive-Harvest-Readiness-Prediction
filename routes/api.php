@@ -14,3 +14,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/sensor-data', [SensorController::class, 'store']);
+Route::post('/internal/test-telegram-ready', [SensorController::class, 'testTelegramReady']);

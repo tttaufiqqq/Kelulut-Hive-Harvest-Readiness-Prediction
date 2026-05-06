@@ -16,13 +16,68 @@ class SensorController extends Controller
 
     public function store(Request $request)
     {
-        // ── Auth ──────────────────────────────────────────────────
         if ($request->header('X-API-Key') !== config('app.iot_api_key')) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // ── Validate ──────────────────────────────────────────────
-        $data = $request->validate([
+        $data = $this->validateSensorPayload($request);
+        $node = $this->findActiveNode($data['device_id'], $data['hive_id']);
+
+        if (! $node) {
+            return response()->json(['error' => 'Device not registered'], 404);
+        }
+
+        $log = $this->storeSensorLog($data, $node);
+        $this->dispatchSensorReadingCreated($log);
+        $this->matchThresholds($log, $data);
+
+        $this->mlService->predict($log);
+
+        return response()->json(['status' => 'ok'], 201);
+    }
+
+    public function testTelegramReady(Request $request)
+    {
+        if (! $this->hasValidInternalTestSecret($request)) {
+            return response()->json([
+                'error' => 'Unauthorized',
+                'message' => 'Internal diagnostic endpoint requires a valid X-Test-Secret header.',
+            ], 401);
+        }
+
+        $data = $this->validateSensorPayload($request, true);
+        $node = $this->findActiveNode($data['device_id'], $data['hive_id']);
+
+        if (! $node) {
+            return response()->json([
+                'error' => 'Device not registered',
+                'message' => 'Internal diagnostic endpoint only accepts an active device and hive pairing.',
+            ], 404);
+        }
+
+        $log = $this->storeSensorLog($data, $node);
+        $this->dispatchSensorReadingCreated($log);
+        $this->matchThresholds($log, $data);
+
+        // Internal-only endpoint: Phase 2 establishes guarded ingress and traceable logs.
+        return response()->json([
+            'message' => 'Internal diagnostic sensor log stored. Prediction handling will be wired in the next phase.',
+            'mode' => $data['mode'],
+            'sensor_log_id' => $log->id,
+        ], 202);
+    }
+
+    private function hasValidInternalTestSecret(Request $request): bool
+    {
+        $expectedSecret = (string) config('services.telegram.test_secret');
+        $providedSecret = (string) $request->header('X-Test-Secret');
+
+        return $expectedSecret !== '' && $providedSecret !== '' && hash_equals($expectedSecret, $providedSecret);
+    }
+
+    private function validateSensorPayload(Request $request, bool $includeMode = false): array
+    {
+        $rules = [
             'device_id' => 'required|string',
             'hive_id' => 'required|integer|exists:hives,id',
             'temp' => 'required|numeric|between:-10,60',
@@ -31,20 +86,26 @@ class SensorController extends Controller
             'mq3_value' => 'required|integer|between:0,4095',
             'mq5_value' => 'required|integer|between:0,4095',
             'mq135_value' => 'required|integer|between:0,4095',
-        ]);
+        ];
 
-        // ── Resolve IoT Node ──────────────────────────────────────
-        $node = IotNode::where('device_id', $data['device_id'])
-            ->where('hive_id', $data['hive_id'])
-            ->where('device_status', 'active')
-            ->first();
-
-        if (! $node) {
-            return response()->json(['error' => 'Device not registered'], 404);
+        if ($includeMode) {
+            $rules['mode'] = 'required|string|in:full_pipeline,synthetic_ready';
         }
 
-        // ── Store sensor log ──────────────────────────────────────
-        $log = SensorLog::create([
+        return $request->validate($rules);
+    }
+
+    private function findActiveNode(string $deviceId, int $hiveId): ?IotNode
+    {
+        return IotNode::where('device_id', $deviceId)
+            ->where('hive_id', $hiveId)
+            ->where('device_status', 'active')
+            ->first();
+    }
+
+    private function storeSensorLog(array $data, IotNode $node): SensorLog
+    {
+        return SensorLog::create([
             'hive_id' => $data['hive_id'],
             'device_id' => $node->id,
             'temp' => $data['temp'],
@@ -55,14 +116,19 @@ class SensorController extends Controller
             'mq135_value' => $data['mq135_value'],
             'record_timestamp' => now(),
         ]);
+    }
 
+    private function dispatchSensorReadingCreated(SensorLog $log): void
+    {
         SensorReadingCreated::dispatch(
             $log->hive_id,
             $log->id,
             $log->record_timestamp->toIso8601String(),
         );
+    }
 
-        // ── Threshold matching (non-blocking) ────────────────────
+    private function matchThresholds(SensorLog $log, array $data): void
+    {
         try {
             $thresholds = DB::table('master_sensor_thresholds')->get();
 
@@ -75,15 +141,15 @@ class SensorController extends Controller
                 'mq135' => $data['mq135_value'],
             ];
 
-            $matched = $thresholds->filter(function ($t) use ($sensorMap) {
-                $reading = $sensorMap[$t->sensor_type] ?? null;
+            $matched = $thresholds->filter(function ($threshold) use ($sensorMap) {
+                $reading = $sensorMap[$threshold->sensor_type] ?? null;
 
                 return $reading !== null
-                    && $reading >= $t->min_value
-                    && $reading <= $t->max_value;
-            })->map(fn ($t) => [
+                    && $reading >= $threshold->min_value
+                    && $reading <= $threshold->max_value;
+            })->map(fn ($threshold) => [
                 'sensor_log_id' => $log->id,
-                'threshold_id' => $t->id,
+                'threshold_id' => $threshold->id,
             ])->values()->all();
 
             if (! empty($matched)) {
@@ -95,10 +161,5 @@ class SensorController extends Controller
                 'sensor_log_id' => $log->id,
             ]);
         }
-
-        // ── ML Prediction (non-blocking — skipped silently if Flask down) ──
-        $this->mlService->predict($log);
-
-        return response()->json(['status' => 'ok'], 201);
     }
 }

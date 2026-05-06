@@ -41,6 +41,7 @@ return [
 
     'telegram' => [
         'token' => env('TELEGRAM_BOT_TOKEN'),
+        'test_secret' => env('TELEGRAM_TEST_SECRET'),
     ],
 
 ];
