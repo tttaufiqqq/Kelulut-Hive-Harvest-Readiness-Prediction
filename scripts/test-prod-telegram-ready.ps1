@@ -45,7 +45,12 @@ function ConvertFrom-JsonSafe {
     }
 
     try {
-        return $normalizedText | ConvertFrom-Json -Depth 10
+        $convertFromJson = Get-Command ConvertFrom-Json
+        if ($convertFromJson.Parameters.ContainsKey("Depth")) {
+            return $normalizedText | ConvertFrom-Json -Depth 10
+        }
+
+        return $normalizedText | ConvertFrom-Json
     } catch {
         return $normalizedText
     }
