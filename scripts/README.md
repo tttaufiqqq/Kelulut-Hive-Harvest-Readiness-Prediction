@@ -23,6 +23,9 @@ This folder contains:
     - ML `/health`
     - ML `/predict`
     - optional `POST /api/sensor-data`
+- `test-prod-telegram-ready.ps1`
+  - dev-PC runner for the internal production Telegram diagnostic endpoint
+  - supports both real-ML `full_pipeline` checks and forced `synthetic_ready` alert checks
 - `test-prod-broadcast.php`
   - server-side broadcast diagnostics for production
   - checks active Laravel Pusher config and whether the built frontend bundle contains the expected Pusher values
@@ -84,6 +87,50 @@ How to read the result:
 - if Laravel config checks fail: production `.env` or config cache is wrong
 - if Laravel config passes but bundle checks fail: the frontend was built without `VITE_PUSHER_APP_KEY` and/or `VITE_PUSHER_APP_CLUSTER`
 - if both pass: the next place to inspect is `/broadcasting/auth` and the browser websocket connection
+
+---
+
+## Production Telegram Diagnostic
+
+This flow is internal-only and requires the `X-Test-Secret` header backed by `TELEGRAM_TEST_SECRET`.
+
+Run it from a Windows dev PC:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -TestSecret "<telegram-test-secret>" -DeviceId "NODE-001" -HiveId 1 -Mode synthetic_ready
+```
+
+Run the real ML path:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -TestSecret "<telegram-test-secret>" -DeviceId "NODE-001" -HiveId 1 -Mode full_pipeline
+```
+
+Optional ML override:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\test-prod-telegram-ready.ps1" -AppUrl "https://buzzyhive.urban-alert.com" -MlUrl "https://ml.buzzyhive.urban-alert.com" -TestSecret "<telegram-test-secret>" -DeviceId "NODE-001" -HiveId 1 -Mode full_pipeline
+```
+
+Route behavior:
+
+- `POST /api/internal/test-telegram-ready` always stores a real `sensor_logs` row first so the diagnostic run is traceable.
+- `mode=full_pipeline` calls the real ML service, persists the resulting prediction, and returns:
+  - `201` when the final guarded `readiness_level` is `ready`
+  - `409` when ML runs but the final guarded readiness is not `ready`
+  - `503` when ML is unavailable or fails before a prediction can be created
+- `mode=synthetic_ready` skips ML, creates a clearly marked synthetic prediction (`prediction_source=synthetic_diagnostic`), and returns `201` after queueing the normal Telegram alert job.
+
+What success means:
+
+- `full_pipeline` success means production ML produced a final guarded `ready` prediction and Laravel queued `SendTelegramAlert`.
+- `synthetic_ready` success means the endpoint forced a diagnostic-only ready prediction and Laravel queued `SendTelegramAlert` without relying on ML output.
+
+Important limits:
+
+- These checks verify queued Telegram dispatch only. They do not confirm Telegram delivery receipt from the bot API or the end user's device.
+- Production queue worker health still matters. The diagnostic route queues the alert job; it does not send Telegram inline during the HTTP request.
+- Synthetic diagnostic predictions are stored intentionally and marked via diagnostic metadata so they can be distinguished from real ML predictions during review.
 
 ---
 
