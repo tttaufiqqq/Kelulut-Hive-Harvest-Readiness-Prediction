@@ -157,7 +157,15 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
             <div className="w-full">
                 {mounted && (
                     <ResponsiveContainer width="100%" height={220}>
-                        <AreaChart data={data}>
+                        <AreaChart
+                            data={data}
+                            margin={{
+                                top: 8,
+                                right: 8,
+                                left: 8,
+                                bottom: 18,
+                            }}
+                        >
                             <defs>
                                 <linearGradient
                                     id="analyticsHriGradient"
@@ -189,24 +197,33 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
                                 tickLine={false}
                                 tick={{
                                     fill: '#78350F',
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     fontWeight: 600,
                                 }}
                                 dy={8}
+                                tickMargin={8}
                             />
                             <YAxis
                                 domain={[0, 100]}
                                 axisLine={false}
                                 tickLine={false}
+                                width={36}
                                 tickFormatter={(value) => `${value}%`}
                                 tick={{
                                     fill: '#78350F',
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     fontWeight: 600,
                                 }}
+                                tickMargin={8}
                             />
                             <Tooltip contentStyle={TOOLTIP_STYLE} />
-                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Legend
+                                wrapperStyle={{
+                                    fontSize: 12,
+                                    paddingTop: 16,
+                                    lineHeight: '20px',
+                                }}
+                            />
                             <Area
                                 type="monotone"
                                 dataKey="hri_score"
@@ -288,7 +305,7 @@ function SensorChart({
                             margin={{
                                 top: 8,
                                 right: showGas ? 8 : 0,
-                                left: -18,
+                                left: 8,
                                 bottom: 18,
                             }}
                         >
@@ -315,13 +332,14 @@ function SensorChart({
                                     domain={[0, 100]}
                                     axisLine={false}
                                     tickLine={false}
-                                    width={34}
+                                    width={36}
                                     tick={{
                                         fill: '#78350F',
                                         fontSize: 11,
                                         fontWeight: 600,
                                     }}
                                     tickFormatter={(value) => `${value}`}
+                                    tickMargin={8}
                                 />
                             )}
                             {showGas && (
@@ -330,7 +348,7 @@ function SensorChart({
                                     orientation="right"
                                     axisLine={false}
                                     tickLine={false}
-                                    width={40}
+                                    width={44}
                                     domain={[
                                         (dataMin: number) =>
                                             Math.max(0, dataMin - 40),
@@ -341,6 +359,7 @@ function SensorChart({
                                         fontSize: 11,
                                         fontWeight: 600,
                                     }}
+                                    tickMargin={8}
                                 />
                             )}
                             <Tooltip
@@ -489,7 +508,15 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
             <div className="w-full">
                 {mounted && (
                     <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={data}>
+                        <BarChart
+                            data={data}
+                            margin={{
+                                top: 8,
+                                right: 8,
+                                left: 8,
+                                bottom: 18,
+                            }}
+                        >
                             <CartesianGrid
                                 strokeDasharray="3 3"
                                 vertical={false}
@@ -501,19 +528,22 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
                                 tickLine={false}
                                 tick={{
                                     fill: '#78350F',
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     fontWeight: 600,
                                 }}
                                 dy={8}
+                                tickMargin={8}
                             />
                             <YAxis
                                 axisLine={false}
                                 tickLine={false}
+                                width={36}
                                 tick={{
                                     fill: '#78350F',
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     fontWeight: 600,
                                 }}
+                                tickMargin={8}
                             />
                             <Tooltip contentStyle={TOOLTIP_STYLE} />
                             <Bar
@@ -557,7 +587,7 @@ export default function Analytics({
     return (
         <AuthenticatedLayout>
             <Head title={`Analytics — ${hive.name}`} />
-            <div className="mx-auto max-w-6xl space-y-8 p-6 md:p-10">
+            <div className="mx-auto max-w-7xl space-y-8 p-6 md:p-10 lg:px-10 lg:py-8">
                 <div className="flex flex-col gap-2">
                     <Breadcrumbs
                         items={[

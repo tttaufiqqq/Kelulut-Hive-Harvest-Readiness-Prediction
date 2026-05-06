@@ -203,7 +203,7 @@ export default function HarvestsIndex({
     return (
         <AuthenticatedLayout>
             <Head title="Harvests" />
-            <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+            <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10 lg:px-10 lg:py-8">
                 {/* Breadcrumb + tab bar */}
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Breadcrumbs

@@ -163,7 +163,7 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
                 <ResponsiveContainer width="100%" height={220}>
                     <AreaChart
                         data={filtered}
-                        margin={{ left: 0, right: 16, top: 4, bottom: 4 }}
+                        margin={{ left: 8, right: 16, top: 8, bottom: 18 }}
                     >
                         <defs>
                             <linearGradient
@@ -192,16 +192,20 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
                         />
                         <XAxis
                             dataKey="date"
-                            tick={{ fontSize: 10, fill: '#92400e' }}
+                            tick={{ fontSize: 11, fill: '#92400e' }}
                             axisLine={false}
                             tickLine={false}
+                            tickMargin={8}
+                            dy={8}
                         />
                         <YAxis
                             unit="%"
                             domain={[0, 100]}
-                            tick={{ fontSize: 10, fill: '#92400e' }}
+                            tick={{ fontSize: 11, fill: '#92400e' }}
                             axisLine={false}
                             tickLine={false}
+                            width={36}
+                            tickMargin={8}
                         />
                         <Tooltip
                             contentStyle={{
@@ -238,7 +242,7 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
         <AuthenticatedLayout>
             <Head title="Reporting" />
 
-            <div className="mx-auto max-w-6xl space-y-6 px-6 py-8">
+            <div className="mx-auto max-w-7xl space-y-6 px-6 py-8 md:p-10 lg:px-10 lg:py-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Breadcrumbs
                         items={[

@@ -401,11 +401,19 @@ function PredictionTrendChart({
             title="Recent readiness movement"
             description="Monitor how HRI and raw confidence are changing across the latest live readings."
         >
-            <div className="w-full">
+            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                 {mounted ? (
                     data.length > 0 ? (
                         <ResponsiveContainer width="100%" height={220}>
-                            <AreaChart data={data}>
+                            <AreaChart
+                                data={data}
+                                margin={{
+                                    top: 8,
+                                    right: 8,
+                                    left: 8,
+                                    bottom: 18,
+                                }}
+                            >
                                 <defs>
                                     <linearGradient
                                         id="predictionsHriGradient"
@@ -437,24 +445,33 @@ function PredictionTrendChart({
                                     tickLine={false}
                                     tick={{
                                         fill: '#78350F',
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         fontWeight: 600,
                                     }}
                                     dy={8}
+                                    tickMargin={8}
                                 />
                                 <YAxis
                                     domain={[0, 100]}
                                     axisLine={false}
                                     tickLine={false}
+                                    width={36}
                                     tickFormatter={(value) => `${value}%`}
                                     tick={{
                                         fill: '#78350F',
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         fontWeight: 600,
                                     }}
+                                    tickMargin={8}
                                 />
                                 <Tooltip contentStyle={TOOLTIP_STYLE} />
-                                <Legend wrapperStyle={{ fontSize: 11 }} />
+                                <Legend
+                                    wrapperStyle={{
+                                        fontSize: 12,
+                                        paddingTop: 16,
+                                        lineHeight: '20px',
+                                    }}
+                                />
                                 <Area
                                     type="monotone"
                                     dataKey="hri_pct"
@@ -503,11 +520,19 @@ function SensorTrendChart({
             title="Environmental context"
             description="Review temperature and humidity shifts alongside readiness changes."
         >
-            <div className="w-full">
+            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                 {mounted ? (
                     data.length > 0 ? (
                         <ResponsiveContainer width="100%" height={250}>
-                            <LineChart data={data}>
+                            <LineChart
+                                data={data}
+                                margin={{
+                                    top: 8,
+                                    right: 8,
+                                    left: 8,
+                                    bottom: 18,
+                                }}
+                            >
                                 <CartesianGrid
                                     strokeDasharray="3 3"
                                     vertical={false}
@@ -519,22 +544,31 @@ function SensorTrendChart({
                                     tickLine={false}
                                     tick={{
                                         fill: '#78350F',
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         fontWeight: 600,
                                     }}
                                     dy={8}
+                                    tickMargin={8}
                                 />
                                 <YAxis
                                     axisLine={false}
                                     tickLine={false}
+                                    width={36}
                                     tick={{
                                         fill: '#78350F',
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         fontWeight: 600,
                                     }}
+                                    tickMargin={8}
                                 />
                                 <Tooltip contentStyle={TOOLTIP_STYLE} />
-                                <Legend wrapperStyle={{ fontSize: 11 }} />
+                                <Legend
+                                    wrapperStyle={{
+                                        fontSize: 12,
+                                        paddingTop: 16,
+                                        lineHeight: '20px',
+                                    }}
+                                />
                                 <Line
                                     type="monotone"
                                     dataKey="temp"
@@ -871,7 +905,7 @@ export default function Predictions({
         <AuthenticatedLayout>
             <Head title={`Live Predictions — ${hive.name}`} />
 
-            <div className="mx-auto w-full max-w-4xl space-y-8 p-4 sm:p-6 md:p-10">
+            <div className="mx-auto w-full max-w-7xl space-y-8 p-4 sm:p-6 md:p-10 lg:px-10 lg:py-8">
                 <div className="flex flex-col gap-3">
                     <Breadcrumbs
                         items={[

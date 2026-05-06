@@ -11,7 +11,10 @@ export interface CrudIndexShellProps {
 export function CrudIndexShell({ children, className }: CrudIndexShellProps) {
     return (
         <div
-            className={cn('mx-auto max-w-6xl space-y-6 p-6 md:p-10', className)}
+            className={cn(
+                'mx-auto max-w-7xl space-y-6 p-6 md:p-10 lg:px-10 lg:py-8',
+                className,
+            )}
         >
             {children}
         </div>
