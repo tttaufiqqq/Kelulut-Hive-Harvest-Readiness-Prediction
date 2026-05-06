@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
@@ -84,7 +85,7 @@ export const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
     return (
         <nav
             className={cn(
-                'flex items-center gap-2 text-xs font-bold tracking-widest text-amber-900/40 uppercase',
+                'flex flex-wrap items-center gap-2 text-xs font-bold tracking-widest text-amber-900/40 uppercase',
                 className,
             )}
         >
@@ -92,12 +93,12 @@ export const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
                 <React.Fragment key={i}>
                     {i > 0 && <span>/</span>}
                     {item.href ? (
-                        <a
+                        <Link
                             href={item.href}
                             className="transition-colors hover:text-yellow-600"
                         >
                             {item.label}
-                        </a>
+                        </Link>
                     ) : (
                         <span className="text-amber-900/80">{item.label}</span>
                     )}

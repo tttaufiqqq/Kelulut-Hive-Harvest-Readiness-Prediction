@@ -873,21 +873,14 @@ export default function Predictions({
 
             <div className="mx-auto w-full max-w-4xl space-y-8 p-4 sm:p-6 md:p-10">
                 <div className="flex flex-col gap-3">
-                    <div className="sm:hidden">
-                        <div className="text-[11px] font-bold tracking-[0.18em] text-amber-900/45 uppercase">
-                            Home / {hive.name} / Live Predictions
-                        </div>
-                    </div>
-                    <div className="hidden sm:block">
-                        <Breadcrumbs
-                            items={[
-                                { label: 'Home', href: '/' },
-                                { label: 'My Hives', href: '/dashboard' },
-                                { label: hive.name, href: '/dashboard' },
-                                { label: 'Live Predictions' },
-                            ]}
-                        />
-                    </div>
+                    <Breadcrumbs
+                        items={[
+                            { label: 'Home', href: '/' },
+                            { label: 'My Hives', href: '/dashboard' },
+                            { label: hive.name, href: '/dashboard' },
+                            { label: 'Live Predictions' },
+                        ]}
+                    />
                     <div className="flex items-start gap-3">
                         <Link
                             href="/dashboard"
