@@ -112,9 +112,9 @@ class MlPredictionService
         ]);
     }
 
-    public function queueReadyAlert(Prediction $prediction): string
+    public function queueReadinessAlert(Prediction $prediction): string
     {
-        if ($prediction->readiness_level !== 'ready') {
+        if (! in_array($prediction->readiness_level, ['ready', 'nearly_ready'], true)) {
             return 'not_ready';
         }
 
@@ -133,7 +133,7 @@ class MlPredictionService
             $prediction->prediction_timestamp->toIso8601String(),
         );
 
-        $telegramDispatch = $this->queueReadyAlert($prediction);
+        $telegramDispatch = $this->queueReadinessAlert($prediction);
         $this->updateHriSummary($log, $prediction);
 
         return PredictionRunResult::predictionCreated($prediction, $telegramDispatch);
