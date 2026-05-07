@@ -4,14 +4,24 @@ import { Alert } from '@/components/core/feedback';
 
 export type FlashMessageBag = {
     id?: string | null;
-    success?: string | null;
-    error?: string | null;
-    warning?: string | null;
+    success?: {
+        message: string;
+        reason?: string | null;
+    } | null;
+    error?: {
+        message: string;
+        reason?: string | null;
+    } | null;
+    warning?: {
+        message: string;
+        reason?: string | null;
+    } | null;
 };
 
 type FlashAlertItem = {
     id: number;
     message: string;
+    reason?: string | null;
     variant: 'success' | 'error' | 'warning';
 };
 
@@ -24,28 +34,31 @@ function buildFlashItems(flash?: FlashMessageBag): FlashAlertItem[] {
     const items: FlashAlertItem[] = [];
 
     if (flash?.success) {
-        items.push({
-            id: 0,
-            message: flash.success,
-            variant: 'success',
-        });
-    }
+            items.push({
+                id: 0,
+                message: flash.success.message,
+                reason: flash.success.reason,
+                variant: 'success',
+            });
+        }
 
     if (flash?.error) {
-        items.push({
-            id: 1,
-            message: flash.error,
-            variant: 'error',
-        });
-    }
+            items.push({
+                id: 1,
+                message: flash.error.message,
+                reason: flash.error.reason,
+                variant: 'error',
+            });
+        }
 
     if (flash?.warning) {
-        items.push({
-            id: 2,
-            message: flash.warning,
-            variant: 'warning',
-        });
-    }
+            items.push({
+                id: 2,
+                message: flash.warning.message,
+                reason: flash.warning.reason,
+                variant: 'warning',
+            });
+        }
 
     return items;
 }
@@ -91,6 +104,7 @@ export function FlashAlerts({ flash, durationMs = 4500 }: FlashAlertsProps) {
                     >
                         <Alert
                             variant={item.variant}
+                            title={item.reason ? item.message : undefined}
                             onClose={() =>
                                 setItems((current) =>
                                     current.filter(
@@ -99,7 +113,7 @@ export function FlashAlerts({ flash, durationMs = 4500 }: FlashAlertsProps) {
                                 )
                             }
                         >
-                            {item.message}
+                            {item.reason ?? item.message}
                         </Alert>
                     </motion.div>
                 ))}

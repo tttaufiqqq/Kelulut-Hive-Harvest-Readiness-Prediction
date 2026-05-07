@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureUserIsBeekeeper;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\AppErrorReporter;
+use App\Support\UserFacingError;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -76,12 +77,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (AppException $e, Request $request) {
             $requestId = (string) $request->attributes->get(AssignRequestId::ATTRIBUTE, '');
+            $payload = UserFacingError::fromAppException($e);
 
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'error' => [
-                        'code' => $e->errorCode->value,
-                        'message' => $e->userMessage,
+                        'code' => $payload['code']->value,
+                        'message' => $payload['message'],
+                        'reason' => $payload['reason'],
                     ],
                     'meta' => [
                         'request_id' => $requestId,
@@ -91,12 +94,18 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($request->inertia() && ! $request->isMethod('GET')) {
                 return back(status: 303)
-                    ->with($e->logLevel === 'warning' ? 'warning' : 'error', $e->userMessage);
+                    ->with(
+                        $e->logLevel === 'warning' ? 'warning' : 'error',
+                        UserFacingError::sessionPayload($payload['message'], $payload['reason']),
+                    );
             }
 
             if ($request->inertia()) {
                 return Inertia::render('error', [
                     'status' => $e->status,
+                    'title' => $payload['title'],
+                    'message' => $payload['message'],
+                    'reason' => $payload['reason'],
                     'requestId' => $requestId,
                 ])->toResponse($request)
                     ->setStatusCode($e->status)
@@ -117,24 +126,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if (($request->expectsJson() || $request->is('api/*')) && ! $e instanceof ValidationException) {
-                $statusMessages = [
-                    401 => ['code' => AppErrorCode::Unauthorized, 'message' => 'You are not authorized to access this resource.'],
-                    403 => ['code' => AppErrorCode::Forbidden, 'message' => 'You do not have permission to perform this action.'],
-                    404 => ['code' => AppErrorCode::NotFound, 'message' => 'The requested resource could not be found.'],
-                    419 => ['code' => AppErrorCode::SessionExpired, 'message' => 'Your session expired. Please try again.'],
-                    429 => ['code' => AppErrorCode::RateLimited, 'message' => 'Too many requests were made. Please try again soon.'],
-                    503 => ['code' => AppErrorCode::ExternalServiceUnavailable, 'message' => 'A required service is temporarily unavailable. Please try again later.'],
-                ];
-
-                $error = $statusMessages[$status] ?? [
-                    'code' => AppErrorCode::UnexpectedError,
-                    'message' => 'Something went wrong on our end. Please try again later.',
-                ];
+                $error = UserFacingError::fromStatus($status);
 
                 return response()->json([
                     'error' => [
                         'code' => $error['code']->value,
                         'message' => $error['message'],
+                        'reason' => $error['reason'],
                     ],
                     'meta' => [
                         'request_id' => $requestId,
@@ -147,8 +145,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($request->isMethod('GET') && in_array($status, [403, 404, 419, 429, 500, 503], true)) {
+                $error = UserFacingError::fromStatus($status);
+
                 return Inertia::render('error', [
                     'status' => $status,
+                    'title' => $error['title'],
+                    'message' => $error['message'],
+                    'reason' => $error['reason'],
                     'requestId' => $requestId,
                 ])
                     ->toResponse($request)
@@ -157,16 +160,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if (! $request->isMethod('GET') && in_array($status, [419, 429, 500, 503], true)) {
-                $messages = [
-                    419 => ['warning', 'Your session expired. Please try that action again.'],
-                    429 => ['warning', 'Too many actions were submitted too quickly. Please wait a moment and try again.'],
-                    500 => ['error', 'Something went wrong on our end. Please try again later.'],
-                    503 => ['error', 'A required service is temporarily unavailable. Please try again later.'],
-                ];
+                $error = UserFacingError::fromStatus($status);
+                $flashLevel = in_array($status, [419, 429], true) ? 'warning' : 'error';
 
-                [$flashLevel, $message] = $messages[$status];
-
-                return back(status: 303)->with($flashLevel, $message);
+                return back(status: 303)->with(
+                    $flashLevel,
+                    UserFacingError::sessionPayload($error['message'], $error['reason']),
+                );
             }
 
             return $response;

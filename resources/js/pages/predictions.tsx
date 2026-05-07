@@ -1,11 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { echo } from '@laravel/echo-react';
-import {
-    ArrowLeft,
-    ChevronLeft,
-    ChevronRight,
-    CircleAlert,
-} from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -24,6 +19,7 @@ import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { DataTable } from '@/components/core/content';
 import { DatePicker } from '@/components/core/date-picker';
+import { Alert } from '@/components/core/feedback';
 import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
 import {
@@ -33,7 +29,6 @@ import {
     SnapshotGrid,
 } from '@/components/core/readiness-chart-cards';
 import { ScrollArea } from '@/components/core/scroll-area';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
 interface PredictionEntry {
@@ -100,19 +95,15 @@ const ROW_TONE_STYLES: Record<string, string> = {
     critical: 'bg-rose-50/45 hover:bg-rose-50/70',
 };
 
-const TRUST_ALERT_STYLES: Record<string, { container: string; icon: string }> =
-    {
+const TRUST_ALERT_STYLES: Record<string, { container: string }> = {
         normal: {
             container: 'border-amber-200 bg-amber-50/80 text-amber-900',
-            icon: 'text-amber-700',
         },
         warning: {
             container: 'border-amber-300 bg-amber-50 text-amber-950',
-            icon: 'text-amber-700',
         },
         critical: {
             container: 'border-rose-300 bg-rose-50 text-rose-950',
-            icon: 'text-rose-700',
         },
     };
 
@@ -239,7 +230,6 @@ function getTrustAlertStyle(state: string) {
     return (
         TRUST_ALERT_STYLES[state] ?? {
             container: 'border-amber-200 bg-amber-50/80 text-amber-900',
-            icon: 'text-amber-700',
         }
     );
 }
@@ -321,9 +311,10 @@ function PredictionTrustNotice({
     const alertStyle = getTrustAlertStyle(prediction.warning_state);
 
     return (
-        <Alert className={alertStyle.container}>
-            <CircleAlert className={alertStyle.icon} />
-            <AlertTitle className="line-clamp-none">
+        <Alert
+            variant="warning"
+            className={alertStyle.container}
+            title={
                 <div className="flex flex-wrap items-center gap-2">
                     <span
                         className={`rounded-full px-3 py-1 text-xs font-bold ${getTrustStyle(prediction.warning_state)}`}
@@ -335,8 +326,9 @@ function PredictionTrustNotice({
                         {formatRawConfidence(prediction.confidence_score)}
                     </span>
                 </div>
-            </AlertTitle>
-            <AlertDescription className="text-sm opacity-85">
+            }
+        >
+            <div className="text-sm opacity-85">
                 <p>
                     {prediction.prediction_warning ??
                         'This result was flagged by the safety layer, so interpret the raw model score carefully.'}
@@ -346,7 +338,7 @@ function PredictionTrustNotice({
                         Recommended action: {prediction.guardrail_action}
                     </p>
                 )}
-            </AlertDescription>
+            </div>
         </Alert>
     );
 }
@@ -363,12 +355,12 @@ function PredictionWarningAlert({
     const alertStyle = getTrustAlertStyle(prediction.warning_state);
 
     return (
-        <Alert className={alertStyle.container}>
-            <CircleAlert className={alertStyle.icon} />
-            <AlertTitle className="line-clamp-none">
-                Prediction Warning
-            </AlertTitle>
-            <AlertDescription className="text-sm opacity-85">
+        <Alert
+            variant="warning"
+            className={alertStyle.container}
+            title="Prediction Warning"
+        >
+            <div className="text-sm opacity-85">
                 <p>
                     {prediction.prediction_warning ??
                         'This prediction was flagged by the safety layer, so review the reading carefully before acting on it.'}
@@ -378,7 +370,7 @@ function PredictionWarningAlert({
                         Recommended action: {prediction.guardrail_action}
                     </p>
                 )}
-            </AlertDescription>
+            </div>
         </Alert>
     );
 }

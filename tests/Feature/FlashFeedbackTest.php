@@ -22,8 +22,14 @@ test('flash feedback is shared on beekeeper crud pages', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('harvests/index')
-            ->where('flash.success', 'Harvest record added.')
-            ->where('flash.error', 'Unable to save harvest.'),
+            ->where('flash.success', [
+                'message' => 'Harvest record added.',
+                'reason' => null,
+            ])
+            ->where('flash.error', [
+                'message' => 'Unable to save harvest.',
+                'reason' => null,
+            ]),
         );
 });
 
@@ -41,8 +47,17 @@ test('flash feedback is shared on admin crud pages', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/beekeepers/index')
-            ->where('flash.success', 'Beekeeper updated.')
-            ->where('flash.error', 'Invite can only be resent to pending users.')
-            ->where('flash.warning', 'Invite delivery is delayed.'),
+            ->where('flash.success', [
+                'message' => 'Beekeeper updated.',
+                'reason' => null,
+            ])
+            ->where('flash.error', [
+                'message' => 'Invite can only be resent to pending users.',
+                'reason' => null,
+            ])
+            ->where('flash.warning', [
+                'message' => 'Invite delivery is delayed.',
+                'reason' => null,
+            ]),
         );
 });

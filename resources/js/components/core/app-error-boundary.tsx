@@ -62,8 +62,12 @@ export class AppErrorBoundary extends React.Component<
                             Something interrupted this page
                         </h1>
                         <p className="mt-3 text-sm leading-relaxed text-amber-800/70">
-                            The app hit an unexpected problem while rendering.
-                            Please refresh and try again.
+                            We could not finish rendering this page.
+                        </p>
+                        <p className="mt-2 text-sm leading-relaxed text-amber-800/60">
+                            A page component threw an unexpected client-side
+                            error while the interface was loading. Please
+                            refresh and try again.
                         </p>
 
                         {requestId && (

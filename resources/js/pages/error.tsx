@@ -8,45 +8,55 @@ import type { Auth } from '@/types/auth';
 
 interface Props {
     status: number;
+    title?: string;
+    message?: string | null;
+    reason?: string | null;
     requestId?: string | null;
 }
 
-const errors: Record<number, { title: string; description: string }> = {
+const errors: Record<number, { title: string; message: string; reason: string }> = {
     403: {
         title: 'Access Restricted',
-        description:
-            "You don't have permission to access this area. If you think this is a mistake, contact your administrator.",
+        message: "You don't have permission to access this area.",
+        reason:
+            'Your account does not have the role or permission required for this page or action.',
     },
     404: {
         title: 'Page Not Found',
-        description:
-            "The page you're looking for doesn't exist or has been moved.",
+        message: "The page you're looking for doesn't exist or has been moved.",
+        reason:
+            'The page, record, or file may have been moved, deleted, or the link may be outdated.',
     },
     500: {
         title: 'Server Error',
-        description: 'Something went wrong on our end. Please try again later.',
+        message: 'We could not complete your request.',
+        reason: 'The server hit an unexpected problem while processing the request.',
     },
     419: {
         title: 'Session Expired',
-        description:
-            'Your session expired before the page could finish loading. Please refresh and try again.',
+        message: 'Your session expired before the page could finish loading.',
+        reason:
+            'The security token for the page timed out, usually because the page stayed open too long before submission.',
     },
     429: {
         title: 'Too Many Requests',
-        description:
-            'Too many requests were sent in a short time. Please wait a moment and try again.',
+        message: 'Too many requests were sent in a short time.',
+        reason:
+            'BuzzyHive temporarily rate-limited this action to protect the service from repeated requests.',
     },
     503: {
         title: 'Service Unavailable',
-        description:
-            'BuzzyHive is temporarily offline for maintenance. Please check back soon.',
+        message: 'A required service is temporarily unavailable.',
+        reason:
+            'BuzzyHive could not reach a dependency it needed to finish the request, such as storage, email, or another backend service.',
     },
 };
 
 interface EmptyStateShellProps {
     status: number;
     title: string;
-    description: string;
+    message: string;
+    reason?: string | null;
     actions: React.ReactNode;
     footer: React.ReactNode;
 }
@@ -54,7 +64,8 @@ interface EmptyStateShellProps {
 function EmptyStateShell({
     status,
     title,
-    description,
+    message,
+    reason,
     actions,
     footer,
 }: EmptyStateShellProps) {
@@ -102,8 +113,24 @@ function EmptyStateShell({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
             >
-                {description}
+                {message}
             </motion.p>
+
+            {reason && (
+                <motion.div
+                    className="mb-8 rounded-2xl border border-amber-100 bg-white/80 px-5 py-4 text-left shadow-sm"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.22 }}
+                >
+                    <p className="text-xs font-black tracking-widest text-amber-900/45 uppercase">
+                        Why This Happened
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-amber-900/70">
+                        {reason}
+                    </p>
+                </motion.div>
+            )}
 
             <motion.div
                 className="mb-10 flex flex-wrap justify-center gap-3"
@@ -121,18 +148,25 @@ function EmptyStateShell({
     );
 }
 
-export default function ErrorPage({ status, requestId = null }: Props) {
+export default function ErrorPage({
+    status,
+    title,
+    message,
+    reason,
+    requestId = null,
+}: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const isAuthenticated = !!auth?.user;
 
-    const { title, description } = errors[status] ?? {
+    const fallback = errors[status] ?? {
         title: 'An Error Occurred',
-        description: 'Something unexpected happened.',
+        message: 'We could not complete your request.',
+        reason: 'An unexpected application error occurred.',
     };
 
     return (
         <>
-            <Head title={`${status} — ${title}`} />
+            <Head title={`${status} — ${title ?? fallback.title}`} />
 
             <div className="flex min-h-screen flex-col bg-[#FFFBEB] font-sans text-amber-950">
                 {/* ── Header — matches AuthenticatedLayout ─────────────────── */}
@@ -153,11 +187,12 @@ export default function ErrorPage({ status, requestId = null }: Props) {
                 <main className="flex flex-1 items-center justify-center p-6">
                     <EmptyStateShell
                         status={status}
-                        title={title}
-                        description={
+                        title={title ?? fallback.title}
+                        message={message ?? fallback.message}
+                        reason={
                             requestId
-                                ? `${description} Reference ID: ${requestId}`
-                                : description
+                                ? `${reason ?? fallback.reason} Reference ID: ${requestId}`
+                                : (reason ?? fallback.reason)
                         }
                         actions={
                             <>

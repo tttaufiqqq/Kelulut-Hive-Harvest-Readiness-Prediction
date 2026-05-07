@@ -64,7 +64,13 @@ function TwoFactorSetupStep({
     return (
         <>
             {errors?.length ? (
-                <AlertError errors={errors.map((error) => error.message)} />
+                <AlertError
+                    errors={errors.map((error) =>
+                        error.reason
+                            ? `${error.message} ${error.reason}`
+                            : error.message,
+                    )}
+                />
             ) : (
                 <>
                     <div className="mx-auto flex max-w-md overflow-hidden">

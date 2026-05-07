@@ -22,6 +22,7 @@ type ApiErrorPayload = {
     error?: {
         code?: string;
         message?: string;
+        reason?: string;
     };
 };
 
@@ -57,6 +58,7 @@ const fetchJson = async <T>(url: string): Promise<T> => {
         throw {
             code: payload?.error?.code ?? 'unexpected_error',
             message: payload?.error?.message ?? `Failed to fetch: ${response.status}`,
+            reason: payload?.error?.reason,
             retryable: response.status >= 500 || response.status === 429,
         } satisfies UiError;
     }

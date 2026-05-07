@@ -16,9 +16,18 @@ declare module '@inertiajs/core' {
             auth: Auth;
             flash: {
                 id?: string | null;
-                success?: string | null;
-                error?: string | null;
-                warning?: string | null;
+                success?: {
+                    message: string;
+                    reason?: string | null;
+                } | null;
+                error?: {
+                    message: string;
+                    reason?: string | null;
+                } | null;
+                warning?: {
+                    message: string;
+                    reason?: string | null;
+                } | null;
             };
             meta: {
                 request_id?: string | null;

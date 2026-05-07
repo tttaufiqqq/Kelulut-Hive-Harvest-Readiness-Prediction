@@ -105,7 +105,13 @@ export function TwoFactorRecoveryCodes({
             >
                 <div className="mt-3 space-y-3">
                     {errors?.length ? (
-                        <AlertError errors={errors.map((error) => error.message)} />
+                        <AlertError
+                            errors={errors.map((error) =>
+                                error.reason
+                                    ? `${error.message} ${error.reason}`
+                                    : error.message,
+                            )}
+                        />
                     ) : (
                         <>
                             <div

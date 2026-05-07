@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\UserFacingError;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Middleware;
@@ -49,9 +50,9 @@ class HandleInertiaRequests extends Middleware
                 'id' => fn () => $request->session()->has('success') || $request->session()->has('error') || $request->session()->has('warning')
                     ? Str::uuid()->toString()
                     : null,
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
-                'warning' => fn () => $request->session()->get('warning'),
+                'success' => fn () => UserFacingError::flashPayload($request->session()->get('success')),
+                'error' => fn () => UserFacingError::flashPayload($request->session()->get('error')),
+                'warning' => fn () => UserFacingError::flashPayload($request->session()->get('warning')),
             ],
             'meta' => [
                 'request_id' => $request->attributes->get(AssignRequestId::ATTRIBUTE),

@@ -15,6 +15,8 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { TooltipProps } from 'recharts/types/component/Tooltip';
 import { DatePicker } from '@/components/core/date-picker';
 import { Breadcrumbs } from '@/components/core/navigation';
 import {
@@ -118,6 +120,27 @@ const READINESS_BAR_STYLES: Record<string, string> = {
     approaching: 'bg-amber-400',
     nearly_ready: 'bg-yellow-400',
     ready: 'bg-emerald-400',
+};
+
+const sensorTooltipFormatter: NonNullable<TooltipProps<ValueType, NameType>['formatter']> = (
+    value,
+    name,
+) => {
+    const numericValue = typeof value === 'number' ? value : 0;
+    const resolvedName =
+        typeof name === 'string' || typeof name === 'number'
+            ? String(name)
+            : '';
+
+    if (resolvedName === 'Temp') {
+        return [`${numericValue}°C`, resolvedName];
+    }
+
+    if (resolvedName === 'Humidity') {
+        return [`${numericValue}%`, resolvedName];
+    }
+
+    return [numericValue, `${resolvedName} ADC`];
 };
 
 function HriScoreCard({ hive }: { hive: HiveData }) {
@@ -364,17 +387,7 @@ function SensorChart({
                             )}
                             <Tooltip
                                 contentStyle={TOOLTIP_STYLE}
-                                formatter={(value: number, name: string) => {
-                                    if (name === 'Temp') {
-                                        return [`${value}°C`, name];
-                                    }
-
-                                    if (name === 'Humidity') {
-                                        return [`${value}%`, name];
-                                    }
-
-                                    return [value, `${name} ADC`];
-                                }}
+                                formatter={sensorTooltipFormatter}
                             />
                             <Legend
                                 iconType="circle"

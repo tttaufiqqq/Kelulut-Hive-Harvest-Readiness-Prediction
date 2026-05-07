@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     Upload,
     FileText,
@@ -7,6 +7,7 @@ import {
     CheckCircle,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { AlertError } from '@/components/core/alert-error';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { FlashAlerts } from '@/components/core/flash-alerts';
@@ -17,31 +18,88 @@ import { AdminLayout } from '@/layouts/admin-layout';
 type Props = {
     thesisUrl: string | null;
     uploadedAt: string | null;
+    maxUploadBytes: number;
 };
 
-export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
+function formatUploadLimit(bytes: number): string {
+    const megabytes = bytes / 1024 / 1024;
+
+    if (Number.isInteger(megabytes)) {
+        return `${megabytes} MB`;
+    }
+
+    return `${megabytes.toFixed(1)} MB`;
+}
+
+export default function ThesisPage({
+    thesisUrl,
+    uploadedAt,
+    maxUploadBytes,
+}: Props) {
     const { props } = usePage<{ flash?: FlashMessageBag }>();
     const flash = props.flash;
+    const maxUploadLabel = formatUploadLimit(maxUploadBytes);
 
     const fileRef = useRef<HTMLInputElement>(null);
     const [dragging, setDragging] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [uploading, setUploading] = useState(false);
+    const [clientErrors, setClientErrors] = useState<string[]>([]);
     const [showRemoveModal, setShowRemoveModal] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const uploadForm = useForm<{ thesis: File | null }>({ thesis: null });
+
+    const uploadErrors = Array.from(
+        new Set([
+            ...clientErrors,
+            ...Object.values(uploadForm.errors).filter(Boolean),
+        ]),
+    );
+
+    function resetSelectedFile() {
+        setSelectedFile(null);
+        uploadForm.reset();
+        if (fileRef.current) {
+            fileRef.current.value = '';
+        }
+    }
+
+    function validatePdf(file: File): string | null {
+        const isPdfMime =
+            file.type === 'application/pdf' ||
+            file.type === 'application/x-pdf' ||
+            file.type === '';
+        const hasPdfExtension = /\.pdf$/i.test(file.name);
+
+        if (!isPdfMime && !hasPdfExtension) {
+            return 'Please choose a PDF file for the thesis.';
+        }
+
+        if (file.size > maxUploadBytes) {
+            return `The thesis PDF must be ${maxUploadLabel} or smaller.`;
+        }
+
+        return null;
+    }
 
     function handleFile(file: File | null) {
         if (!file) {
             return;
         }
 
-        if (file.type !== 'application/pdf') {
-            alert('Only PDF files are allowed.');
+        setClientErrors([]);
+        uploadForm.clearErrors();
+
+        const validationError = validatePdf(file);
+
+        if (validationError) {
+            setClientErrors([validationError]);
+            resetSelectedFile();
 
             return;
         }
 
         setSelectedFile(file);
+        uploadForm.setData('thesis', file);
     }
 
     function handleDrop(e: React.DragEvent) {
@@ -52,24 +110,24 @@ export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
 
     function handleUpload() {
         if (!selectedFile) {
+            setClientErrors(['Please choose a thesis PDF to upload.']);
+
             return;
         }
 
-        setUploading(true);
-        const form = new FormData();
-        form.append('thesis', selectedFile);
-        router.post('/admin/thesis', form, {
+        uploadForm.post(route('admin.thesis.upload'), {
             forceFormData: true,
-            onFinish: () => {
-                setUploading(false);
-                setSelectedFile(null);
+            preserveScroll: true,
+            onSuccess: () => {
+                setClientErrors([]);
+                resetSelectedFile();
             },
         });
     }
 
     function confirmRemove() {
         setDeleting(true);
-        router.delete('/admin/thesis', {
+        router.delete(route('admin.thesis.destroy'), {
             onFinish: () => {
                 setDeleting(false);
                 setShowRemoveModal(false);
@@ -147,6 +205,15 @@ export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
                         {thesisUrl ? 'Replace Thesis' : 'Upload Thesis'}
                     </h3>
 
+                    {uploadErrors.length > 0 && (
+                        <div className="mb-4">
+                            <AlertError
+                                errors={uploadErrors}
+                                title="Thesis upload failed."
+                            />
+                        </div>
+                    )}
+
                     {/* Drop zone */}
                     <div
                         className={`cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-colors ${
@@ -198,7 +265,7 @@ export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
                                     Drop your PDF here, or click to browse
                                 </p>
                                 <p className="text-xs text-amber-900/40">
-                                    PDF only · max 50 MB
+                                    PDF only · max {maxUploadLabel}
                                 </p>
                             </div>
                         )}
@@ -208,16 +275,22 @@ export default function ThesisPage({ thesisUrl, uploadedAt }: Props) {
                         <div className="mt-4 flex gap-3">
                             <Button
                                 onClick={handleUpload}
-                                disabled={uploading}
+                                disabled={uploadForm.processing}
                                 size="md"
                             >
-                                {uploading ? 'Uploading...' : 'Upload Thesis'}
+                                {uploadForm.processing
+                                    ? 'Uploading...'
+                                    : 'Upload Thesis'}
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="md"
-                                onClick={() => setSelectedFile(null)}
-                                disabled={uploading}
+                                onClick={() => {
+                                    setClientErrors([]);
+                                    uploadForm.clearErrors();
+                                    resetSelectedFile();
+                                }}
+                                disabled={uploadForm.processing}
                             >
                                 Cancel
                             </Button>

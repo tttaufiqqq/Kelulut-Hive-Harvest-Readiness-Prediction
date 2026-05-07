@@ -70,6 +70,8 @@ test('inertia get errors render the shared error page with request ids', functio
 
     expect($response->json('props.requestId'))->toBeString();
     expect($response->json('props.meta.request_id'))->toBeString();
+    expect($response->json('props.message'))->toBeString();
+    expect($response->json('props.reason'))->toBeString();
 })->with([
     ['/testing/errors/403', 403],
     ['/testing/errors/404', 404],
@@ -86,10 +88,10 @@ test('inertia mutating app exceptions redirect back with warning flash', functio
         ->post('/testing/errors/mutate-warning', [], inertiaHeaders());
 
     $response->assertRedirect('/testing/errors/source');
-    $response->assertSessionHas(
-        'warning',
-        'The requested action cannot be completed right now.',
-    );
+    $response->assertSessionHas('warning', [
+        'message' => 'The requested action cannot be completed right now.',
+        'reason' => null,
+    ]);
 });
 
 test('inertia mutating runtime exceptions redirect back with friendly error flash', function () {
@@ -99,9 +101,10 @@ test('inertia mutating runtime exceptions redirect back with friendly error flas
         ->post('/testing/errors/mutate-runtime', [], inertiaHeaders());
 
     $response->assertRedirect('/testing/errors/source');
+    $response->assertSessionHas('error.message', 'We could not complete your request.');
     $response->assertSessionHas(
-        'error',
-        'Something went wrong on our end. Please try again later.',
+        'error.reason',
+        'The server hit an unexpected problem while processing the request.',
     );
 });
 
@@ -111,9 +114,10 @@ test('unexpected api failures use the standardized json envelope', function () {
     $response
         ->assertStatus(500)
         ->assertJsonPath('error.code', 'unexpected_error')
+        ->assertJsonPath('error.message', 'We could not complete your request.')
         ->assertJsonPath(
-            'error.message',
-            'Something went wrong on our end. Please try again later.',
+            'error.reason',
+            'The server hit an unexpected problem while processing the request.',
         )
         ->assertHeader('X-Request-Id');
 

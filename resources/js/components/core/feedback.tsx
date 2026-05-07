@@ -7,7 +7,7 @@ type AlertVariant = 'info' | 'success' | 'warning' | 'error';
 
 interface AlertProps {
     variant?: AlertVariant;
-    title?: string;
+    title?: React.ReactNode;
     children: React.ReactNode;
     onClose?: () => void;
     className?: string;
