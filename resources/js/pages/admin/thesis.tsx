@@ -58,6 +58,7 @@ export default function ThesisPage({
     function resetSelectedFile() {
         setSelectedFile(null);
         uploadForm.reset();
+
         if (fileRef.current) {
             fileRef.current.value = '';
         }

@@ -1,5 +1,5 @@
-import React from 'react';
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
+import React from 'react';
 import { BeeIcon } from '@/components/core/bee-icon';
 import { Button } from '@/components/core/button';
 import { TextLink } from '@/components/core/text-link';

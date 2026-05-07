@@ -53,7 +53,9 @@ const fetchJson = async <T>(url: string): Promise<T> => {
 
         try {
             payload = (await response.clone().json()) as ApiErrorPayload;
-        } catch {}
+        } catch {
+            payload = null;
+        }
 
         throw {
             code: payload?.error?.code ?? 'unexpected_error',
