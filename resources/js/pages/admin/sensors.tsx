@@ -19,6 +19,8 @@ import {
     CartesianGrid,
     Tooltip,
 } from 'recharts';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { TooltipProps } from 'recharts/types/component/Tooltip';
 import { Card } from '@/components/core/card';
 import { DatePicker } from '@/components/core/date-picker';
 import { AdminLayout } from '@/layouts/admin-layout';
@@ -457,57 +459,124 @@ const TOOLTIP_STYLE = {
     color: '#78350F',
 };
 
-function SensorLine({
+const SENSOR_DESCRIPTIONS = {
+    temperature: 'Internal hive temperature',
+    humidity: 'Relative humidity',
+    mq2: 'Smoke / LPG',
+    mq3: 'Alcohol / Benzene',
+    mq5: 'LPG / Natural Gas',
+    mq135: 'Air Quality / CO₂',
+} as const;
+
+const sensorTooltipFormatter: NonNullable<
+    TooltipProps<ValueType, NameType>['formatter']
+> = (value, name) => {
+    const numericValue = typeof value === 'number' ? value : 0;
+    const resolvedName =
+        typeof name === 'string' || typeof name === 'number'
+            ? String(name)
+            : '';
+
+    if (resolvedName === 'Temperature') {
+        return [`${numericValue.toFixed(1).replace(/\.0$/, '')}°C`, resolvedName];
+    }
+
+    if (resolvedName === 'Humidity') {
+        return [`${numericValue.toFixed(1).replace(/\.0$/, '')}%`, resolvedName];
+    }
+
+    return [numericValue, resolvedName];
+};
+
+function SensorTrendChart({
     data,
     dataKey,
+    label,
 }: {
     data: HistoryPoint[];
     dataKey: keyof HistoryPoint;
+    label: string;
 }) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
+
+    const values = data
+        .map((point) => point[dataKey])
+        .filter((value): value is number => typeof value === 'number');
+    const minValue = values.length > 0 ? Math.min(...values) : 0;
+    const maxValue = values.length > 0 ? Math.max(...values) : 0;
+    const paddedMax = maxValue === 0 ? 100 : Math.ceil(maxValue * 1.15);
+    const isHumidity = dataKey === 'humidity';
+
     return (
-        <div className="mt-4 w-full min-w-0">
-            <ResponsiveContainer width="100%" height={140}>
-                <LineChart
-                    data={data}
-                    margin={{
-                        top: 8,
-                        right: 8,
-                        left: 8,
-                        bottom: 18,
-                    }}
-                >
-                    <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="#FEF3C7"
-                    />
-                    <XAxis
-                        dataKey="time"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={AXIS_TICK}
-                        dy={8}
-                        interval="preserveStartEnd"
-                        tickMargin={8}
-                    />
-                    <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={AXIS_TICK}
-                        width={36}
-                        tickMargin={8}
-                    />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Line
-                        type="monotone"
-                        dataKey={dataKey}
-                        stroke="#F59E0B"
-                        strokeWidth={2}
-                        dot={false}
-                        isAnimationActive={false}
-                    />
-                </LineChart>
-            </ResponsiveContainer>
+        <div className="mt-4 rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
+            {mounted && (
+                <ResponsiveContainer width="100%" height={170}>
+                    <LineChart
+                        data={data}
+                        margin={{
+                            top: 8,
+                            right: 8,
+                            left: 8,
+                            bottom: 18,
+                        }}
+                    >
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#FDE68A"
+                            strokeOpacity={0.55}
+                        />
+                        <XAxis
+                            dataKey="time"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={AXIS_TICK}
+                            dy={8}
+                            interval="preserveStartEnd"
+                            tickMargin={8}
+                        />
+                        <YAxis
+                            axisLine={false}
+                            tickLine={false}
+                            tick={AXIS_TICK}
+                            width={36}
+                            tickMargin={8}
+                            domain={
+                                isHumidity
+                                    ? [0, 100]
+                                    : [
+                                          Math.max(0, Math.floor(minValue * 0.9)),
+                                          paddedMax,
+                                      ]
+                            }
+                        />
+                        <Tooltip
+                            contentStyle={TOOLTIP_STYLE}
+                            formatter={sensorTooltipFormatter}
+                            labelStyle={{ color: '#78350F' }}
+                        />
+                        <Line
+                            type="monotone"
+                            dataKey={dataKey}
+                            name={label}
+                            stroke="#F59E0B"
+                            strokeWidth={2.5}
+                            dot={false}
+                            activeDot={{
+                                r: 4,
+                                stroke: '#F59E0B',
+                                strokeWidth: 2,
+                                fill: '#fff',
+                            }}
+                        />
+                    </LineChart>
+                </ResponsiveContainer>
+            )}
         </div>
     );
 }
@@ -654,6 +723,177 @@ export default function AdminSensors({
     const sensorChannelName = hives.some((hive) => hive.id === selected)
         ? `hive.${selected}.sensors`
         : null;
+    const sensorCards = [
+        {
+            key: 'temperature' as const,
+            label: 'Temperature',
+            description: SENSOR_DESCRIPTIONS.temperature,
+            value: normalizedLatest?.temperature ?? null,
+            suffix: '°C',
+            maxFractionDigits: 1,
+            icon: <Thermometer className="h-4 w-4" />,
+            iconBg: 'bg-amber-100',
+            iconColor: '#B45309',
+            renderVisual: () => (
+                <>
+                    <ArcGauge
+                        value={normalizedLatest?.temperature ?? 0}
+                        max={45}
+                        color={
+                            normalizedLatest?.temperature != null
+                                ? tempColor(normalizedLatest.temperature)
+                                : '#FEF3C7'
+                        }
+                        noData={!normalizedLatest}
+                    />
+                    {normalizedLatest?.temperature != null && (
+                        <StatusBadge
+                            color={tempColor(normalizedLatest.temperature)}
+                        />
+                    )}
+                </>
+            ),
+        },
+        {
+            key: 'humidity' as const,
+            label: 'Humidity',
+            description: SENSOR_DESCRIPTIONS.humidity,
+            value: normalizedLatest?.humidity ?? null,
+            suffix: '%',
+            maxFractionDigits: 1,
+            icon: <Droplets className="h-4 w-4" />,
+            iconBg: 'bg-blue-50',
+            iconColor: '#3B82F6',
+            renderVisual: () => (
+                <>
+                    <ProgressBar
+                        value={normalizedLatest?.humidity ?? 0}
+                        color={
+                            normalizedLatest?.humidity != null
+                                ? humidColor(normalizedLatest.humidity)
+                                : '#FEF3C7'
+                        }
+                        noData={!normalizedLatest}
+                    />
+                    {normalizedLatest?.humidity != null && (
+                        <StatusBadge
+                            color={humidColor(normalizedLatest.humidity)}
+                        />
+                    )}
+                </>
+            ),
+        },
+        {
+            key: 'mq2' as const,
+            label: 'MQ-2',
+            description: SENSOR_DESCRIPTIONS.mq2,
+            value: normalizedLatest?.mq2 ?? null,
+            maxFractionDigits: 0,
+            icon: <Flame className="h-4 w-4" />,
+            iconBg: 'bg-red-50',
+            iconColor: '#EF4444',
+            renderVisual: () => (
+                <>
+                    <ArcGauge
+                        value={normalizedLatest?.mq2 ?? 0}
+                        max={MQ_GAUGE_MAX}
+                        color={
+                            normalizedLatest?.mq2 != null
+                                ? mqColor(normalizedLatest.mq2)
+                                : '#FEF3C7'
+                        }
+                        noData={!normalizedLatest}
+                    />
+                    {normalizedLatest?.mq2 != null && (
+                        <StatusBadge color={mqColor(normalizedLatest.mq2)} />
+                    )}
+                </>
+            ),
+        },
+        {
+            key: 'mq3' as const,
+            label: 'MQ-3',
+            description: SENSOR_DESCRIPTIONS.mq3,
+            value: normalizedLatest?.mq3 ?? null,
+            maxFractionDigits: 0,
+            icon: <Flame className="h-4 w-4" />,
+            iconBg: 'bg-red-50',
+            iconColor: '#EF4444',
+            renderVisual: () => (
+                <>
+                    <ArcGauge
+                        value={normalizedLatest?.mq3 ?? 0}
+                        max={MQ_GAUGE_MAX}
+                        color={
+                            normalizedLatest?.mq3 != null
+                                ? mqColor(normalizedLatest.mq3)
+                                : '#FEF3C7'
+                        }
+                        noData={!normalizedLatest}
+                    />
+                    {normalizedLatest?.mq3 != null && (
+                        <StatusBadge color={mqColor(normalizedLatest.mq3)} />
+                    )}
+                </>
+            ),
+        },
+        {
+            key: 'mq5' as const,
+            label: 'MQ-5',
+            description: SENSOR_DESCRIPTIONS.mq5,
+            value: normalizedLatest?.mq5 ?? null,
+            maxFractionDigits: 0,
+            icon: <Flame className="h-4 w-4" />,
+            iconBg: 'bg-red-50',
+            iconColor: '#EF4444',
+            renderVisual: () => (
+                <>
+                    <ArcGauge
+                        value={normalizedLatest?.mq5 ?? 0}
+                        max={MQ_GAUGE_MAX}
+                        color={
+                            normalizedLatest?.mq5 != null
+                                ? mqColor(normalizedLatest.mq5)
+                                : '#FEF3C7'
+                        }
+                        noData={!normalizedLatest}
+                    />
+                    {normalizedLatest?.mq5 != null && (
+                        <StatusBadge color={mqColor(normalizedLatest.mq5)} />
+                    )}
+                </>
+            ),
+        },
+        {
+            key: 'mq135' as const,
+            label: 'MQ-135',
+            description: SENSOR_DESCRIPTIONS.mq135,
+            value: normalizedLatest?.mq135 ?? null,
+            maxFractionDigits: 0,
+            icon: <Flame className="h-4 w-4" />,
+            iconBg: 'bg-red-50',
+            iconColor: '#EF4444',
+            renderVisual: () => (
+                <>
+                    <ArcGauge
+                        value={normalizedLatest?.mq135 ?? 0}
+                        max={MQ_GAUGE_MAX}
+                        color={
+                            normalizedLatest?.mq135 != null
+                                ? mqColor(normalizedLatest.mq135)
+                                : '#FEF3C7'
+                        }
+                        noData={!normalizedLatest}
+                    />
+                    {normalizedLatest?.mq135 != null && (
+                        <StatusBadge color={mqColor(normalizedLatest.mq135)} />
+                    )}
+                </>
+            ),
+        },
+    ];
+    const summarySensorCards = sensorCards.slice(0, 2);
+    const gasSensorCards = sensorCards.slice(2);
 
     const navigate = (params: Record<string, string | number | null>) =>
         router.get(route('admin.sensors.index'), {
@@ -802,95 +1042,57 @@ export default function AdminSensors({
                     </Card>
                 ) : (
                     <div className="space-y-6">
-                        {/* ── Top row: Temperature + Humidity ── */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                            {/* Temperature */}
-                            <Card className="flex flex-col p-4 sm:p-6">
-                                <SensorHeader
-                                    icon={<Thermometer className="h-4 w-4" />}
-                                    label="Temperature"
-                                    value={
-                                        <AnimatedMetricValue
+                            {summarySensorCards.map(
+                                ({
+                                    key,
+                                    label,
+                                    description,
+                                    value,
+                                    suffix,
+                                    maxFractionDigits,
+                                    icon,
+                                    iconBg,
+                                    iconColor,
+                                    renderVisual,
+                                }) => (
+                                    <Card
+                                        key={key}
+                                        className="flex min-h-[500px] min-w-0 flex-col p-4 sm:p-6"
+                                    >
+                                        <SensorHeader
+                                            icon={icon}
+                                            label={label}
                                             value={
-                                                normalizedLatest?.temperature ??
-                                                null
+                                                <AnimatedMetricValue
+                                                    value={value}
+                                                    suffix={suffix}
+                                                    maxFractionDigits={
+                                                        maxFractionDigits
+                                                    }
+                                                />
                                             }
-                                            suffix="°C"
-                                            maxFractionDigits={1}
+                                            iconBg={iconBg}
+                                            iconColor={iconColor}
                                         />
-                                    }
-                                    iconBg="bg-amber-100"
-                                    iconColor="#B45309"
-                                />
-                                <ArcGauge
-                                    value={normalizedLatest?.temperature ?? 0}
-                                    max={45}
-                                    color={
-                                        normalizedLatest?.temperature != null
-                                            ? tempColor(
-                                                  normalizedLatest.temperature,
-                                              )
-                                            : '#FEF3C7'
-                                    }
-                                    noData={!normalizedLatest}
-                                />
-                                {normalizedLatest?.temperature != null && (
-                                    <StatusBadge
-                                        color={tempColor(
-                                            normalizedLatest.temperature,
-                                        )}
-                                    />
-                                )}
-                                <SensorLine
-                                    data={normalizedHistory}
-                                    dataKey="temperature"
-                                />
-                            </Card>
-
-                            {/* Humidity */}
-                            <Card className="flex flex-col p-4 sm:p-6">
-                                <SensorHeader
-                                    icon={<Droplets className="h-4 w-4" />}
-                                    label="Humidity"
-                                    value={
-                                        <AnimatedMetricValue
-                                            value={
-                                                normalizedLatest?.humidity ??
-                                                null
-                                            }
-                                            suffix="%"
-                                            maxFractionDigits={1}
-                                        />
-                                    }
-                                    iconBg="bg-blue-50"
-                                    iconColor="#3B82F6"
-                                />
-                                <ProgressBar
-                                    value={normalizedLatest?.humidity ?? 0}
-                                    color={
-                                        normalizedLatest?.humidity != null
-                                            ? humidColor(
-                                                  normalizedLatest.humidity,
-                                              )
-                                            : '#FEF3C7'
-                                    }
-                                    noData={!normalizedLatest}
-                                />
-                                {normalizedLatest?.humidity != null && (
-                                    <StatusBadge
-                                        color={humidColor(
-                                            normalizedLatest.humidity,
-                                        )}
-                                    />
-                                )}
-                                <SensorLine
-                                    data={normalizedHistory}
-                                    dataKey="humidity"
-                                />
-                            </Card>
+                                        <p className="text-xs text-amber-700/55">
+                                            {description}
+                                        </p>
+                                        <div className="mt-4 flex min-h-[174px] flex-col justify-center px-2 py-2">
+                                            {renderVisual()}
+                                        </div>
+                                        <div className="mt-auto">
+                                            <SensorTrendChart
+                                                data={normalizedHistory}
+                                                dataKey={key}
+                                                label={label}
+                                            />
+                                        </div>
+                                    </Card>
+                                ),
+                            )}
                         </div>
 
-                        {/* ── Bottom row: Gas sensors (horizontal scroll) ── */}
                         <div>
                             <div className="mb-3 flex items-center gap-2">
                                 <motion.div
@@ -910,78 +1112,54 @@ export default function AdminSensors({
                                 </span>
                             </div>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                                {(
-                                    [
-                                        {
-                                            key: 'mq2' as const,
-                                            label: 'MQ-2',
-                                            desc: 'Smoke / LPG',
-                                        },
-                                        {
-                                            key: 'mq3' as const,
-                                            label: 'MQ-3',
-                                            desc: 'Alcohol / Benzene',
-                                        },
-                                        {
-                                            key: 'mq5' as const,
-                                            label: 'MQ-5',
-                                            desc: 'LPG / Natural Gas',
-                                        },
-                                        {
-                                            key: 'mq135' as const,
-                                            label: 'MQ-135',
-                                            desc: 'Air Quality / CO₂',
-                                        },
-                                    ] as const
-                                ).map(({ key, label, desc }) => (
-                                    <Card
-                                        key={key}
-                                        className="flex h-full min-w-0 flex-col p-4 sm:p-6"
-                                    >
-                                        <div className="mb-1 flex items-center justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <span className="text-xs font-black tracking-widest text-amber-900/60 uppercase">
-                                                    {label}
-                                                </span>
-                                                <p className="mt-0.5 text-[10px] font-medium text-amber-900/40">
-                                                    {desc}
-                                                </p>
-                                            </div>
-                                            <AnimatedMetricValue
+                                {gasSensorCards.map(
+                                    ({
+                                        key,
+                                        label,
+                                        description,
+                                        value,
+                                        suffix,
+                                        maxFractionDigits,
+                                        icon,
+                                        iconBg,
+                                        iconColor,
+                                        renderVisual,
+                                    }) => (
+                                        <Card
+                                            key={key}
+                                            className="flex h-[500px] min-w-0 flex-col p-4 sm:p-6"
+                                        >
+                                            <SensorHeader
+                                                icon={icon}
+                                                label={label}
                                                 value={
-                                                    normalizedLatest?.[key] ??
-                                                    null
+                                                    <AnimatedMetricValue
+                                                        value={value}
+                                                        suffix={suffix}
+                                                        maxFractionDigits={
+                                                            maxFractionDigits
+                                                        }
+                                                    />
                                                 }
-                                                className="shrink-0 text-2xl font-black text-amber-950"
+                                                iconBg={iconBg}
+                                                iconColor={iconColor}
                                             />
-                                        </div>
-                                        <ArcGauge
-                                            value={normalizedLatest?.[key] ?? 0}
-                                            max={MQ_GAUGE_MAX}
-                                            color={
-                                                normalizedLatest?.[key] != null
-                                                    ? mqColor(
-                                                          normalizedLatest[
-                                                              key
-                                                          ],
-                                                      )
-                                                    : '#FEF3C7'
-                                            }
-                                            noData={!normalizedLatest}
-                                        />
-                                        {normalizedLatest?.[key] != null && (
-                                            <StatusBadge
-                                                color={mqColor(
-                                                    normalizedLatest[key],
-                                                )}
-                                            />
-                                        )}
-                                        <SensorLine
-                                            data={normalizedHistory}
-                                            dataKey={key}
-                                        />
-                                    </Card>
-                                ))}
+                                            <p className="text-xs text-amber-700/55">
+                                                {description}
+                                            </p>
+                                            <div className="mt-4 flex min-h-[174px] flex-col justify-center px-2 py-2">
+                                                {renderVisual()}
+                                            </div>
+                                            <div className="mt-auto">
+                                                <SensorTrendChart
+                                                    data={normalizedHistory}
+                                                    dataKey={key}
+                                                    label={label}
+                                                />
+                                            </div>
+                                        </Card>
+                                    ),
+                                )}
                             </div>
                         </div>
                     </div>
