@@ -4,6 +4,7 @@ import {
     Area,
     AreaChart,
     CartesianGrid,
+    Legend,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -41,6 +42,15 @@ interface Props {
     readinessTrends: ReadinessTrend[];
 }
 
+const TOOLTIP_STYLE = {
+    backgroundColor: '#FFFBEB',
+    border: '1px solid #FEF3C7',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    color: '#78350F',
+};
+
 const READINESS_BAR_STYLES: Record<string, string> = {
     not_ready: 'bg-rose-400',
     approaching: 'bg-amber-400',
@@ -53,8 +63,10 @@ function HriGaugeCard({ gauge }: { gauge: HriGauge }) {
         <Card className="flex h-full flex-col gap-5 border border-amber-100/80 bg-white/95">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="font-bold text-amber-950">{gauge.hive_name}</p>
-                    <p className="mt-0.5 text-xs text-amber-900/50">
+                    <p className="text-lg font-bold text-amber-900">
+                        {gauge.hive_name}
+                    </p>
+                    <p className="mt-1 text-sm text-amber-900/50">
                         {gauge.site_name ?? 'No site assigned'}
                     </p>
                 </div>
@@ -65,7 +77,7 @@ function HriGaugeCard({ gauge }: { gauge: HriGauge }) {
                 <p className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                     Current HRI
                 </p>
-                <p className="text-4xl font-black tracking-tight text-amber-950">
+                <p className="text-5xl font-black tracking-tight text-amber-900">
                     {gauge.hri_value !== null ? gauge.hri_value.toFixed(2) : '—'}
                 </p>
             </div>
@@ -123,7 +135,7 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
         return (
             <ChartCard
                 eyebrow="Readiness Trend"
-                title="30-day HRI movement"
+                title="Recent readiness movement"
                 description="Trend data will appear once recent readiness history is available."
             >
                 <p className="py-6 text-center text-sm text-amber-900/40">
@@ -134,106 +146,117 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
     }
 
     return (
-        <Card className="h-full">
-            <div className="mb-4">
-                <p className="text-[11px] font-black tracking-[0.22em] text-amber-900/45 uppercase">
-                    Readiness Trend
-                </p>
-                <div className="mt-1 flex flex-col gap-3 md:grid md:grid-cols-[minmax(0,1fr)_220px] md:items-start md:gap-x-4 md:gap-y-0">
-                    <p className="order-1 text-lg leading-tight font-black text-amber-950 sm:text-base">
-                        30-day HRI movement
-                    </p>
-                    <p className="order-2 max-w-xl text-sm leading-7 text-amber-700 md:order-3 md:-mt-1 md:leading-6">
-                        Review how each hive&apos;s average readiness has shifted
-                        over time.
-                    </p>
-                    {hiveNames.length > 1 ? (
-                        <div className="order-3 w-full md:order-2 md:w-[220px] md:flex-shrink-0">
-                            <SelectField
-                                value={selectedHive}
-                                onChange={setSelectedHive}
-                                options={hiveOptions}
+        <ChartCard
+            eyebrow="Readiness Trend"
+            title="Recent readiness movement"
+            description="Monitor how HRI is changing across the selected reporting window."
+            actions={
+                hiveNames.length > 1 ? (
+                    <div className="w-full sm:w-[220px]">
+                        <SelectField
+                            value={selectedHive}
+                            onChange={setSelectedHive}
+                            options={hiveOptions}
+                        />
+                    </div>
+                ) : null
+            }
+        >
+            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
+                {mounted && (
+                    <ResponsiveContainer width="100%" height={220}>
+                        <AreaChart
+                            data={filtered}
+                            margin={{ top: 8, right: 8, left: 8, bottom: 18 }}
+                        >
+                            <defs>
+                                <linearGradient
+                                    id="reportingHriGradient"
+                                    x1="0"
+                                    y1="0"
+                                    x2="0"
+                                    y2="1"
+                                >
+                                    <stop
+                                        offset="5%"
+                                        stopColor="#F59E0B"
+                                        stopOpacity={0.3}
+                                    />
+                                    <stop
+                                        offset="95%"
+                                        stopColor="#F59E0B"
+                                        stopOpacity={0}
+                                    />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                vertical={false}
+                                stroke="#FEF3C7"
                             />
-                        </div>
-                    ) : null}
-                </div>
+                            <XAxis
+                                dataKey="date"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                }}
+                                dy={8}
+                                tickMargin={8}
+                            />
+                            <YAxis
+                                domain={[0, 100]}
+                                axisLine={false}
+                                tickLine={false}
+                                width={36}
+                                tickFormatter={(value) => `${value}%`}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                }}
+                                tickMargin={8}
+                            />
+                            <Tooltip
+                                contentStyle={TOOLTIP_STYLE}
+                                formatter={(value) => {
+                                    const displayValue =
+                                        typeof value === 'number'
+                                            ? value
+                                            : Number(value ?? 0);
+
+                                    return [`${displayValue}%`, 'HRI'];
+                                }}
+                            />
+                            <Legend
+                                iconType="circle"
+                                wrapperStyle={{
+                                    fontSize: 12,
+                                    paddingTop: 16,
+                                    lineHeight: '20px',
+                                }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="avg_hri_pct"
+                                name="HRI"
+                                stroke="#F59E0B"
+                                strokeWidth={3}
+                                fill="url(#reportingHriGradient)"
+                                activeDot={{
+                                    r: 4,
+                                    stroke: '#F59E0B',
+                                    strokeWidth: 2,
+                                    fill: '#fff',
+                                }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                )}
             </div>
-
-            {mounted && (
-                <ResponsiveContainer width="100%" height={220}>
-                    <AreaChart
-                        data={filtered}
-                        margin={{ left: 8, right: 16, top: 8, bottom: 18 }}
-                    >
-                        <defs>
-                            <linearGradient
-                                id="reportingHriGradient"
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                            >
-                                <stop
-                                    offset="5%"
-                                    stopColor="#F59E0B"
-                                    stopOpacity={0.3}
-                                />
-                                <stop
-                                    offset="95%"
-                                    stopColor="#F59E0B"
-                                    stopOpacity={0}
-                                />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                            vertical={false}
-                            stroke="#fef3c7"
-                        />
-                        <XAxis
-                            dataKey="date"
-                            tick={{ fontSize: 11, fill: '#92400e' }}
-                            axisLine={false}
-                            tickLine={false}
-                            tickMargin={8}
-                            dy={8}
-                        />
-                        <YAxis
-                            unit="%"
-                            domain={[0, 100]}
-                            tick={{ fontSize: 11, fill: '#92400e' }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={36}
-                            tickMargin={8}
-                        />
-                        <Tooltip
-                            contentStyle={{
-                                borderRadius: 12,
-                                border: '1px solid #fef3c7',
-                                fontSize: 12,
-                            }}
-                            formatter={(value) => {
-                                const displayValue =
-                                    typeof value === 'number'
-                                        ? value
-                                        : Number(value ?? 0);
-
-                                return [`${displayValue}%`, 'Avg HRI'];
-                            }}
-                        />
-                        <Area
-                            type="monotone"
-                            dataKey="avg_hri_pct"
-                            stroke="#F59E0B"
-                            strokeWidth={2}
-                            fill="url(#reportingHriGradient)"
-                            dot={false}
-                        />
-                    </AreaChart>
-                </ResponsiveContainer>
-            )}
-        </Card>
+        </ChartCard>
     );
 }
 
@@ -242,8 +265,8 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
         <AuthenticatedLayout>
             <Head title="Reporting" />
 
-            <div className="mx-auto max-w-7xl space-y-6 px-6 py-8 md:p-10 lg:px-10 lg:py-8">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="mx-auto max-w-7xl space-y-8 p-6 md:p-10 lg:px-10 lg:py-8">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <Breadcrumbs
                         items={[
                             { label: 'Home', href: '/' },
@@ -253,7 +276,7 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
                     <BeekeeperTabs active="reporting" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-amber-950">
+                    <h1 className="text-lg font-bold text-amber-900">
                         Reporting
                     </h1>
                     <p className="mt-1 text-sm text-amber-900/50">
@@ -262,7 +285,7 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
                 </div>
 
                 <div>
-                    <h2 className="mb-3 text-sm font-black tracking-widest text-amber-900/60 uppercase">
+                    <h2 className="mb-4 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                         HRI Gauge
                     </h2>
                     <HriGaugeGrid gauges={hriGauges} />
