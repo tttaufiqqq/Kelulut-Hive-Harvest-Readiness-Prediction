@@ -16,6 +16,7 @@ import { useAppearance } from '@/hooks/use-appearance';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import { confirm } from '@/routes/two-factor';
+import type { UiError } from '@/types';
 
 function GridScanIcon() {
     return (
@@ -54,7 +55,7 @@ function TwoFactorSetupStep({
     manualSetupKey: string | null;
     buttonText: string;
     onNextStep: () => void;
-    errors: string[];
+    errors: UiError[];
 }) {
     const { resolvedAppearance } = useAppearance();
     const [copiedText, copy] = useClipboard();
@@ -63,7 +64,7 @@ function TwoFactorSetupStep({
     return (
         <>
             {errors?.length ? (
-                <AlertError errors={errors} />
+                <AlertError errors={errors.map((error) => error.message)} />
             ) : (
                 <>
                     <div className="mx-auto flex max-w-md overflow-hidden">
@@ -236,7 +237,7 @@ type Props = {
     manualSetupKey: string | null;
     clearSetupData: () => void;
     fetchSetupData: () => Promise<void>;
-    errors: string[];
+    errors: UiError[];
 };
 
 export function TwoFactorSetupModal({

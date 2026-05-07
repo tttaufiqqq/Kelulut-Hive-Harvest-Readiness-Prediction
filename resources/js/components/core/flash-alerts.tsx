@@ -6,12 +6,13 @@ export type FlashMessageBag = {
     id?: string | null;
     success?: string | null;
     error?: string | null;
+    warning?: string | null;
 };
 
 type FlashAlertItem = {
     id: number;
     message: string;
-    variant: 'success' | 'error';
+    variant: 'success' | 'error' | 'warning';
 };
 
 interface FlashAlertsProps {
@@ -35,6 +36,14 @@ function buildFlashItems(flash?: FlashMessageBag): FlashAlertItem[] {
             id: 1,
             message: flash.error,
             variant: 'error',
+        });
+    }
+
+    if (flash?.warning) {
+        items.push({
+            id: 2,
+            message: flash.warning,
+            variant: 'warning',
         });
     }
 

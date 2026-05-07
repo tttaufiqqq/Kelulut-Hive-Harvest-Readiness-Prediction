@@ -47,7 +47,7 @@ class SiteController extends Controller
     {
         if ($site->hives()->exists()) {
             return redirect()->route('admin.sites.index')
-                ->with('error', "Cannot delete \"{$site->name}\" — {$site->hives()->count()} hive(s) are assigned to it.");
+                ->with('warning', "Cannot delete \"{$site->name}\" — {$site->hives()->count()} hive(s) are assigned to it.");
         }
 
         $site->delete();

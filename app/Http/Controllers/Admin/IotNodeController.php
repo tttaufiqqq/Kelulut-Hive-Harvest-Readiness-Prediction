@@ -69,7 +69,7 @@ class IotNodeController extends Controller
     {
         if ($device->sensorLogs()->exists()) {
             return redirect()->route('admin.devices.index')
-                ->with('error', "Cannot delete \"{$device->device_id}\" — it has sensor log records.");
+                ->with('warning', "Cannot delete \"{$device->device_id}\" — it has sensor log records.");
         }
 
         $device->delete();

@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AppErrorCode;
 use App\Http\Controllers\Controller;
 use App\Models\Hive;
 use App\Models\Prediction;
 use App\Models\SensorLog;
+use App\Support\SafeSection;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -20,26 +21,26 @@ class DashboardController extends Controller
             ->selectRaw("COUNT(*) as total, SUM(status = 'pending') as pending, SUM(status = 'active') as active")
             ->first();
 
-        try {
-            $hives = $this->liveHiveMonitor();
-        } catch (\Throwable $e) {
-            Log::error('AdminDashboard liveHiveMonitor failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
-            $hives = [];
-        }
+        $hives = SafeSection::execute(
+            'admin.dashboard.live_hive_monitor',
+            fn () => $this->liveHiveMonitor(),
+            [],
+            AppErrorCode::UnexpectedError,
+        );
 
-        try {
-            $productivity = $this->productivityRanking();
-        } catch (\Throwable $e) {
-            Log::error('AdminDashboard productivityRanking failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
-            $productivity = [];
-        }
+        $productivity = SafeSection::execute(
+            'admin.dashboard.productivity_ranking',
+            fn () => $this->productivityRanking(),
+            [],
+            AppErrorCode::UnexpectedError,
+        );
 
-        try {
-            $crossSite = $this->crossSiteComparison();
-        } catch (\Throwable $e) {
-            Log::error('AdminDashboard crossSiteComparison failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
-            $crossSite = [];
-        }
+        $crossSite = SafeSection::execute(
+            'admin.dashboard.cross_site_comparison',
+            fn () => $this->crossSiteComparison(),
+            [],
+            AppErrorCode::UnexpectedError,
+        );
 
         return Inertia::render('admin/dashboard', [
             'stats' => [

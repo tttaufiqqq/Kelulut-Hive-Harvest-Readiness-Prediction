@@ -8,6 +8,7 @@ import type { Auth } from '@/types/auth';
 
 interface Props {
     status: number;
+    requestId?: string | null;
 }
 
 const errors: Record<number, { title: string; description: string }> = {
@@ -24,6 +25,16 @@ const errors: Record<number, { title: string; description: string }> = {
     500: {
         title: 'Server Error',
         description: 'Something went wrong on our end. Please try again later.',
+    },
+    419: {
+        title: 'Session Expired',
+        description:
+            'Your session expired before the page could finish loading. Please refresh and try again.',
+    },
+    429: {
+        title: 'Too Many Requests',
+        description:
+            'Too many requests were sent in a short time. Please wait a moment and try again.',
     },
     503: {
         title: 'Service Unavailable',
@@ -110,7 +121,7 @@ function EmptyStateShell({
     );
 }
 
-export default function ErrorPage({ status }: Props) {
+export default function ErrorPage({ status, requestId = null }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const isAuthenticated = !!auth?.user;
 
@@ -143,7 +154,11 @@ export default function ErrorPage({ status }: Props) {
                     <EmptyStateShell
                         status={status}
                         title={title}
-                        description={description}
+                        description={
+                            requestId
+                                ? `${description} Reference ID: ${requestId}`
+                                : description
+                        }
                         actions={
                             <>
                                 <Button

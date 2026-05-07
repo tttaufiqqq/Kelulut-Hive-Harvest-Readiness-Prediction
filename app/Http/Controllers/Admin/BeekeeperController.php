@@ -6,16 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreBeekeeperRequest;
 use App\Http\Requests\Admin\UpdateBeekeeperRequest;
 use App\Models\User;
-use App\Notifications\BeekeeperInviteNotification;
+use App\Services\Admin\BeekeeperInviteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class BeekeeperController extends Controller
 {
+    public function __construct(private readonly BeekeeperInviteService $inviteService) {}
+
     public function index(): Response
     {
         $beekeepers = User::role('beekeeper')
@@ -39,27 +39,10 @@ class BeekeeperController extends Controller
 
     public function store(StoreBeekeeperRequest $request): RedirectResponse
     {
-        $beekeeper = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => null,
-            'status' => 'pending',
-            'invited_by' => $request->user()->id,
-        ]);
-
-        $beekeeper->assignRole(Role::findByName('beekeeper'));
-
-        $inviteUrl = URL::temporarySignedRoute(
-            'invite.accept',
-            now()->addDays(7),
-            ['user' => $beekeeper->id]
-        );
-
-        $beekeeper->notify(new BeekeeperInviteNotification($inviteUrl, $request->user()->name));
+        $result = $this->inviteService->invite($request->user(), $request->validated());
 
         return redirect()->route('admin.beekeepers.index')
-            ->with('success', "Invite sent to {$beekeeper->email}.");
+            ->with($result->flashLevel, $result->message);
     }
 
     public function update(UpdateBeekeeperRequest $request, User $user): RedirectResponse
@@ -102,18 +85,12 @@ class BeekeeperController extends Controller
 
         if (! $user->isPending()) {
             return redirect()->route('admin.beekeepers.index')
-                ->with('error', 'Invite can only be resent to pending users.');
+                ->with('warning', 'Invite can only be resent to pending users.');
         }
 
-        $inviteUrl = URL::temporarySignedRoute(
-            'invite.accept',
-            now()->addDays(7),
-            ['user' => $user->id]
-        );
-
-        $user->notify(new BeekeeperInviteNotification($inviteUrl, $request->user()->name));
+        $result = $this->inviteService->resend($user, $request->user());
 
         return redirect()->route('admin.beekeepers.index')
-            ->with('success', "Invite resent to {$user->email}.");
+            ->with($result->flashLevel, $result->message);
     }
 }

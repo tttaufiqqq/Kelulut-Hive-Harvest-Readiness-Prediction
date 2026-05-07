@@ -14,3 +14,9 @@ export type AuthLayoutProps = {
     title?: string;
     description?: string;
 };
+
+export type UiError = {
+    code: string;
+    message: string;
+    retryable: boolean;
+};

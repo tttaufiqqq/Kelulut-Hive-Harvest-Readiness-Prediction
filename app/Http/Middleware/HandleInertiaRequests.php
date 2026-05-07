@@ -46,11 +46,15 @@ class HandleInertiaRequests extends Middleware
                 ) : null,
             ],
             'flash' => [
-                'id' => fn () => $request->session()->has('success') || $request->session()->has('error')
+                'id' => fn () => $request->session()->has('success') || $request->session()->has('error') || $request->session()->has('warning')
                     ? Str::uuid()->toString()
                     : null,
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'warning' => fn () => $request->session()->get('warning'),
+            ],
+            'meta' => [
+                'request_id' => $request->attributes->get(AssignRequestId::ATTRIBUTE),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

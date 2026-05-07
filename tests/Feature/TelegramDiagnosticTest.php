@@ -151,7 +151,9 @@ test('full pipeline returns 409 when final prediction is not ready', function ()
             'guardrail_action' => 'downgrade',
             'telegram_dispatch' => 'not_ready',
             'prediction_source' => 'ml_pipeline',
-        ]);
+        ])
+        ->assertJsonPath('error.code', 'prediction_not_ready');
+    expect($response->json('meta.request_id'))->toBeString();
 
     expect(Prediction::count())->toBe(1);
     Queue::assertNotPushed(SendTelegramAlert::class);
@@ -174,7 +176,9 @@ test('full pipeline returns 503 when ml is unavailable', function () {
             'prediction_id' => null,
             'telegram_dispatch' => 'not_attempted',
             'prediction_source' => null,
-        ]);
+        ])
+        ->assertJsonPath('error.code', 'ml_unavailable');
+    expect($response->json('meta.request_id'))->toBeString();
 
     expect(SensorLog::count())->toBe(1);
     expect(Prediction::count())->toBe(0);

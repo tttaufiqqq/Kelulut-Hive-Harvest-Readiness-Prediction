@@ -5,6 +5,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { route } from 'ziggy-js';
 import '../css/app.css';
+import { AppErrorBoundary } from '@/components/core/app-error-boundary';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
@@ -47,10 +48,16 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
+        const requestId =
+            props.initialPage.props.meta?.request_id?.toString() ?? null;
+
+        window.__BUZZYHIVE_REQUEST_ID = requestId;
 
         root.render(
             <StrictMode>
-                <App {...props} />
+                <AppErrorBoundary requestId={requestId}>
+                    <App {...props} />
+                </AppErrorBoundary>
             </StrictMode>,
         );
     },

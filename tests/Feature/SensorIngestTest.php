@@ -142,7 +142,10 @@ test('missing api key returns 401 and stores no sensor log', function () {
         'mq2_value' => 250, 'mq3_value' => 200, 'mq5_value' => 180, 'mq135_value' => 220,
     ]);
 
-    $response->assertStatus(401);
+    $response->assertStatus(401)
+        ->assertJsonPath('error.code', 'unauthorized')
+        ->assertJsonPath('error.message', 'The API key is missing or invalid.');
+    expect($response->json('meta.request_id'))->toBeString();
     expect(SensorLog::count())->toBe(0);
 });
 
@@ -155,7 +158,8 @@ test('wrong api key returns 401', function () {
         'mq2_value' => 250, 'mq3_value' => 200, 'mq5_value' => 180, 'mq135_value' => 220,
     ], ['X-API-Key' => 'wrong-key']);
 
-    $response->assertStatus(401);
+    $response->assertStatus(401)
+        ->assertJsonPath('error.code', 'unauthorized');
 });
 
 // ── Test 6: invalid payload (temp=999) returns 422, no log stored ─────────
@@ -184,7 +188,13 @@ test('unknown device returns 404', function () {
 
     $response = $this->postJson('/api/sensor-data', $payload, ['X-API-Key' => 'test-api-key']);
 
-    $response->assertStatus(404);
+    $response->assertStatus(404)
+        ->assertJsonPath('error.code', 'not_found')
+        ->assertJsonPath(
+            'error.message',
+            'Device not registered for the selected hive.',
+        );
+    expect($response->json('meta.request_id'))->toBeString();
 });
 
 // ── Test 8: Flask down — sensor_log saved, no prediction, still 201 ───────
@@ -196,7 +206,13 @@ test('ml script down still returns 201 and saves sensor log without prediction',
 
     $response = $this->postJson('/api/sensor-data', sensorPayload($hive->id), ['X-API-Key' => 'test-api-key']);
 
-    $response->assertStatus(201);
+    $response->assertStatus(201)
+        ->assertJsonPath('warnings.0.code', 'ml_unavailable')
+        ->assertJsonPath(
+            'warnings.0.message',
+            'Live readiness prediction is temporarily unavailable.',
+        );
+    expect($response->json('meta.request_id'))->toBeString();
     expect(SensorLog::count())->toBe(1);
     expect(Prediction::count())->toBe(0);
 });

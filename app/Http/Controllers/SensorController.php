@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AppErrorCode;
 use App\Events\SensorReadingCreated;
+use App\Exceptions\AppException;
 use App\Models\IotNode;
 use App\Models\SensorLog;
 use App\Services\MlPredictionService;
 use App\Services\PredictionRunResult;
+use App\Http\Middleware\AssignRequestId;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class SensorController extends Controller
 {
@@ -18,47 +20,73 @@ class SensorController extends Controller
     public function store(Request $request)
     {
         if ($request->header('X-API-Key') !== config('app.iot_api_key')) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            throw new AppException(
+                AppErrorCode::Unauthorized,
+                401,
+                'The API key is missing or invalid.',
+                'warning',
+            );
         }
 
         $data = $this->validateSensorPayload($request);
         $node = $this->findActiveNode($data['device_id'], $data['hive_id']);
 
         if (! $node) {
-            return response()->json(['error' => 'Device not registered'], 404);
+            throw new AppException(
+                AppErrorCode::NotFound,
+                404,
+                'Device not registered for the selected hive.',
+                'warning',
+                [
+                    'device_id' => $data['device_id'],
+                    'hive_id' => $data['hive_id'],
+                ],
+            );
         }
 
-        $log = $this->storeSensorLog($data, $node);
-        $this->dispatchSensorReadingCreated($log);
-        $this->matchThresholds($log, $data);
+        $log = $this->storeSensorReading($data, $node);
+        $result = $this->mlService->runPrediction($log);
 
-        $this->mlService->predict($log);
+        $payload = ['status' => 'ok'];
 
-        return response()->json(['status' => 'ok'], 201);
+        if ($warning = $result->toWarning()) {
+            $payload['warnings'] = [$warning];
+            $payload['meta'] = [
+                'request_id' => $request->attributes->get(AssignRequestId::ATTRIBUTE),
+            ];
+        }
+
+        return response()->json($payload, 201);
     }
 
     public function testTelegramReady(Request $request)
     {
         if (! $this->hasValidInternalTestSecret($request)) {
-            return response()->json([
-                'error' => 'Unauthorized',
-                'message' => 'Internal diagnostic endpoint requires a valid X-Test-Secret header.',
-            ], 401);
+            throw new AppException(
+                AppErrorCode::Unauthorized,
+                401,
+                'Internal diagnostic endpoint requires a valid X-Test-Secret header.',
+                'warning',
+            );
         }
 
         $data = $this->validateSensorPayload($request, true);
         $node = $this->findActiveNode($data['device_id'], $data['hive_id']);
 
         if (! $node) {
-            return response()->json([
-                'error' => 'Device not registered',
-                'message' => 'Internal diagnostic endpoint only accepts an active device and hive pairing.',
-            ], 404);
+            throw new AppException(
+                AppErrorCode::NotFound,
+                404,
+                'Internal diagnostic endpoint only accepts an active device and hive pairing.',
+                'warning',
+                [
+                    'device_id' => $data['device_id'],
+                    'hive_id' => $data['hive_id'],
+                ],
+            );
         }
 
-        $log = $this->storeSensorLog($data, $node);
-        $this->dispatchSensorReadingCreated($log);
-        $this->matchThresholds($log, $data);
+        $log = $this->storeSensorReading($data, $node);
 
         if ($data['mode'] === 'synthetic_ready') {
             $result = $this->mlService->createSyntheticReadyPrediction($log);
@@ -66,6 +94,7 @@ class SensorController extends Controller
             return response()->json([
                 'message' => 'Internal diagnostic synthetic-ready run created a marked ready prediction and queued the Telegram alert job.',
                 'mode' => $data['mode'],
+                ...$this->withMeta($request),
                 ...$this->formatPredictionRunResult($result),
             ], 201);
         }
@@ -74,6 +103,11 @@ class SensorController extends Controller
 
         if (! $result->hasPrediction()) {
             return response()->json([
+                ...$this->errorPayload(
+                    $request,
+                    AppErrorCode::MlUnavailable,
+                    'Internal diagnostic full-pipeline run could not create a prediction because ML was unavailable.',
+                ),
                 'message' => 'Internal diagnostic full-pipeline run could not create a prediction because ML was unavailable.',
                 'mode' => $data['mode'],
                 ...$this->formatPredictionRunResult($result),
@@ -82,6 +116,11 @@ class SensorController extends Controller
 
         if (! $result->isReady()) {
             return response()->json([
+                ...$this->errorPayload(
+                    $request,
+                    AppErrorCode::PredictionNotReady,
+                    'Internal diagnostic full-pipeline run created a prediction, but the final guarded readiness was not ready.',
+                ),
                 'message' => 'Internal diagnostic full-pipeline run created a prediction, but the final guarded readiness was not ready.',
                 'mode' => $data['mode'],
                 ...$this->formatPredictionRunResult($result),
@@ -91,6 +130,7 @@ class SensorController extends Controller
         return response()->json([
             'message' => 'Internal diagnostic full-pipeline run created a ready prediction and queued the Telegram alert job.',
             'mode' => $data['mode'],
+            ...$this->withMeta($request),
             ...$this->formatPredictionRunResult($result),
         ], 201);
     }
@@ -146,6 +186,17 @@ class SensorController extends Controller
         ]);
     }
 
+    private function storeSensorReading(array $data, IotNode $node): SensorLog
+    {
+        return DB::transaction(function () use ($data, $node) {
+            $log = $this->storeSensorLog($data, $node);
+            $this->matchThresholds($log, $data);
+            $this->dispatchSensorReadingCreated($log);
+
+            return $log;
+        });
+    }
+
     private function dispatchSensorReadingCreated(SensorLog $log): void
     {
         SensorReadingCreated::dispatch(
@@ -157,42 +208,55 @@ class SensorController extends Controller
 
     private function matchThresholds(SensorLog $log, array $data): void
     {
-        try {
-            $thresholds = DB::table('master_sensor_thresholds')->get();
+        $thresholds = DB::table('master_sensor_thresholds')->get();
 
-            $sensorMap = [
-                'temp' => $data['temp'],
-                'humidity' => $data['humidity'],
-                'mq2' => $data['mq2_value'],
-                'mq3' => $data['mq3_value'],
-                'mq5' => $data['mq5_value'],
-                'mq135' => $data['mq135_value'],
-            ];
+        $sensorMap = [
+            'temp' => $data['temp'],
+            'humidity' => $data['humidity'],
+            'mq2' => $data['mq2_value'],
+            'mq3' => $data['mq3_value'],
+            'mq5' => $data['mq5_value'],
+            'mq135' => $data['mq135_value'],
+        ];
 
-            $matched = $thresholds->filter(function ($threshold) use ($sensorMap) {
-                $reading = $sensorMap[$threshold->sensor_type] ?? null;
+        $matched = $thresholds->filter(function ($threshold) use ($sensorMap) {
+            $reading = $sensorMap[$threshold->sensor_type] ?? null;
 
-                return $reading !== null
-                    && $reading >= $threshold->min_value
-                    && $reading <= $threshold->max_value;
-            })->map(fn ($threshold) => [
-                'sensor_log_id' => $log->id,
-                'threshold_id' => $threshold->id,
-            ])->values()->all();
+            return $reading !== null
+                && $reading >= $threshold->min_value
+                && $reading <= $threshold->max_value;
+        })->map(fn ($threshold) => [
+            'sensor_log_id' => $log->id,
+            'threshold_id' => $threshold->id,
+        ])->values()->all();
 
-            if (! empty($matched)) {
-                DB::table('sensor_log_thresholds')->insert($matched);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Threshold matching failed', [
-                'error' => $e->getMessage(),
-                'sensor_log_id' => $log->id,
-            ]);
+        if (! empty($matched)) {
+            DB::table('sensor_log_thresholds')->insert($matched);
         }
     }
 
     private function formatPredictionRunResult(PredictionRunResult $result): array
     {
         return $result->toArray();
+    }
+
+    private function errorPayload(Request $request, AppErrorCode $errorCode, string $message): array
+    {
+        return [
+            'error' => [
+                'code' => $errorCode->value,
+                'message' => $message,
+            ],
+            ...$this->withMeta($request),
+        ];
+    }
+
+    private function withMeta(Request $request): array
+    {
+        return [
+            'meta' => [
+                'request_id' => $request->attributes->get(AssignRequestId::ATTRIBUTE),
+            ],
+        ];
     }
 }

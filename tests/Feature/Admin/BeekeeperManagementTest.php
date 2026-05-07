@@ -2,7 +2,9 @@
 
 use App\Models\User;
 use App\Notifications\BeekeeperInviteNotification;
+use Illuminate\Contracts\Notifications\Dispatcher;
 use Illuminate\Support\Facades\Notification;
+use Mockery\MockInterface;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -154,8 +156,35 @@ test('admin cannot resend invite to active beekeeper', function () {
         ->post(route('admin.beekeepers.resend-invite', $beekeeper));
 
     $response->assertRedirect(route('admin.beekeepers.index'));
-    $response->assertSessionHas('error');
+    $response->assertSessionHas('warning');
     Notification::assertNothingSent();
+});
+
+test('invite delivery failure keeps the beekeeper record and flashes a warning', function () {
+    $this->mock(Dispatcher::class, function (MockInterface $mock) {
+        $mock->shouldReceive('send')->andThrow(new RuntimeException('SMTP offline'));
+    });
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $response = $this->actingAs($admin)->post(route('admin.beekeepers.store'), [
+        'name' => 'Failed Invite User',
+        'email' => 'failed-invite@buzzyhive.com',
+        'phone' => '0123456789',
+    ]);
+
+    $response->assertRedirect(route('admin.beekeepers.index'));
+    $response->assertSessionHas(
+        'warning',
+        'Beekeeper failed-invite@buzzyhive.com was created, but the invite email could not be delivered. Please resend the invite.',
+    );
+
+    $beekeeper = User::where('email', 'failed-invite@buzzyhive.com')->first();
+
+    expect($beekeeper)->not->toBeNull();
+    expect($beekeeper->status)->toBe('pending');
+    expect($beekeeper->hasRole('beekeeper'))->toBeTrue();
 });
 
 test('admin can update beekeeper details', function () {

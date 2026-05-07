@@ -5,11 +5,12 @@ import { AlertError } from '@/components/core/alert-error';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { regenerateRecoveryCodes } from '@/routes/two-factor';
+import type { UiError } from '@/types';
 
 type Props = {
     recoveryCodesList: string[];
     fetchRecoveryCodes: () => Promise<void>;
-    errors: string[];
+    errors: UiError[];
 };
 
 export function TwoFactorRecoveryCodes({
@@ -104,7 +105,7 @@ export function TwoFactorRecoveryCodes({
             >
                 <div className="mt-3 space-y-3">
                     {errors?.length ? (
-                        <AlertError errors={errors} />
+                        <AlertError errors={errors.map((error) => error.message)} />
                     ) : (
                         <>
                             <div

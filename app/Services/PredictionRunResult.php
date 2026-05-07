@@ -12,9 +12,10 @@ class PredictionRunResult
         public readonly string $outcome,
         public readonly string $telegramDispatch,
         public readonly ?string $failureReason = null,
+        public readonly ?string $failureMessage = null,
     ) {}
 
-    public static function mlUnavailable(int $sensorLogId, string $failureReason): self
+    public static function mlUnavailable(int $sensorLogId, string $failureReason, string $failureMessage): self
     {
         return new self(
             sensorLogId: $sensorLogId,
@@ -22,6 +23,19 @@ class PredictionRunResult
             outcome: 'ml_unavailable',
             telegramDispatch: 'not_attempted',
             failureReason: $failureReason,
+            failureMessage: $failureMessage,
+        );
+    }
+
+    public static function processingFailed(int $sensorLogId, string $failureReason, string $failureMessage): self
+    {
+        return new self(
+            sensorLogId: $sensorLogId,
+            prediction: null,
+            outcome: 'processing_failed',
+            telegramDispatch: 'not_attempted',
+            failureReason: $failureReason,
+            failureMessage: $failureMessage,
         );
     }
 
@@ -57,6 +71,19 @@ class PredictionRunResult
             'prediction_source' => $this->predictionSource(),
             'telegram_dispatch' => $this->telegramDispatch,
             'failure_reason' => $this->failureReason,
+            'failure_message' => $this->failureMessage,
+        ];
+    }
+
+    public function toWarning(): ?array
+    {
+        if ($this->failureReason === null || $this->failureMessage === null) {
+            return null;
+        }
+
+        return [
+            'code' => $this->failureReason,
+            'message' => $this->failureMessage,
         ];
     }
 

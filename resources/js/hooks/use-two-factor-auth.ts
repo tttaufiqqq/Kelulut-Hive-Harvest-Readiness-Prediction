@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { qrCode, recoveryCodes, secretKey } from '@/routes/two-factor';
-import type { TwoFactorSecretKey, TwoFactorSetupData } from '@/types';
+import type { TwoFactorSecretKey, TwoFactorSetupData, UiError } from '@/types';
 
 export type UseTwoFactorAuthReturn = {
     qrCodeSvg: string | null;
     manualSetupKey: string | null;
     recoveryCodesList: string[];
     hasSetupData: boolean;
-    errors: string[];
+    errors: UiError[];
     clearErrors: () => void;
     clearSetupData: () => void;
     fetchQrCode: () => Promise<void>;
@@ -18,13 +18,47 @@ export type UseTwoFactorAuthReturn = {
 
 export const OTP_MAX_LENGTH = 6;
 
+type ApiErrorPayload = {
+    error?: {
+        code?: string;
+        message?: string;
+    };
+};
+
+function normalizeUiError(error: unknown, fallbackMessage: string): UiError {
+    if (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        'code' in error
+    ) {
+        return error as UiError;
+    }
+
+    return {
+        code: 'unexpected_error',
+        message: fallbackMessage,
+        retryable: true,
+    };
+}
+
 const fetchJson = async <T>(url: string): Promise<T> => {
     const response = await fetch(url, {
         headers: { Accept: 'application/json' },
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status}`);
+        let payload: ApiErrorPayload | null = null;
+
+        try {
+            payload = (await response.clone().json()) as ApiErrorPayload;
+        } catch {}
+
+        throw {
+            code: payload?.error?.code ?? 'unexpected_error',
+            message: payload?.error?.message ?? `Failed to fetch: ${response.status}`,
+            retryable: response.status >= 500 || response.status === 429,
+        } satisfies UiError;
     }
 
     return response.json();
@@ -34,7 +68,7 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
     const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
     const [manualSetupKey, setManualSetupKey] = useState<string | null>(null);
     const [recoveryCodesList, setRecoveryCodesList] = useState<string[]>([]);
-    const [errors, setErrors] = useState<string[]>([]);
+    const [errors, setErrors] = useState<UiError[]>([]);
 
     const hasSetupData = qrCodeSvg !== null && manualSetupKey !== null;
 
@@ -42,8 +76,11 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
         try {
             const { svg } = await fetchJson<TwoFactorSetupData>(qrCode.url());
             setQrCodeSvg(svg);
-        } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch QR code']);
+        } catch (error) {
+            setErrors((prev) => [
+                ...prev,
+                normalizeUiError(error, 'Failed to fetch QR code'),
+            ]);
             setQrCodeSvg(null);
         }
     };
@@ -54,8 +91,11 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
                 secretKey.url(),
             );
             setManualSetupKey(key);
-        } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch a setup key']);
+        } catch (error) {
+            setErrors((prev) => [
+                ...prev,
+                normalizeUiError(error, 'Failed to fetch a setup key'),
+            ]);
             setManualSetupKey(null);
         }
     };
@@ -75,8 +115,11 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
             clearErrors();
             const codes = await fetchJson<string[]>(recoveryCodes.url());
             setRecoveryCodesList(codes);
-        } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch recovery codes']);
+        } catch (error) {
+            setErrors((prev) => [
+                ...prev,
+                normalizeUiError(error, 'Failed to fetch recovery codes'),
+            ]);
             setRecoveryCodesList([]);
         }
     };

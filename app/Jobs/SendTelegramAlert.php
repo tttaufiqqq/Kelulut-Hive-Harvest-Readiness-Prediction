@@ -2,14 +2,24 @@
 
 namespace App\Jobs;
 
+use App\Enums\AppErrorCode;
+use App\Exceptions\AppException;
 use App\Models\Prediction;
 use App\Services\TelegramService;
+use App\Support\AppErrorReporter;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Throwable;
 
 class SendTelegramAlert implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 3;
+
+    public int|array $backoff = [60, 300];
+
+    public int $timeout = 15;
 
     public function __construct(public readonly int $predictionId) {}
 
@@ -28,6 +38,24 @@ class SendTelegramAlert implements ShouldQueue
         }
 
         $telegram->sendMessage($user->telegram_id, $this->buildMessage($prediction));
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        $prediction = Prediction::with('sensorLog.hive.user')->find($this->predictionId);
+
+        AppErrorReporter::report(
+            $exception,
+            $exception instanceof AppException ? $exception->errorCode : AppErrorCode::TelegramDeliveryFailed,
+            context: [
+                ...($exception instanceof AppException ? $exception->context() : []),
+                'prediction_id' => $this->predictionId,
+                'hive_id' => $prediction?->sensorLog?->hive?->id,
+                'user_id' => $prediction?->sensorLog?->hive?->user?->id,
+                'chat_id' => $prediction?->sensorLog?->hive?->user?->telegram_id,
+            ],
+            level: $exception instanceof AppException ? $exception->logLevel : 'error',
+        );
     }
 
     private function buildMessage(Prediction $prediction): string

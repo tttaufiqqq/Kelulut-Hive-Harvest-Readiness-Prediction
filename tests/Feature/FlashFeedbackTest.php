@@ -35,12 +35,14 @@ test('flash feedback is shared on admin crud pages', function () {
         ->withSession([
             'success' => 'Beekeeper updated.',
             'error' => 'Invite can only be resent to pending users.',
+            'warning' => 'Invite delivery is delayed.',
         ])
         ->get(route('admin.beekeepers.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/beekeepers/index')
             ->where('flash.success', 'Beekeeper updated.')
-            ->where('flash.error', 'Invite can only be resent to pending users.'),
+            ->where('flash.error', 'Invite can only be resent to pending users.')
+            ->where('flash.warning', 'Invite delivery is delayed.'),
         );
 });

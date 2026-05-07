@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\AppErrorCode;
+use App\Exceptions\AppException;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TelegramService
 {
@@ -11,16 +13,45 @@ class TelegramService
     {
         $token = config('services.telegram.token');
 
-        $response = Http::timeout(5)->post(
-            "https://api.telegram.org/bot{$token}/sendMessage",
-            ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'HTML']
-        );
+        if (! is_string($token) || $token === '') {
+            throw new AppException(
+                AppErrorCode::TelegramDeliveryFailed,
+                503,
+                'Unable to deliver the Telegram alert right now.',
+                'warning',
+                ['chat_id' => $chatId, 'reason' => 'missing_token'],
+            );
+        }
 
-        if (! $response->successful()) {
-            Log::warning('Telegram alert failed', [
-                'chat_id' => $chatId,
-                'status' => $response->status(),
-            ]);
+        try {
+            $response = Http::timeout(5)->post(
+                "https://api.telegram.org/bot{$token}/sendMessage",
+                ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'HTML'],
+            );
+
+            if (! $response->successful()) {
+                throw new AppException(
+                    AppErrorCode::TelegramDeliveryFailed,
+                    503,
+                    'Unable to deliver the Telegram alert right now.',
+                    'warning',
+                    [
+                        'chat_id' => $chatId,
+                        'status' => $response->status(),
+                    ],
+                );
+            }
+        } catch (AppException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            throw new AppException(
+                AppErrorCode::TelegramDeliveryFailed,
+                503,
+                'Unable to deliver the Telegram alert right now.',
+                'warning',
+                ['chat_id' => $chatId],
+                $e,
+            );
         }
     }
 }
