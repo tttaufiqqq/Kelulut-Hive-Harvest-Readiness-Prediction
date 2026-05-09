@@ -22,6 +22,10 @@ class MlPredictionService
 
     public function runPrediction(SensorLog $log): PredictionRunResult
     {
+        if ($log->temp === null || $log->humidity === null) {
+            return PredictionRunResult::skipped($log->id);
+        }
+
         $payload = [
             'mq2_value' => $log->mq2_value,
             'mq3_value' => $log->mq3_value,
