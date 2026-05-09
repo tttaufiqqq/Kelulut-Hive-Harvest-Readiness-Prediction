@@ -52,6 +52,7 @@ class ReportingController extends Controller
             ->map(fn ($s) => [
                 'hive_id' => $s->hive_id,
                 'hive_name' => $s->hive?->name,
+                'summary_date' => $s->summary_date,
                 'date' => Carbon::parse($s->summary_date)->format('M d'),
                 'avg_hri_pct' => (int) round((float) ($s->avg_hri_value ?? 0) * 100),
             ])
