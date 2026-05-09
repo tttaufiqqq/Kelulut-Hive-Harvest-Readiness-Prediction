@@ -148,12 +148,12 @@ class SensorController extends Controller
         $rules = [
             'device_id' => 'required|string',
             'hive_id' => 'required|integer|exists:hives,id',
-            'temp' => 'required|numeric|between:-10,60',
-            'humidity' => 'required|numeric|between:0,100',
-            'mq2_value' => 'required|integer|between:0,4095',
-            'mq3_value' => 'required|integer|between:0,4095',
-            'mq5_value' => 'required|integer|between:0,4095',
-            'mq135_value' => 'required|integer|between:0,4095',
+            'temp' => 'nullable|numeric|between:-10,60',
+            'humidity' => 'nullable|numeric|between:0,100',
+            'mq2_value' => 'nullable|integer|between:0,4095',
+            'mq3_value' => 'nullable|integer|between:0,4095',
+            'mq5_value' => 'nullable|integer|between:0,4095',
+            'mq135_value' => 'nullable|integer|between:0,4095',
         ];
 
         if ($includeMode) {
@@ -176,12 +176,12 @@ class SensorController extends Controller
         return SensorLog::create([
             'hive_id' => $data['hive_id'],
             'device_id' => $node->id,
-            'temp' => $data['temp'],
-            'humidity' => $data['humidity'],
-            'mq2_value' => $data['mq2_value'],
-            'mq3_value' => $data['mq3_value'],
-            'mq5_value' => $data['mq5_value'],
-            'mq135_value' => $data['mq135_value'],
+            'temp' => $data['temp'] ?? null,
+            'humidity' => $data['humidity'] ?? null,
+            'mq2_value' => $data['mq2_value'] ?? null,
+            'mq3_value' => $data['mq3_value'] ?? null,
+            'mq5_value' => $data['mq5_value'] ?? null,
+            'mq135_value' => $data['mq135_value'] ?? null,
             'record_timestamp' => now(),
         ]);
     }
@@ -211,12 +211,12 @@ class SensorController extends Controller
         $thresholds = DB::table('master_sensor_thresholds')->get();
 
         $sensorMap = [
-            'temp' => $data['temp'],
-            'humidity' => $data['humidity'],
-            'mq2' => $data['mq2_value'],
-            'mq3' => $data['mq3_value'],
-            'mq5' => $data['mq5_value'],
-            'mq135' => $data['mq135_value'],
+            'temp' => $data['temp'] ?? null,
+            'humidity' => $data['humidity'] ?? null,
+            'mq2' => $data['mq2_value'] ?? null,
+            'mq3' => $data['mq3_value'] ?? null,
+            'mq5' => $data['mq5_value'] ?? null,
+            'mq135' => $data['mq135_value'] ?? null,
         ];
 
         $matched = $thresholds->filter(function ($threshold) use ($sensorMap) {
