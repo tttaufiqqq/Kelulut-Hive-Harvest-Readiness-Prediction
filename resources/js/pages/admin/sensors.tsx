@@ -29,12 +29,12 @@ import { AdminLayout } from '@/layouts/admin-layout';
 type Hive = { id: number; name: string };
 
 type LatestReading = {
-    temperature: number;
-    humidity: number;
-    mq2: number;
-    mq3: number;
-    mq5: number;
-    mq135: number;
+    temperature: number | null;
+    humidity: number | null;
+    mq2: number | null;
+    mq3: number | null;
+    mq5: number | null;
+    mq135: number | null;
     recorded_at: string;
 } | null;
 
@@ -711,6 +711,18 @@ export default function AdminSensors({
               mq135: toFiniteNumber(latest.mq135),
           }
         : null;
+    const missingSensors: string[] = normalizedLatest
+        ? (
+              [
+                  normalizedLatest.temperature == null ? 'Temperature' : null,
+                  normalizedLatest.humidity == null ? 'Humidity' : null,
+                  normalizedLatest.mq2 == null ? 'MQ-2' : null,
+                  normalizedLatest.mq3 == null ? 'MQ-3' : null,
+                  normalizedLatest.mq5 == null ? 'MQ-5' : null,
+                  normalizedLatest.mq135 == null ? 'MQ-135' : null,
+              ] as (string | null)[]
+          ).filter((s): s is string => s !== null)
+        : [];
     const normalizedHistory = history.map((point) => ({
         ...point,
         temperature: toFiniteNumber(point.temperature) ?? 0,
@@ -744,7 +756,7 @@ export default function AdminSensors({
                                 ? tempColor(normalizedLatest.temperature)
                                 : '#FEF3C7'
                         }
-                        noData={!normalizedLatest}
+                        noData={normalizedLatest?.temperature == null}
                     />
                     {normalizedLatest?.temperature != null && (
                         <StatusBadge
@@ -773,7 +785,7 @@ export default function AdminSensors({
                                 ? humidColor(normalizedLatest.humidity)
                                 : '#FEF3C7'
                         }
-                        noData={!normalizedLatest}
+                        noData={normalizedLatest?.humidity == null}
                     />
                     {normalizedLatest?.humidity != null && (
                         <StatusBadge
@@ -802,7 +814,7 @@ export default function AdminSensors({
                                 ? mqColor(normalizedLatest.mq2)
                                 : '#FEF3C7'
                         }
-                        noData={!normalizedLatest}
+                        noData={normalizedLatest?.mq2 == null}
                     />
                     {normalizedLatest?.mq2 != null && (
                         <StatusBadge color={mqColor(normalizedLatest.mq2)} />
@@ -829,7 +841,7 @@ export default function AdminSensors({
                                 ? mqColor(normalizedLatest.mq3)
                                 : '#FEF3C7'
                         }
-                        noData={!normalizedLatest}
+                        noData={normalizedLatest?.mq3 == null}
                     />
                     {normalizedLatest?.mq3 != null && (
                         <StatusBadge color={mqColor(normalizedLatest.mq3)} />
@@ -856,7 +868,7 @@ export default function AdminSensors({
                                 ? mqColor(normalizedLatest.mq5)
                                 : '#FEF3C7'
                         }
-                        noData={!normalizedLatest}
+                        noData={normalizedLatest?.mq5 == null}
                     />
                     {normalizedLatest?.mq5 != null && (
                         <StatusBadge color={mqColor(normalizedLatest.mq5)} />
@@ -883,7 +895,7 @@ export default function AdminSensors({
                                 ? mqColor(normalizedLatest.mq135)
                                 : '#FEF3C7'
                         }
-                        noData={!normalizedLatest}
+                        noData={normalizedLatest?.mq135 == null}
                     />
                     {normalizedLatest?.mq135 != null && (
                         <StatusBadge color={mqColor(normalizedLatest.mq135)} />
@@ -1029,6 +1041,23 @@ export default function AdminSensors({
                             <span className="text-sm leading-relaxed font-semibold text-amber-700">
                                 No readings in the last {window}.
                             </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Partial Data Warning ──────────────────────────── */}
+                {normalizedLatest !== null && missingSensors.length > 0 && (
+                    <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+                        <div className="flex min-w-0 items-start gap-2">
+                            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                            <div>
+                                <span className="text-sm leading-relaxed font-semibold text-amber-700">
+                                    {missingSensors.length} sensor{missingSensors.length > 1 ? 's' : ''} not reporting: {missingSensors.join(', ')}
+                                </span>
+                                <p className="mt-0.5 text-xs text-amber-600/70">
+                                    Check device wiring or firmware.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )}
