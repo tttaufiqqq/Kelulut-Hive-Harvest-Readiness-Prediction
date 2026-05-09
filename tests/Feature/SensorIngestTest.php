@@ -126,12 +126,6 @@ test('prediction warning metadata is stored when ml flags low trust', function (
 // ── Test 3: hri_summary created for hive + today ─────────────────────────
 
 test('hri_summary is created after prediction', function () {
-    // hri_summary is populated by trg_predictions_after_insert (migration
-    // 2026_05_10_000005). SQLite does not support this trigger — skip on SQLite.
-    if (DB::connection()->getDriverName() === 'sqlite') {
-        $this->markTestSkipped('hri_summary auto-update requires MySQL trigger trg_predictions_after_insert.');
-    }
-
     fakeMlOk();
     ['hive' => $hive] = sensorStack();
 
