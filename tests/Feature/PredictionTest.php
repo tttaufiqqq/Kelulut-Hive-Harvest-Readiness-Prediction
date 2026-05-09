@@ -50,7 +50,7 @@ test('live predictions response includes enriched process payload', function () 
     $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
     $node = IotNode::create([
         'hive_id' => $hive->id,
-        'device_id' => 'NODE-001',
+        'node_identifier' => 'NODE-001',
         'device_status' => 'active',
     ]);
 
@@ -130,7 +130,7 @@ test('live predictions response returns the newest results first', function () {
     $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
     $node = IotNode::create([
         'hive_id' => $hive->id,
-        'device_id' => 'NODE-001',
+        'node_identifier' => 'NODE-001',
         'device_status' => 'active',
     ]);
 

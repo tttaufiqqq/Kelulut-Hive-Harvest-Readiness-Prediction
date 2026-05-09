@@ -46,7 +46,7 @@ class DemoHiveSeeder extends Seeder
             );
 
             IotNode::firstOrCreate(
-                ['device_id' => $data['node']],
+                ['node_identifier' => $data['node']],
                 [
                     'hive_id' => $hive->id,
                     'device_status' => 'active',

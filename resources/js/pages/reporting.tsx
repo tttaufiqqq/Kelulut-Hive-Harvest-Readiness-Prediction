@@ -265,7 +265,7 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
         <AuthenticatedLayout>
             <Head title="Reporting" />
 
-            <div className="mx-auto max-w-7xl space-y-8 p-6 md:p-10 lg:px-10 lg:py-8">
+            <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10 lg:px-10 lg:py-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <Breadcrumbs
                         items={[

@@ -165,7 +165,7 @@ class SensorController extends Controller
 
     private function findActiveNode(string $deviceId, int $hiveId): ?IotNode
     {
-        return IotNode::where('device_id', $deviceId)
+        return IotNode::where('node_identifier', $deviceId)
             ->where('hive_id', $hiveId)
             ->where('device_status', 'active')
             ->first();

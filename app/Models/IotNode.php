@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class IotNode extends Model
 {
-    protected $fillable = ['hive_id', 'device_id', 'device_status', 'installation_date', 'last_maintenance_date'];
+    protected $fillable = ['hive_id', 'node_identifier', 'device_status', 'installation_date', 'last_maintenance_date'];
 
     public function hive(): BelongsTo
     {

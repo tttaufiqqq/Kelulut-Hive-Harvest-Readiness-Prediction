@@ -32,7 +32,7 @@ function telegramDiagnosticStack(string $deviceStatus = 'active'): array
 
     IotNode::create([
         'hive_id' => $hive->id,
-        'device_id' => 'NODE-001',
+        'node_identifier' => 'NODE-001',
         'device_status' => $deviceStatus,
     ]);
 

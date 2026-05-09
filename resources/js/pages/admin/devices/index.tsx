@@ -21,7 +21,7 @@ import { AdminLayout } from '@/layouts/admin-layout';
 
 type DeviceRow = {
     id: number;
-    device_id: string;
+    node_identifier: string;
     hive_id: number;
     hive_name: string | null;
     device_status: 'active' | 'inactive';
@@ -46,7 +46,7 @@ type ActiveModal =
     | null;
 
 type DeviceFormData = {
-    device_id: string;
+    node_identifier: string;
     hive_id: string;
     device_status: string;
     installation_date: string;
@@ -117,7 +117,7 @@ export default function DevicesIndex({
     }, [viewIndex, devices.length]);
 
     const createForm = useForm<DeviceFormData>({
-        device_id: '',
+        node_identifier: '',
         hive_id: '',
         device_status: 'active',
         installation_date: '',
@@ -125,7 +125,7 @@ export default function DevicesIndex({
     });
 
     const editForm = useForm<DeviceFormData>({
-        device_id: '',
+        node_identifier: '',
         hive_id: '',
         device_status: 'active',
         installation_date: '',
@@ -134,7 +134,7 @@ export default function DevicesIndex({
 
     const openEdit = (device: DeviceRow) => {
         editForm.setData({
-            device_id: device.device_id,
+            node_identifier: device.node_identifier,
             hive_id: String(device.hive_id),
             device_status: device.device_status,
             installation_date: device.installation_date ?? '',
@@ -278,7 +278,7 @@ export default function DevicesIndex({
                                         }
                                     >
                                         <td className="px-6 py-4 font-mono font-semibold text-amber-950">
-                                            {device.device_id}
+                                            {device.node_identifier}
                                         </td>
                                         <td className="px-6 py-4 text-amber-800">
                                             {device.hive_name ?? '—'}
@@ -399,7 +399,7 @@ export default function DevicesIndex({
                                     Device ID
                                 </p>
                                 <p className="font-mono font-semibold text-amber-950">
-                                    {viewDevice.device_id}
+                                    {viewDevice.node_identifier}
                                 </p>
                             </div>
                             <div>
@@ -481,13 +481,13 @@ export default function DevicesIndex({
                 <form onSubmit={submitCreate} className="space-y-4">
                     <Input
                         label="Device ID"
-                        value={createForm.data.device_id}
+                        value={createForm.data.node_identifier}
                         onChange={(e) =>
-                            createForm.setData('device_id', e.target.value)
+                            createForm.setData('node_identifier', e.target.value)
                         }
                         placeholder="e.g. NODE-001"
                         autoFocus
-                        error={createForm.errors.device_id}
+                        error={createForm.errors.node_identifier}
                     />
                     <SelectField
                         label="Hive"
@@ -550,12 +550,12 @@ export default function DevicesIndex({
                     <form onSubmit={submitEdit} className="space-y-4">
                         <Input
                             label="Device ID"
-                            value={editForm.data.device_id}
+                            value={editForm.data.node_identifier}
                             onChange={(e) =>
-                                editForm.setData('device_id', e.target.value)
+                                editForm.setData('node_identifier', e.target.value)
                             }
                             autoFocus
-                            error={editForm.errors.device_id}
+                            error={editForm.errors.node_identifier}
                         />
                         <SelectField
                             label="Hive"
@@ -630,7 +630,7 @@ export default function DevicesIndex({
                         <p className="text-sm text-amber-900/70">
                             Remove{' '}
                             <span className="font-mono font-semibold text-amber-950">
-                                "{activeModal.device.device_id}"
+                                "{activeModal.device.node_identifier}"
                             </span>
                             ?
                             {activeModal.device.sensor_log_count > 0 ? (

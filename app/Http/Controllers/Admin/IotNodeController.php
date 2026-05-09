@@ -22,7 +22,7 @@ class IotNodeController extends Controller
             ->get()
             ->map(fn ($node) => [
                 'id' => $node->id,
-                'device_id' => $node->device_id,
+                'node_identifier' => $node->node_identifier,
                 'hive_id' => $node->hive_id,
                 'hive_name' => $node->hive?->name,
                 'device_status' => $node->device_status,
@@ -69,7 +69,7 @@ class IotNodeController extends Controller
     {
         if ($device->sensorLogs()->exists()) {
             return redirect()->route('admin.devices.index')
-                ->with('warning', "Cannot delete \"{$device->device_id}\" — it has sensor log records.");
+                ->with('warning', "Cannot delete \"{$device->node_identifier}\" — it has sensor log records.");
         }
 
         $device->delete();

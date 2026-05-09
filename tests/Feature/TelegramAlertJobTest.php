@@ -30,7 +30,7 @@ function telegramAlertPrediction(?string $telegramId = '123456789'): Prediction
 
     $node = IotNode::create([
         'hive_id' => $hive->id,
-        'device_id' => 'NODE-ALERT-001',
+        'node_identifier' => 'NODE-ALERT-001',
         'device_status' => 'active',
     ]);
 

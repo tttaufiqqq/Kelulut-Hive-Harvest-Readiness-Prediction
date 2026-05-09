@@ -26,7 +26,7 @@ function sensorStack(): array
     $hive = Hive::create(['beekeeper_id' => $user->id, 'name' => 'Test Hive']);
     IotNode::create([
         'hive_id' => $hive->id,
-        'device_id' => 'NODE-001',
+        'node_identifier' => 'NODE-001',
         'device_status' => 'active',
     ]);
 

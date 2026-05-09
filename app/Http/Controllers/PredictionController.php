@@ -28,7 +28,7 @@ class PredictionController extends Controller
                     'mq135_value',
                     'record_timestamp',
                 ]),
-                'sensorLog.iotNode:id,device_id',
+                'sensorLog.iotNode:id,node_identifier',
                 'sensorLog.matchedThresholds:id,sensor_type,min_value,max_value,level,meaning,recommended_action',
             ])
             ->whereHas('sensorLog', fn ($query) => $query->where('hive_id', $hive->id));
@@ -82,7 +82,7 @@ class PredictionController extends Controller
         return [
             'id' => $prediction->id,
             'sensor_log_id' => $sensorLog?->id,
-            'device_identifier' => $sensorLog?->iotNode?->device_id,
+            'device_identifier' => $sensorLog?->iotNode?->node_identifier,
             'readiness_level' => $prediction->readiness_level,
             'raw_readiness_level' => $prediction->raw_readiness_level,
             'hri_value' => (float) $prediction->hri_value,

@@ -15,7 +15,7 @@ class StoreIotNodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'device_id' => ['required', 'string', 'max:50', 'unique:iot_nodes,device_id'],
+            'node_identifier' => ['required', 'string', 'max:50', 'unique:iot_nodes,node_identifier'],
             'hive_id' => ['required', 'integer', 'exists:hives,id', Rule::unique('iot_nodes', 'hive_id')],
             'device_status' => ['required', Rule::in(['active', 'inactive'])],
             'installation_date' => ['required', 'date'],
