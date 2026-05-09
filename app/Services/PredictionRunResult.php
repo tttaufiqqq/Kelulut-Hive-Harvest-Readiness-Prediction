@@ -15,6 +15,16 @@ class PredictionRunResult
         public readonly ?string $failureMessage = null,
     ) {}
 
+    public static function skipped(int $sensorLogId): self
+    {
+        return new self(
+            sensorLogId: $sensorLogId,
+            prediction: null,
+            outcome: 'ml_skipped',
+            telegramDispatch: 'not_attempted',
+        );
+    }
+
     public static function mlUnavailable(int $sensorLogId, string $failureReason, string $failureMessage): self
     {
         return new self(
