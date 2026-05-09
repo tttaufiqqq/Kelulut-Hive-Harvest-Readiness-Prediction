@@ -217,6 +217,102 @@ test('ml script down still returns 201 and saves sensor log without prediction',
     expect(Prediction::count())->toBe(0);
 });
 
+// ── Test 10: partial payload (gas sensors missing) → row saved, gas fields null ───
+
+test('partial payload without gas sensors saves row with null gas fields', function () {
+    fakeMlOk();
+    ['hive' => $hive] = sensorStack();
+
+    $payload = [
+        'device_id' => 'NODE-001',
+        'hive_id' => $hive->id,
+        'temp' => 33.5,
+        'humidity' => 70.0,
+    ];
+
+    $response = $this->postJson('/api/sensor-data', $payload, ['X-API-Key' => 'test-api-key']);
+
+    $response->assertStatus(201);
+    expect(SensorLog::count())->toBe(1);
+    $log = SensorLog::first();
+    expect($log->mq3_value)->toBeNull();
+    expect($log->mq5_value)->toBeNull();
+    expect($log->mq135_value)->toBeNull();
+});
+
+// ── Test 11: missing temp + humidity → row saved, no prediction created ───
+
+test('payload without temp and humidity saves row but skips prediction', function () {
+    ['hive' => $hive] = sensorStack();
+
+    $payload = [
+        'device_id' => 'NODE-001',
+        'hive_id' => $hive->id,
+        'mq2_value' => 250,
+        'mq3_value' => 200,
+        'mq5_value' => 180,
+        'mq135_value' => 220,
+    ];
+
+    $response = $this->postJson('/api/sensor-data', $payload, ['X-API-Key' => 'test-api-key']);
+
+    $response->assertStatus(201);
+    expect(SensorLog::count())->toBe(1);
+    expect(Prediction::count())->toBe(0);
+});
+
+// ── Test 12: threshold matching skips null sensor field but still matches non-null ───
+
+test('threshold matching skips null sensor but still matches present sensors', function () {
+    fakeMlOk();
+    ['hive' => $hive] = sensorStack();
+
+    DB::table('master_sensor_thresholds')->insert([
+        ['sensor_type' => 'temp', 'min_value' => 32.0, 'max_value' => 37.0, 'level' => 'normal', 'meaning' => 'Optimal', 'recommended_action' => 'None', 'created_at' => now(), 'updated_at' => now()],
+        ['sensor_type' => 'mq2', 'min_value' => 200.0, 'max_value' => 300.0, 'level' => 'warning', 'meaning' => 'High smoke', 'recommended_action' => 'Inspect', 'created_at' => now(), 'updated_at' => now()],
+    ]);
+
+    $payload = [
+        'device_id' => 'NODE-001',
+        'hive_id' => $hive->id,
+        'temp' => 33.5,
+        'humidity' => 70.0,
+        // mq2_value intentionally absent
+        'mq3_value' => 200,
+        'mq5_value' => 180,
+        'mq135_value' => 220,
+    ];
+
+    $this->postJson('/api/sensor-data', $payload, ['X-API-Key' => 'test-api-key']);
+
+    $logId = SensorLog::first()->id;
+    // Only temp threshold matched; mq2 threshold skipped because mq2_value is null
+    expect(DB::table('sensor_log_thresholds')->where('sensor_log_id', $logId)->count())->toBe(1);
+});
+
+// ── Test 13: all sensor fields absent → 201, all fields null, no prediction ──
+
+test('payload with no sensor readings saves row with all null sensor fields and no prediction', function () {
+    ['hive' => $hive] = sensorStack();
+
+    $payload = [
+        'device_id' => 'NODE-001',
+        'hive_id' => $hive->id,
+    ];
+
+    $response = $this->postJson('/api/sensor-data', $payload, ['X-API-Key' => 'test-api-key']);
+
+    $response->assertStatus(201);
+    $log = SensorLog::first();
+    expect($log->temp)->toBeNull();
+    expect($log->humidity)->toBeNull();
+    expect($log->mq2_value)->toBeNull();
+    expect($log->mq3_value)->toBeNull();
+    expect($log->mq5_value)->toBeNull();
+    expect($log->mq135_value)->toBeNull();
+    expect(Prediction::count())->toBe(0);
+});
+
 // ── Test 9: threshold records written to sensor_log_thresholds ───────────
 
 test('threshold records are written for matching sensor readings', function () {
