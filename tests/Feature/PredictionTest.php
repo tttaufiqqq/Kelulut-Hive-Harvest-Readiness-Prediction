@@ -196,7 +196,7 @@ test('live predictions defaults the chart filter to today even when latest data 
         $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
         $node = IotNode::create([
             'hive_id' => $hive->id,
-            'device_id' => 'NODE-001',
+            'node_identifier' => 'NODE-001',
             'device_status' => 'active',
         ]);
 
