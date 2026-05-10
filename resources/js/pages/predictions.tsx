@@ -55,6 +55,10 @@ interface PredictionEntry {
         mq5_value: number;
         mq135_value: number;
     };
+    threshold_match_summaries: {
+        sensor_type: string;
+        level: string;
+    }[];
 }
 
 interface Props {
@@ -251,33 +255,74 @@ function formatCapturedTime(prediction: PredictionEntry) {
     );
 }
 
+const SENSOR_LEVEL_CLASSES: Record<string, string> = {
+    critical: 'text-red-600',
+    warning: 'text-amber-600',
+};
+
+function sensorLevelClass(
+    sensorType: string,
+    thresholdMap: Record<string, string>,
+): string {
+    const level = thresholdMap[sensorType];
+    return SENSOR_LEVEL_CLASSES[level] ?? 'text-amber-900';
+}
+
 function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
+    const thresholdMap = Object.fromEntries(
+        prediction.threshold_match_summaries.map((s) => [s.sensor_type, s.level]),
+    );
+
     return (
         <SnapshotGrid
             items={[
                 {
                     label: 'Temp',
-                    value: `${prediction.sensor_values.temp}°C`,
+                    value: (
+                        <span className={sensorLevelClass('temp', thresholdMap)}>
+                            {prediction.sensor_values.temp}°C
+                        </span>
+                    ),
                 },
                 {
                     label: 'Humidity',
-                    value: `${prediction.sensor_values.humidity}%`,
+                    value: (
+                        <span className={sensorLevelClass('humidity', thresholdMap)}>
+                            {prediction.sensor_values.humidity}%
+                        </span>
+                    ),
                 },
                 {
                     label: 'MQ2',
-                    value: prediction.sensor_values.mq2_value,
+                    value: (
+                        <span className={sensorLevelClass('mq2_value', thresholdMap)}>
+                            {prediction.sensor_values.mq2_value}
+                        </span>
+                    ),
                 },
                 {
                     label: 'MQ3',
-                    value: prediction.sensor_values.mq3_value,
+                    value: (
+                        <span className={sensorLevelClass('mq3_value', thresholdMap)}>
+                            {prediction.sensor_values.mq3_value}
+                        </span>
+                    ),
                 },
                 {
                     label: 'MQ5',
-                    value: prediction.sensor_values.mq5_value,
+                    value: (
+                        <span className={sensorLevelClass('mq5_value', thresholdMap)}>
+                            {prediction.sensor_values.mq5_value}
+                        </span>
+                    ),
                 },
                 {
                     label: 'MQ135',
-                    value: prediction.sensor_values.mq135_value,
+                    value: (
+                        <span className={sensorLevelClass('mq135_value', thresholdMap)}>
+                            {prediction.sensor_values.mq135_value}
+                        </span>
+                    ),
                 },
             ]}
         />
