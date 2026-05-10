@@ -771,6 +771,32 @@ function LiveBadge({ className = '' }: { className?: string }) {
     );
 }
 
+function StalenessLabel({ secondsAgo }: { secondsAgo: number }) {
+    if (secondsAgo < 300) {
+        const label =
+            secondsAgo < 60
+                ? 'Just now'
+                : `${Math.floor(secondsAgo / 60)} min ago`;
+        return (
+            <p className="text-xs font-semibold text-emerald-600">{label}</p>
+        );
+    }
+    if (secondsAgo < 900) {
+        return (
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                {Math.floor(secondsAgo / 60)} min ago
+            </p>
+        );
+    }
+    return (
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-red-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            {Math.floor(secondsAgo / 60)} min ago — data may be stale
+        </p>
+    );
+}
+
 export default function Predictions({
     hive,
     latestPrediction,
@@ -784,6 +810,7 @@ export default function Predictions({
     const predictionChannelName = `hive.${hive.id}.predictions`;
     const [showHistory, setShowHistory] = useState(filters.page > 1);
     const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
+    const [secondsAgo, setSecondsAgo] = useState(0);
     const activeHistoryIndex =
         activeHistoryId === null
             ? null
@@ -880,6 +907,24 @@ export default function Predictions({
         return () => window.removeEventListener('keydown', handler);
     }, [activeHistoryId, activeHistoryIndex, historyPredictions.data]);
 
+    useEffect(() => {
+        if (!latest?.prediction_timestamp) return;
+
+        const computeSecondsAgo = () => {
+            const diff = Math.floor(
+                (Date.now() -
+                    new Date(latest.prediction_timestamp!).getTime()) /
+                    1000,
+            );
+            setSecondsAgo(Math.max(0, diff));
+        };
+
+        computeSecondsAgo();
+        const interval = setInterval(computeSecondsAgo, 1000);
+
+        return () => clearInterval(interval);
+    }, [latest?.prediction_timestamp]);
+
     function handleChartDateChange(date: string | null) {
         const resolved = date ?? filters.default_chart_date;
         router.get(
@@ -927,13 +972,13 @@ export default function Predictions({
                                         <p className="truncate font-semibold text-amber-800">
                                             {hive.name}
                                         </p>
-                                        <LiveBadge className="inline-flex shrink-0 sm:hidden" />
+                                        <LiveBadge className={`inline-flex shrink-0 sm:hidden${secondsAgo > 900 ? ' opacity-40' : ''}`} />
                                     </div>
                                     <p className="text-amber-700/75">
                                         ML Harvest Readiness
                                     </p>
                                 </div>
-                                <LiveBadge className="hidden sm:inline-flex" />
+                                <LiveBadge className={`hidden sm:inline-flex${secondsAgo > 900 ? ' opacity-40' : ''}`} />
                             </div>
                         </div>
                     </div>
@@ -973,6 +1018,7 @@ export default function Predictions({
                                                 HRI value
                                             </p>
                                         </div>
+                                        <StalenessLabel secondsAgo={secondsAgo} />
                                     </div>
 
                                     <div className="grid gap-5 text-sm sm:grid-cols-2 lg:min-w-[360px]">
