@@ -1021,6 +1021,7 @@ export default function Predictions({
                             className="p-6 sm:p-8"
                         >
                             <div className="space-y-6">
+                                <PredictionTrustNotice prediction={latest} />
                                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                                     <div className="space-y-4">
                                         <AnimatedReadinessBadge
@@ -1104,7 +1105,6 @@ export default function Predictions({
                                     }
                                 />
 
-                                <PredictionTrustNotice prediction={latest} />
                             </div>
                         </ChartCard>
                         </div>
