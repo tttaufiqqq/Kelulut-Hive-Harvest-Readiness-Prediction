@@ -18,7 +18,7 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
                         <Bee className="h-5 w-5 text-yellow-950" />
                     </div>
                     <span className="text-lg font-black tracking-tighter text-amber-950 uppercase">
-                        BuzzyHive<span className="text-yellow-500">2.0</span>
+                        BuzzyHive <span className="text-yellow-500">2.0</span>
                     </span>
                 </Link>
 

@@ -33,7 +33,7 @@ export function AuthSplitShell({
     logoHref = '/',
     brandName = (
         <>
-            BuzzyHive<span className="text-yellow-500">2.0</span>
+            BuzzyHive <span className="text-yellow-500">2.0</span>
         </>
     ),
     logoIcon = <BeeIcon className="h-5 w-5 text-yellow-950" />,
