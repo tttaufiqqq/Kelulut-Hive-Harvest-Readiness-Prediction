@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { ArrowRight, Lock, Mail } from 'lucide-react';
+import { ArrowRight, Check, Lock, Mail } from 'lucide-react';
 import React from 'react';
 import { AuthFormFieldBlock } from '@/components/auth/auth-form-field-block';
 import { AuthSplitShell } from '@/components/auth/auth-split-shell';
@@ -84,7 +84,7 @@ export default function Login({
                 </AuthFormFieldBlock>
 
                 <div className="flex items-center justify-between">
-                    <label className="flex cursor-pointer items-center gap-2">
+                    <label className="flex cursor-pointer items-center gap-2.5">
                         <input
                             type="checkbox"
                             name="remember"
@@ -92,8 +92,19 @@ export default function Login({
                             onChange={(e) =>
                                 setData('remember', e.target.checked)
                             }
-                            className="rounded border-amber-300 text-yellow-500 focus:ring-yellow-400"
+                            className="sr-only"
                         />
+                        <span
+                            className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                                data.remember
+                                    ? 'border-yellow-400 bg-yellow-400'
+                                    : 'border-amber-200 bg-white'
+                            }`}
+                        >
+                            {data.remember && (
+                                <Check className="h-3 w-3 text-yellow-950" strokeWidth={3} />
+                            )}
+                        </span>
                         <span className="text-sm font-medium text-amber-800">
                             Remember me
                         </span>
