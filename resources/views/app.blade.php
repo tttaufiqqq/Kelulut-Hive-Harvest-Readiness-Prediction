@@ -32,8 +32,10 @@
 
         <title inertia>{{ config('app.name', 'BuzzyHive 2.0') }}</title>
 
+        <meta name="theme-color" content="#F59E0B">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="apple-touch-icon" href="/icon-192.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
