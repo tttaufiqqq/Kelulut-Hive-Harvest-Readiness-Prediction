@@ -199,7 +199,12 @@ function HriTrendChart({ data }: { data: HriTrend[] }) {
             description="Compare the daily score with the rolling 7-day average."
         >
             <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
-                {mounted && (
+                {mounted && data.length === 0 && (
+                    <p className="py-12 text-center text-sm text-amber-700/60">
+                        No trend data available for this period.
+                    </p>
+                )}
+                {mounted && data.length > 0 && (
                     <ResponsiveContainer width="100%" height={220}>
                         <AreaChart
                             data={data}
@@ -342,7 +347,12 @@ function SensorChart({
             }
         >
             <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
-                {mounted && (
+                {mounted && data.length === 0 && (
+                    <p className="py-12 text-center text-sm text-amber-700/60">
+                        No sensor readings for the selected date.
+                    </p>
+                )}
+                {mounted && data.length > 0 && (
                     <ResponsiveContainer width="100%" height={290}>
                         <LineChart
                             data={data}
