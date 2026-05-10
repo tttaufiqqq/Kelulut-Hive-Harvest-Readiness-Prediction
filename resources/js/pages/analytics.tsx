@@ -115,6 +115,25 @@ const SENSOR_SERIES = {
     ],
 } as const;
 
+function formatDate(ymd: string): string {
+    const [year, month, day] = ymd.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+    });
+}
+
+function formatTimestamp(iso: string): string {
+    return new Date(iso).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    });
+}
+
 const READINESS_BAR_STYLES: Record<string, string> = {
     not_ready: 'bg-rose-400',
     approaching: 'bg-amber-400',
@@ -158,6 +177,8 @@ function HriScoreCard({ hive }: { hive: HiveData }) {
             level={hive.latest_readiness_level}
             secondaryLabel="7-day avg"
             secondaryValue={`${hive.avg_hri_7d_pct}%`}
+            tertiaryLabel="Last harvest"
+            tertiaryValue={hive.last_harvest_date ? formatDate(hive.last_harvest_date) : '—'}
             description="Current harvest readiness score based on the latest analytics window."
         />
     );
