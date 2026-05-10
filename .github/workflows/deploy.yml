@@ -175,4 +175,5 @@ jobs:
       - name: Run post-deploy commands
         run: |
           curl --fail --show-error --silent -X POST https://buzzyhive.urban-alert.com/deploy-hook.php \
-            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET }}"
+            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_SECRET }}" \
+            -H "Content-Type: application/json"
