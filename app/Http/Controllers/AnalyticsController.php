@@ -86,7 +86,7 @@ class AnalyticsController extends Controller
         // ── Q4: Harvest history ───────────────────────────────────────────────
         $harvestHistory = Harvest::where('hive_id', $hive->id)
             ->with(['color', 'flavor'])
-            ->orderByDesc('harvest_date')
+            ->orderBy('harvest_date')
             ->get()
             ->map(fn ($h) => [
                 'date' => Carbon::parse($h->harvest_date)->format('M d'),
