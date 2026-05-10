@@ -1,9 +1,10 @@
 # BuzzyHive CI/CD Pipelines
 
-Reference document for the GitHub Actions deployment pipelines to Exabytes shared hosting.
+Reference document for the GitHub Actions quality and deployment pipelines to Exabytes shared hosting.
 
-There are now two deployment workflows:
+There are now three active GitHub Actions workflows:
 
+- `lint.yml` — code quality checks for PHP + frontend formatting/linting
 - `deploy.yml` — Laravel + React app for `https://buzzyhive.urban-alert.com`
 - `deploy-ml.yml` — Flask ML app for `https://ml.buzzyhive.urban-alert.com`
 
@@ -64,7 +65,8 @@ git push main
     │─────────────────────│
     │  checkout@v5         │
     │  download-artifact@v6│  ← public/build/ from build job
-    │  FTP upload          │  ← changed files only (sync state)
+    │  FTP upload app files│  ← changed files only (sync state)
+    │  FTP upload build    │  ← clean-slate upload to /public/build/
     │  curl deploy-hook    │  ← POST /deploy-hook.php
     └──────────┬──────────┘
                │
@@ -82,6 +84,51 @@ git push main
     │  php artisan view:cache                 │
     └─────────────────────────────────────────┘
 ```
+
+---
+
+## Quality Pipeline Diagram
+
+```
+git push / pull request
+(develop, main, master, workos)
+         │
+         ▼
+┌─────────────────────────────────────┐
+│            QUALITY JOB             │
+│────────────────────────────────────│
+│  checkout@v4                       │
+│  setup PHP 8.4                     │
+│  composer install                  │
+│  npm install                       │
+│  composer lint                     │  ← Pint
+│  npm run format                    │  ← Prettier writes fixes in CI workspace
+│  npm run lint                      │  ← eslint . --fix
+└─────────────────────────────────────┘
+```
+
+This workflow is separate from deployment and runs on both `push` and `pull_request`.
+
+Important behavior:
+
+- `npm run format` and `npm run lint` both run in write/fix mode
+- the workflow currently does **not** auto-commit those fixes back to the branch
+- if ESLint hits an unfixable rule, the job fails even though some fixable issues may already have been corrected inside the ephemeral runner
+
+Recent example: an empty `catch {}` block in `resources/js/hooks/use-two-factor-auth.ts` passed local build/test checks but failed the `quality` workflow because `no-empty` is not auto-fixable.
+
+Recommended local verification before pushing frontend-heavy changes:
+
+- `npm run lint:check`
+- `npm run types:check`
+- `npm run build`
+
+For mixed backend/frontend changes:
+
+- `php artisan test`
+- `npm run lint:check`
+- `npm run types:check`
+- `npm run build`
 
 ---
 
@@ -148,6 +195,22 @@ paths:
 
 ---
 
+## Quality Trigger
+
+```yaml
+on:
+  push:
+    branches: [develop, main, master, workos]
+  pull_request:
+    branches: [develop, main, master, workos]
+```
+
+**Why:** Quality checks should run broadly across active working branches, not just deployment branches. This catches formatting and lint regressions before they become deploy failures or branch drift.
+
+Unlike the deploy workflows, `lint.yml` currently has no path filter, so any push or PR on those branches triggers it.
+
+---
+
 ## ML Trigger — Why Path Filtering
 
 ```yaml
@@ -201,7 +264,7 @@ If the frontend needs build-time environment variables, they must exist in GitHu
 
 The same rule applies to the browser tab title and other frontend branding. `VITE_APP_NAME` is injected during the CI build, so the GitHub Actions build job must receive it as a repository or environment variable. The current workflow uses `vars.VITE_APP_NAME` and falls back to `BuzzyHive 2.0` if the variable is missing, which avoids accidental `Laravel` titles in compiled production assets.
 
-The workflow also now uses newer GitHub-maintained action versions (`checkout@v5`, `cache@v5`, `setup-node@v5`, `upload-artifact@v6`, `download-artifact@v6`) to stay ahead of the GitHub Actions Node 20 deprecation warnings.
+The Laravel deploy workflow now uses newer GitHub-maintained action versions (`checkout@v5`, `cache@v5`, `setup-node@v5`, `upload-artifact@v6`, `download-artifact@v6`) to stay ahead of the GitHub Actions Node 20 deprecation warnings.
 
 The artifact has `retention-days: 1` — it only needs to survive the duration of the pipeline run.
 
@@ -235,6 +298,13 @@ Exabytes shared hosting does not provide SSH access for external connections. Gi
 FTP is the only viable remote file transfer mechanism on this hosting plan.
 
 `SamKirkland/FTP-Deploy-Action@v4.4.0` maintains a `.ftp-deploy-sync-state.json` file on the server that tracks a hash of every uploaded file. On subsequent deploys, only files whose hash has changed are re-uploaded. This makes the first deploy slow (full upload) and all subsequent deploys fast (diff only).
+
+The Laravel deploy workflow now splits FTP into two steps:
+
+1. app files uploaded to `/` with `public/build/**` excluded
+2. compiled frontend assets uploaded separately to `/public/build/` with `dangerous-clean-slate: true`
+
+**Why split them:** Vite build output is content-hashed. A clean-slate upload for `public/build/` prevents stale hashed assets from accumulating on the server while leaving the rest of the Laravel tree on diff-sync behavior.
 
 ---
 
@@ -395,8 +465,18 @@ Cache hits restore in ~2s vs 30–45s for a full install. On a typical code-only
 
 The deploy time breakdown for a warm cache run:
 - FTP sync (few changed files): ~30–45s
+- clean-slate `public/build/` upload: ~10–20s
 - Deploy hook — composer skipped: ~15s
 - Deploy hook — artisan commands: ~10s
+
+---
+
+Quality workflow times are usually shorter:
+
+| Scenario | Quality |
+|---|---|
+| Warm cache, typical frontend/backend code change | ~1m–2m |
+| Cold cache, first run | ~2m–4m |
 
 ---
 
@@ -461,6 +541,8 @@ These are not handled by the pipeline and must be configured manually:
 
 ### Fully automated
 
+- PHP style checks through Pint
+- frontend formatting and lint checks through the `quality` workflow
 - Laravel code deploys
 - Laravel migrations and cache rebuild
 - Frontend asset builds
@@ -472,6 +554,7 @@ These are not handled by the pipeline and must be configured manually:
 ### Still manual
 
 - creating and rotating FTP accounts/secrets
+- deciding whether CI auto-fix changes from format/lint should be applied locally, because the `quality` workflow does not auto-commit them
 - first-time cPanel Python App creation/configuration
 - production ML dependency refresh when `ml/requirements.txt` changes
 - manual cPanel restart if Passenger does not react to `tmp/restart.txt`

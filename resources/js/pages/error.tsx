@@ -73,11 +73,10 @@ function EmptyStateShell({
         <div className="w-full max-w-md text-center">
             <div className="mb-6 flex justify-center">
                 <motion.div
-                    className="flex h-24 w-24 items-center justify-center"
+                    className="flex h-24 w-24 items-center justify-center bg-yellow-400"
                     style={{
                         clipPath:
                             'polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)',
-                        backgroundColor: '#FBBF24',
                         boxShadow: '0 8px 24px rgba(251,191,36,0.30)',
                     }}
                     initial={{ opacity: 0, scale: 0.8 }}
