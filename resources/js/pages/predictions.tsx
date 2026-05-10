@@ -811,6 +811,8 @@ export default function Predictions({
     const [showHistory, setShowHistory] = useState(filters.page > 1);
     const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
     const [secondsAgo, setSecondsAgo] = useState(0);
+    const [justUpdated, setJustUpdated] = useState(false);
+    const prevTimestampRef = useRef<string | null | undefined>(undefined);
     const activeHistoryIndex =
         activeHistoryId === null
             ? null
@@ -908,6 +910,19 @@ export default function Predictions({
     }, [activeHistoryId, activeHistoryIndex, historyPredictions.data]);
 
     useEffect(() => {
+        if (prevTimestampRef.current === undefined) {
+            prevTimestampRef.current = latest?.prediction_timestamp;
+            return;
+        }
+        if (latest?.prediction_timestamp !== prevTimestampRef.current) {
+            prevTimestampRef.current = latest?.prediction_timestamp;
+            setJustUpdated(true);
+            const timer = setTimeout(() => setJustUpdated(false), 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [latest?.prediction_timestamp]);
+
+    useEffect(() => {
         if (!latest?.prediction_timestamp) return;
 
         const computeSecondsAgo = () => {
@@ -992,6 +1007,13 @@ export default function Predictions({
 
                 {latest ? (
                     <>
+                        <div
+                            className={
+                                justUpdated
+                                    ? 'rounded-[1.75rem] ring-2 ring-yellow-400/50 transition-all duration-300'
+                                    : 'rounded-[1.75rem] ring-2 ring-transparent transition-all duration-300'
+                            }
+                        >
                         <ChartCard
                             eyebrow="Latest Prediction"
                             title="Current model output"
@@ -1085,6 +1107,7 @@ export default function Predictions({
                                 <PredictionTrustNotice prediction={latest} />
                             </div>
                         </ChartCard>
+                        </div>
 
                         <div className="space-y-6">
                             <ChartsFilterBar
