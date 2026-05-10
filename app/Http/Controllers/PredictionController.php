@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Hive;
 use App\Models\Prediction;
+use App\Models\SensorLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -60,6 +61,22 @@ class PredictionController extends Controller
             ->values()
             ->map(fn (Prediction $prediction) => $this->transformPredictionTrend($prediction, $chartDate));
 
+        $latestSensorLog = SensorLog::where('hive_id', $hive->id)
+            ->latest('record_timestamp')
+            ->first(['temp', 'humidity', 'mq2_value', 'mq3_value', 'mq5_value', 'mq135_value']);
+
+        $sensorWarnings = $latestSensorLog ? collect([
+            'temp'       => 'Temperature',
+            'humidity'   => 'Humidity',
+            'mq2_value'  => 'MQ-2',
+            'mq3_value'  => 'MQ-3',
+            'mq5_value'  => 'MQ-5',
+            'mq135_value'=> 'MQ-135',
+        ])->filter(fn ($label, $field) => $latestSensorLog->$field === null)
+          ->values()
+          ->all()
+        : [];
+
         return Inertia::render('predictions', [
             'hive' => ['id' => $hive->id, 'name' => $hive->name],
             'latestPrediction' => $latestPrediction
@@ -67,6 +84,7 @@ class PredictionController extends Controller
                 : null,
             'predictionTrends' => $predictionTrends,
             'historyPredictions' => $historyPredictions,
+            'sensorWarnings' => $sensorWarnings,
             'filters' => [
                 'page' => (int) $request->integer('page', 1),
                 'chart_date' => Carbon::parse($chartDate)->toDateString(),
@@ -100,12 +118,12 @@ class PredictionController extends Controller
             'record_timestamp' => $sensorLog?->record_timestamp?->toIso8601String(),
             'record_timestamp_label' => $sensorLog?->record_timestamp?->format('d/m/Y H:i'),
             'sensor_values' => [
-                'temp' => round((float) ($sensorLog?->temp ?? 0), 1),
-                'humidity' => round((float) ($sensorLog?->humidity ?? 0), 1),
-                'mq2_value' => (int) ($sensorLog?->mq2_value ?? 0),
-                'mq3_value' => (int) ($sensorLog?->mq3_value ?? 0),
-                'mq5_value' => (int) ($sensorLog?->mq5_value ?? 0),
-                'mq135_value' => (int) ($sensorLog?->mq135_value ?? 0),
+                'temp' => $sensorLog?->temp !== null ? round((float) $sensorLog->temp, 1) : null,
+                'humidity' => $sensorLog?->humidity !== null ? round((float) $sensorLog->humidity, 1) : null,
+                'mq2_value' => $sensorLog?->mq2_value !== null ? (int) $sensorLog->mq2_value : null,
+                'mq3_value' => $sensorLog?->mq3_value !== null ? (int) $sensorLog->mq3_value : null,
+                'mq5_value' => $sensorLog?->mq5_value !== null ? (int) $sensorLog->mq5_value : null,
+                'mq135_value' => $sensorLog?->mq135_value !== null ? (int) $sensorLog->mq135_value : null,
             ],
             'threshold_match_summaries' => $sensorLog?->matchedThresholds
                 ->map(function ($threshold) use ($sensorLog) {
@@ -148,8 +166,8 @@ class PredictionController extends Controller
                 : 'N/A',
             'hri_pct' => round((float) $prediction->hri_value * 100, 1),
             'confidence_pct' => round((float) $prediction->confidence_score * 100, 1),
-            'temp' => round((float) ($sensorLog?->temp ?? 0), 1),
-            'humidity' => round((float) ($sensorLog?->humidity ?? 0), 1),
+            'temp' => $sensorLog?->temp !== null ? round((float) $sensorLog->temp, 1) : null,
+            'humidity' => $sensorLog?->humidity !== null ? round((float) $sensorLog->humidity, 1) : null,
             'warning_state' => $prediction->warning_state ?? 'normal',
         ];
     }

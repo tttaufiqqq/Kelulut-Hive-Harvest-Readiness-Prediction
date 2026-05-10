@@ -56,8 +56,8 @@ class SensorDashboardController extends Controller
 
         $history = $logs->map(fn ($log) => [
             'time' => $log->record_timestamp->format('H:i'),
-            'temperature' => round($log->temp, 1),
-            'humidity' => round($log->humidity, 1),
+            'temperature' => $log->temp !== null ? round($log->temp, 1) : null,
+            'humidity' => $log->humidity !== null ? round($log->humidity, 1) : null,
             'mq2' => $log->mq2_value,
             'mq3' => $log->mq3_value,
             'mq5' => $log->mq5_value,
@@ -70,8 +70,8 @@ class SensorDashboardController extends Controller
             'window' => $window,
             'date' => $date ?? null,
             'latest' => $latest ? [
-                'temperature' => round($latest->temp, 1),
-                'humidity' => round($latest->humidity, 1),
+                'temperature' => $latest->temp !== null ? round($latest->temp, 1) : null,
+                'humidity' => $latest->humidity !== null ? round($latest->humidity, 1) : null,
                 'mq2' => $latest->mq2_value,
                 'mq3' => $latest->mq3_value,
                 'mq5' => $latest->mq5_value,

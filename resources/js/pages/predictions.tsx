@@ -60,6 +60,7 @@ interface PredictionEntry {
 interface Props {
     hive: { id: number; name: string };
     latestPrediction: PredictionEntry | null;
+    sensorWarnings: string[];
     predictionTrends: {
         id: number;
         label: string;
@@ -773,6 +774,7 @@ function LiveBadge({ className = '' }: { className?: string }) {
 export default function Predictions({
     hive,
     latestPrediction,
+    sensorWarnings,
     predictionTrends,
     historyPredictions,
     filters,
@@ -831,6 +833,7 @@ export default function Predictions({
             router.reload({
                 only: [
                     'latestPrediction',
+                    'sensorWarnings',
                     'predictionTrends',
                     'historyPredictions',
                 ],
@@ -935,6 +938,12 @@ export default function Predictions({
                         </div>
                     </div>
                 </div>
+
+                {sensorWarnings.length > 0 && (
+                    <Alert variant="warning">
+                        Some sensor data is missing ({sensorWarnings.join(', ')}) — prediction cannot be made until all sensors report.
+                    </Alert>
+                )}
 
                 {latest ? (
                     <>
