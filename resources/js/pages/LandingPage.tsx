@@ -84,7 +84,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.74 }}
-                        className="mb-10 max-w-xl text-center text-xl leading-snug font-medium text-amber-900/70 lg:text-justify lg:text-2xl"
+                        className="mb-10 max-w-xl text-justify text-xl leading-snug font-medium text-amber-900/70 lg:text-2xl"
                     >
                         IoT sensors on every hive. A KNN model that classifies
                         harvest readiness in real time. One dashboard for every
@@ -150,7 +150,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                                     Intelligence.
                                 </span>
                             </h2>
-                            <p className="mb-12 max-w-md text-xl text-amber-100/60 lg:text-justify">
+                            <p className="mb-12 max-w-md text-xl text-amber-100/60 text-justify">
                                 Modernizing kelulut farming through IoT-driven
                                 harvest readiness predictions and real-time hive
                                 analytics.
@@ -462,7 +462,7 @@ export default function LandingPage({ thesisUrl }: Props) {
 
                     <div className="flex flex-col items-center justify-between gap-4 border-t border-yellow-900/10 pt-8 text-[10px] font-black tracking-widest uppercase opacity-40 md:flex-row">
                         <div>© 2026 BuzzyHive 2.0. All rights reserved.</div>
-                        <div>FYP · Universiti Teknologi MARA</div>
+                        <div>FYP · Universiti Teknikal Malaysia Melaka</div>
                     </div>
                 </div>
             </footer>
