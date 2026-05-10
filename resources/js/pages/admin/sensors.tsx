@@ -907,6 +907,8 @@ export default function AdminSensors({
     const summarySensorCards = sensorCards.slice(0, 2);
     const gasSensorCards = sensorCards.slice(2);
 
+    const today = new Date().toISOString().slice(0, 10);
+
     const navigate = (params: Record<string, string | number | null>) =>
         router.get(route('admin.sensors.index'), {
             hive_id: selected,
@@ -1007,7 +1009,8 @@ export default function AdminSensors({
                         {/* Date filter */}
                         <DatePicker
                             className="justify-self-start"
-                            value={date}
+                            value={date ?? today}
+                            defaultValue={today}
                             onChange={(d) =>
                                 navigate({ date: d ?? '', window })
                             }
