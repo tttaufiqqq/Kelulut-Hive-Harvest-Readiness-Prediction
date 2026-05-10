@@ -143,10 +143,7 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
     const [selectedMonth, setSelectedMonth] = useState<string | null>(
         latestMonthValue,
     );
-    const activeMonth =
-        selectedMonth && availableMonthValues.includes(selectedMonth)
-            ? selectedMonth
-            : latestMonthValue;
+    const activeMonth = selectedMonth ?? latestMonthValue;
     const activeHive =
         selectedHive === ALL_HIVES || hiveNames.includes(selectedHive)
             ? selectedHive
@@ -187,11 +184,13 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
                 <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
                     <div className="w-full sm:w-[220px]">
                         <DatePickerField
-                            value={activeMonth}
+                            value={selectedMonth}
                             onChange={setSelectedMonth}
                             mode="month"
                             maxDate="today"
                             placeholder="Month"
+                            clearable
+                            defaultValue={latestMonthValue ?? undefined}
                         />
                     </div>
                     <div className="w-full sm:w-[220px]">

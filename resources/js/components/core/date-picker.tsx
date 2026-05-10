@@ -279,7 +279,6 @@ export function DatePicker({
                 onClick={() => setOpen((o) => !o)}
                 className={cn(
                     'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm whitespace-nowrap transition-all',
-                    hasCustomValue && 'pr-11',
                     'focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
                     open && 'ring-2 ring-yellow-400/50',
                     hasCustomValue
@@ -309,7 +308,7 @@ export function DatePicker({
                         event.stopPropagation();
                         onChange(null);
                     }}
-                    className="absolute top-1/2 right-3 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700"
+                    className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700"
                     aria-label={mode === 'month' ? 'Clear month' : 'Clear date'}
                 >
                     <X className="h-3 w-3 text-white" />
@@ -574,8 +573,8 @@ export function DatePickerField({
                     onClick={handleOpen}
                     className={cn(
                         'flex min-h-12 w-full items-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-left text-sm transition-all focus:outline-none',
-                        hasCustomValue && clearable && 'pr-11',
                         open && 'ring-2 ring-yellow-400/50',
+                        hasCustomValue && clearable && 'border-yellow-400 bg-yellow-400/15',
                         error && 'border-red-400 focus:ring-red-400/50',
                     )}
                 >
@@ -603,7 +602,7 @@ export function DatePickerField({
                             event.stopPropagation();
                             onChange(null);
                         }}
-                        className="absolute top-1/2 right-3 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700"
+                        className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700"
                         aria-label={
                             mode === 'month' ? 'Clear month' : 'Clear date'
                         }
