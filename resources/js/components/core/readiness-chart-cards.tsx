@@ -212,6 +212,8 @@ export interface ReadinessScoreCardProps {
     eyebrow?: ReactNode;
     secondaryLabel?: ReactNode;
     secondaryValue?: ReactNode;
+    tertiaryLabel?: ReactNode;
+    tertiaryValue?: ReactNode;
     description?: ReactNode;
     valueClassName?: string;
     badgeClassName?: string;
@@ -224,6 +226,8 @@ export function ReadinessScoreCard({
     eyebrow = 'HRI Score',
     secondaryLabel,
     secondaryValue,
+    tertiaryLabel,
+    tertiaryValue,
     description,
     valueClassName,
     badgeClassName,
@@ -261,6 +265,20 @@ export function ReadinessScoreCard({
                     {secondaryValue && (
                         <div className="text-xl font-bold text-amber-900">
                             {secondaryValue}
+                        </div>
+                    )}
+                </div>
+            )}
+            {(tertiaryLabel || tertiaryValue) && (
+                <div className="mt-2 text-center">
+                    {tertiaryLabel && (
+                        <p className="text-[10px] font-bold tracking-wider text-amber-900/40 uppercase">
+                            {tertiaryLabel}
+                        </p>
+                    )}
+                    {tertiaryValue && (
+                        <div className="text-sm font-bold text-amber-900">
+                            {tertiaryValue}
                         </div>
                     )}
                 </div>
