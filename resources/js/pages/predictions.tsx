@@ -834,10 +834,15 @@ function StalenessLabel({ secondsAgo }: { secondsAgo: number }) {
             </p>
         );
     }
+    const staleLabel =
+        secondsAgo >= 3600
+            ? `${Math.floor(secondsAgo / 3600)} hr ago`
+            : `${Math.floor(secondsAgo / 60)} min ago`;
+
     return (
         <p className="flex items-center gap-1.5 text-xs font-semibold text-red-500">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-            {Math.floor(secondsAgo / 60)} min ago — data may be stale
+            {staleLabel} — data may be stale
         </p>
     );
 }
