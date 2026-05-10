@@ -44,7 +44,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.35, delay: 0.4 }}
-                        className="mb-6 flex items-center justify-center gap-2 lg:justify-start"
+                        className="mb-6 flex items-center gap-2"
                     >
                         <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold tracking-widest text-yellow-950 uppercase">
                             The Future of Meliponiculture
@@ -52,7 +52,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                     </motion.div>
 
                     {/* 2. Headline — each line staggers in */}
-                    <h1 className="mb-8 text-center text-[12vw] leading-[0.85] font-black tracking-tighter text-amber-950 uppercase lg:text-left lg:text-[100px]">
+                    <h1 className="mb-8 text-[12vw] leading-[0.85] font-black tracking-tighter text-amber-950 uppercase lg:text-[100px]">
                         <motion.span
                             initial={{ opacity: 0, y: 40 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -96,7 +96,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.86 }}
-                        className="flex flex-wrap justify-center gap-4 lg:justify-start"
+                        className="flex flex-wrap gap-4"
                     >
                         <Link href={dashboardHref}>
                             <Button size="lg" className="group">
