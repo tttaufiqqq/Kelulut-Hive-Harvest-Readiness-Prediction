@@ -86,10 +86,10 @@ export default function LandingPage({ thesisUrl }: Props) {
                         transition={{ duration: 0.5, delay: 0.74 }}
                         className="mb-10 max-w-xl text-xl leading-tight font-medium text-amber-900/70 md:text-2xl"
                     >
-                        Optimizing kelulut farming through an IoT-integrated
-                        Business Intelligence platform that leverages multi-gas
-                        sensing and historical pattern analysis to predict honey
-                        harvest readiness.
+                        IoT sensors on every hive. A KNN model that classifies
+                        harvest readiness in real time. One dashboard for every
+                        hive, harvest, and inspection — built for kelulut
+                        beekeepers.
                     </motion.p>
 
                     {/* 4. CTAs slide up last */}
@@ -116,7 +116,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                                     : undefined
                             }
                         >
-                            View Case Studies
+                            Read Research
                         </Button>
                     </motion.div>
                 </div>
@@ -180,8 +180,8 @@ export default function LandingPage({ thesisUrl }: Props) {
                             {[
                                 {
                                     icon: ShieldCheck,
-                                    title: 'Hive Security',
-                                    desc: 'Monitor colony health and detect abnormal environmental shifts instantly.',
+                                    title: 'Colony Monitoring',
+                                    desc: 'Track temperature, humidity, and gas levels to detect abnormal hive conditions early.',
                                 },
                                 {
                                     icon: BarChart3,
@@ -425,12 +425,12 @@ export default function LandingPage({ thesisUrl }: Props) {
                                     </button>
                                 </li>
                                 <li>
-                                    <a
-                                        href="mailto:taufiq@buzzyhive.com"
+                                    <Link
+                                        href={dashboardHref}
                                         className="transition-opacity hover:opacity-60"
                                     >
                                         Support
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
@@ -443,19 +443,19 @@ export default function LandingPage({ thesisUrl }: Props) {
                             <ul className="space-y-3 text-sm font-medium">
                                 <li>
                                     <Link
-                                        href="/about"
+                                        href={dashboardHref}
                                         className="transition-opacity hover:opacity-60"
                                     >
                                         About
                                     </Link>
                                 </li>
                                 <li>
-                                    <a
-                                        href="mailto:taufiq@buzzyhive.com"
+                                    <Link
+                                        href={dashboardHref}
                                         className="transition-opacity hover:opacity-60"
                                     >
                                         Contact
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
@@ -463,26 +463,7 @@ export default function LandingPage({ thesisUrl }: Props) {
 
                     <div className="flex flex-col items-center justify-between gap-4 border-t border-yellow-900/10 pt-8 text-[10px] font-black tracking-widest uppercase opacity-40 md:flex-row">
                         <div>© 2026 BuzzyHive 2.0. All rights reserved.</div>
-                        <div className="flex gap-8">
-                            <a
-                                href="/privacy"
-                                className="transition-opacity hover:opacity-80"
-                            >
-                                Privacy Policy
-                            </a>
-                            <a
-                                href="/terms"
-                                className="transition-opacity hover:opacity-80"
-                            >
-                                Terms of Service
-                            </a>
-                            <a
-                                href="/cookies"
-                                className="transition-opacity hover:opacity-80"
-                            >
-                                Cookie Policy
-                            </a>
-                        </div>
+                        <div>FYP — Universiti Teknologi MARA</div>
                     </div>
                 </div>
             </footer>
