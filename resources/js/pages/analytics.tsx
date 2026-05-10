@@ -502,7 +502,7 @@ function LatestPredictionCard({
                             Timestamp
                         </p>
                         <p className="text-sm font-semibold text-amber-900">
-                            {prediction.prediction_timestamp}
+                            {formatTimestamp(prediction.prediction_timestamp)}
                         </p>
                     </div>
                 </div>
