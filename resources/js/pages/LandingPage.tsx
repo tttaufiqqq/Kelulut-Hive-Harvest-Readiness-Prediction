@@ -44,7 +44,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.35, delay: 0.4 }}
-                        className="mb-6 flex items-center gap-2"
+                        className="mb-6 flex items-center justify-center gap-2 lg:justify-start"
                     >
                         <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold tracking-widest text-yellow-950 uppercase">
                             The Future of Meliponiculture
@@ -52,7 +52,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                     </motion.div>
 
                     {/* 2. Headline — each line staggers in */}
-                    <h1 className="mb-8 text-[12vw] leading-[0.85] font-black tracking-tighter text-amber-950 uppercase lg:text-[100px]">
+                    <h1 className="mb-8 text-center text-[12vw] leading-[0.85] font-black tracking-tighter text-amber-950 uppercase lg:text-left lg:text-[100px]">
                         <motion.span
                             initial={{ opacity: 0, y: 40 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -84,12 +84,11 @@ export default function LandingPage({ thesisUrl }: Props) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.74 }}
-                        className="mb-10 max-w-xl text-xl leading-tight font-medium text-amber-900/70 md:text-2xl"
+                        className="mb-10 max-w-xl text-center text-xl leading-snug font-medium text-amber-900/70 lg:text-left lg:text-2xl"
                     >
                         IoT sensors on every hive. A KNN model that classifies
                         harvest readiness in real time. One dashboard for every
-                        hive, harvest, and inspection — built for kelulut
-                        beekeepers.
+                        hive, harvest, and inspection — built for kelulut beekeepers.
                     </motion.p>
 
                     {/* 4. CTAs slide up last */}
@@ -97,7 +96,7 @@ export default function LandingPage({ thesisUrl }: Props) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.86 }}
-                        className="flex flex-wrap gap-4"
+                        className="flex flex-wrap justify-center gap-4 lg:justify-start"
                     >
                         <Link href={dashboardHref}>
                             <Button size="lg" className="group">
