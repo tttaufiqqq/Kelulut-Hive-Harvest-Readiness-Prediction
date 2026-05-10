@@ -521,6 +521,19 @@ function LatestPredictionCard({
     );
 }
 
+function HarvestTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: HarvestRecord }> }) {
+    if (!active || !payload?.length) return null;
+    const record = payload[0].payload;
+    return (
+        <div style={TOOLTIP_STYLE} className="px-3 py-2">
+            <p className="font-bold">{record.date}</p>
+            <p>{record.weight} kg</p>
+            {record.color && <p>Color: {record.color}</p>}
+            {record.flavor && <p>Flavor: {record.flavor}</p>}
+        </div>
+    );
+}
+
 function HarvestBar({ data }: { data: HarvestRecord[] }) {
     const [mounted, setMounted] = useState(false);
 
@@ -589,7 +602,7 @@ function HarvestBar({ data }: { data: HarvestRecord[] }) {
                                 }}
                                 tickMargin={8}
                             />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                            <Tooltip content={<HarvestTooltip />} />
                             <Bar
                                 dataKey="weight"
                                 name="Weight (kg)"
