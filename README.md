@@ -11,8 +11,10 @@ Sensors on the hive push environmental data to the platform, a machine learning 
 ## Features
 
 - **Real-time sensor ingestion** — ESP32 posts temperature, humidity, and gas (MQ2/MQ3/MQ5/MQ135) readings via HTTP
-- **ML harvest readiness** — Flask API runs a KNN scikit-learn classifier and returns one of four labels: Not Ready / Approaching / Nearly Ready / Ready to Harvest
+- **ML harvest readiness** — Flask API runs a KNN classifier with guardrails (OOD detection, confidence-based downgrade, threshold conflict detection) and returns one of four labels: Not Ready / Approaching / Nearly Ready / Ready to Harvest
+- **Realtime updates** — Pusher + Laravel Echo pushes live predictions and sensor readings to the dashboard without page refresh
 - **Telegram alerts** — notifies the beekeeper automatically when the hive hits "Ready to Harvest"
+- **Two-factor authentication** — TOTP-based 2FA available on all accounts
 - **Hive management** — add/edit hives, assign beekeepers, track species and site
 - **Harvest records** — log weight, honey color, flavor, and productivity per harvest
 - **Inspection logs** — record hive inspections with weather conditions and flora observations
@@ -27,7 +29,7 @@ Sensors on the hive push environmental data to the platform, a machine learning 
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 11 (PHP 8.3+) |
+| Backend | Laravel 13 (PHP 8.3+) |
 | Frontend | React 19 + TypeScript (Inertia.js) |
 | Styling | Tailwind CSS v4 + Radix UI |
 | Auth & Roles | Laravel Fortify + Spatie Permission |
@@ -65,12 +67,13 @@ buzzyhive/
 │   ├── app.py                  # Flask REST API — POST /predict
 │   ├── model.pkl               # Trained KNN model
 │   ├── scaler.pkl              # Feature scaler
-│   ├── train.ipynb             # Training notebook (synthetic dataset, 200 samples)
+│   ├── train.ipynb             # Training notebook (expanded synthetic dataset)
 │   └── requirements.txt
 ├── diagrams/                   # ERD + DFD (.drawio)
 ├── .github/workflows/
 │   ├── deploy.yml              # tests → build → FTP upload → deploy hook
-│   └── lint.yml                # ESLint + Prettier + Pint
+│   ├── lint.yml                # ESLint + Prettier + Pint
+│   └── deploy-ml.yml           # smoke-test → upload ml/ → Passenger restart
 └── public/
     └── deploy-hook.php         # Post-deploy: composer install (if changed), migrate, seed, cache
 ```
@@ -164,13 +167,15 @@ The endpoint stores the reading in `sensor_logs`, calls the Flask ML API for a p
 
 **Labels:** `not_ready` / `approaching` / `nearly_ready` / `ready`
 
-**Model:** K-Nearest Neighbours (KNN) — 100% accuracy on synthetic test set.
+**Model:** K-Nearest Neighbours (KNN, k=7, distance-weighted)
 
-**Dataset:** 200-sample synthetic dataset anchored on Aida 'Izwani's thesis baselines (same species, same sensor types).
+**Dataset:** Expanded synthetic dataset anchored on Aida 'Izwani's thesis baselines (same species, same sensor types).
+
+**Guardrails (`ml/runtime.py`):** OOD detection per feature, confidence-based label downgrade, threshold conflict detection — stored alongside the raw model output for auditability.
 
 **Stack:** scikit-learn → `.pkl` model + scaler → Flask REST API on cPanel (Passenger WSGI)
 
-**Output per prediction:** `readiness_level`, `hri_value` (0.25/0.50/0.75/1.00), `confidence_score` (KNN vote ratio)
+**Output per prediction:** `readiness_level`, `raw_readiness_level`, `hri_value`, `raw_hri_value`, `confidence_score`, `warning_state`, `guardrail_action`, `out_of_distribution`
 
 ---
 
@@ -190,12 +195,12 @@ Roles are managed via Spatie Permission. Admins assign roles when inviting users
 Push to `main` (app files only — docs and unrelated changes are ignored) triggers:
 
 1. **Lint** (`lint.yml`) — ESLint, Prettier, Laravel Pint — runs in parallel
-2. **Tests** (`deploy.yml`) — Pest on PHP 8.3 + 8.4 in parallel, SQLite in-memory, `Vite::fake()` (no frontend build needed)
+2. **Tests** (`deploy.yml`) — Pest on PHP 8.3 + 8.4 in parallel, SQLite in-memory, `Vite::fake()` (no frontend build needed) — 119 tests / 501 assertions
 3. **Build** (after tests pass) — installs deps, runs `npm run build`, uploads `public/build/` as a GitHub Actions artifact
 4. **Deploy** (after build) — downloads artifact, FTPs changed files only to Exabytes, hits `deploy-hook.php`
 
 **Deploy hook** (runs on server via HTTP):
-- `composer install` — skipped if `composer.lock` unchanged (hash check)
+- `composer install` — **not automated**; hook returns 409 if `composer.lock` changed — requires manual install on the server first
 - `php artisan migrate --force`
 - `php artisan db:seed --class=MasterDataSeeder`
 - `php artisan config:cache` + `route:cache` + `view:cache`
