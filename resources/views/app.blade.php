@@ -32,6 +32,7 @@
 
         <title inertia>{{ config('app.name', 'BuzzyHive 2.0') }}</title>
 
+        <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="theme-color" content="#F59E0B">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="icon" href="/favicon.ico" sizes="any">
