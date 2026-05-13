@@ -23,7 +23,7 @@ export default function ConfirmPassword() {
         >
             <Head title="Confirm Password" />
 
-            <Form {...store()} resetOnSuccess={['password']}>
+            <Form action={store()} resetOnSuccess={['password']}>
                 {({ processing }) => (
                     <div className="space-y-5">
                         <div className="space-y-1.5">

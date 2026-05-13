@@ -25,7 +25,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                 </Alert>
             )}
 
-            <Form {...email()} className="space-y-5">
+            <Form action={email()} className="space-y-5">
                 {({ processing, errors }) => (
                     <>
                         <AuthFormFieldBlock label="Email Address">

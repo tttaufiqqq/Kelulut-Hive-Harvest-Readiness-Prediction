@@ -46,7 +46,7 @@ export function DeleteUser() {
                 </p>
 
                 <Form
-                    {...ProfileController.destroy()}
+                    action={ProfileController.destroy()}
                     options={{
                         preserveScroll: true,
                     }}

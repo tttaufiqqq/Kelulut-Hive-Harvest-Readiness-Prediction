@@ -26,7 +26,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                 </Alert>
             )}
 
-            <Form {...send()} className="space-y-4">
+            <Form action={send()} className="space-y-4">
                 {({ processing }) => (
                     <>
                         <Button

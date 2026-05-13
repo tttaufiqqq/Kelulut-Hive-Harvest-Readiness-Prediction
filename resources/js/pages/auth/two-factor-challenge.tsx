@@ -54,7 +54,7 @@ export default function TwoFactorChallenge() {
             <Head title="Two-Factor Authentication" />
 
             <Form
-                {...store()}
+                action={store()}
                 className="space-y-5"
                 resetOnError
                 resetOnSuccess={!showRecoveryInput}
