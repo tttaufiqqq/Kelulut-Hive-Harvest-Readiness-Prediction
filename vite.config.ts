@@ -25,13 +25,14 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'favicon.svg', 'icon.svg', 'icon-192.png', 'icon-512.png'],
             manifest: {
+                id: '/',
                 name: 'BuzzyHive',
                 short_name: 'BuzzyHive',
                 description: 'Smart kelulut hive monitoring and ML-based harvest readiness tracking.',
                 theme_color: '#F59E0B',
                 background_color: '#FFFBEB',
                 display: 'standalone',
-                start_url: '/dashboard',
+                start_url: '/',
                 scope: '/',
                 icons: [
                     { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
