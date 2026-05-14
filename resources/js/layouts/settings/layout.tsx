@@ -30,7 +30,7 @@ export function SettingsLayout({ children }: PropsWithChildren) {
     }
 
     return (
-        <div className="mx-auto max-w-6xl space-y-8 p-6 md:p-10">
+        <div className="mx-auto max-w-7xl space-y-8 p-6 md:p-10 lg:px-10 lg:py-8">
             {/* Page header — matches dashboard pattern */}
             <Breadcrumbs
                 items={[{ label: 'Home', href: '/' }, { label: 'Settings' }]}
@@ -82,12 +82,12 @@ export function SettingsLayout({ children }: PropsWithChildren) {
                 </aside>
 
                 <motion.div
-                    className="flex-1 md:max-w-2xl"
+                    className="min-w-0 flex-1"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
                 >
-                    <section className="max-w-xl space-y-8">{children}</section>
+                    <section className="max-w-3xl space-y-8">{children}</section>
                 </motion.div>
             </div>
         </div>

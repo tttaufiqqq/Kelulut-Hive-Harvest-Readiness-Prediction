@@ -40,12 +40,12 @@ type LatestReading = {
 
 type HistoryPoint = {
     time: string;
-    temperature: number;
-    humidity: number;
-    mq2: number;
-    mq3: number;
-    mq5: number;
-    mq135: number;
+    temperature: number | null;
+    humidity: number | null;
+    mq2: number | null;
+    mq3: number | null;
+    mq5: number | null;
+    mq135: number | null;
 };
 
 type Props = {
@@ -70,6 +70,16 @@ function toFiniteNumber(value: unknown): number | null {
     }
 
     return null;
+}
+
+function normalizeMissingReading(value: unknown): number | null {
+    const numericValue = toFiniteNumber(value);
+
+    if (numericValue === null || numericValue === 0) {
+        return null;
+    }
+
+    return numericValue;
 }
 
 function formatAnimatedReading(value: unknown, maxFractionDigits = 1): string {
@@ -703,12 +713,12 @@ export default function AdminSensors({
     const normalizedLatest = latest
         ? {
               ...latest,
-              temperature: toFiniteNumber(latest.temperature),
-              humidity: toFiniteNumber(latest.humidity),
-              mq2: toFiniteNumber(latest.mq2),
-              mq3: toFiniteNumber(latest.mq3),
-              mq5: toFiniteNumber(latest.mq5),
-              mq135: toFiniteNumber(latest.mq135),
+              temperature: normalizeMissingReading(latest.temperature),
+              humidity: normalizeMissingReading(latest.humidity),
+              mq2: normalizeMissingReading(latest.mq2),
+              mq3: normalizeMissingReading(latest.mq3),
+              mq5: normalizeMissingReading(latest.mq5),
+              mq135: normalizeMissingReading(latest.mq135),
           }
         : null;
     const missingSensors: string[] = normalizedLatest

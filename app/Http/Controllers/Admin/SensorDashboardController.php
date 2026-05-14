@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Hive;
 use App\Models\SensorLog;
+use App\Support\SensorReadings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -63,6 +64,7 @@ class SensorDashboardController extends Controller
             'mq5' => $log->mq5_value,
             'mq135' => $log->mq135_value,
         ])->values();
+        $latestReadings = SensorReadings::fromLog($latest);
 
         return Inertia::render('admin/sensors', [
             'hives' => $hives,
@@ -70,12 +72,12 @@ class SensorDashboardController extends Controller
             'window' => $window,
             'date' => $date ?? null,
             'latest' => $latest ? [
-                'temperature' => $latest->temp !== null ? round($latest->temp, 1) : null,
-                'humidity' => $latest->humidity !== null ? round($latest->humidity, 1) : null,
-                'mq2' => $latest->mq2_value,
-                'mq3' => $latest->mq3_value,
-                'mq5' => $latest->mq5_value,
-                'mq135' => $latest->mq135_value,
+                'temperature' => ($latestReadings['temp'] ?? null) !== null ? round((float) $latestReadings['temp'], 1) : null,
+                'humidity' => ($latestReadings['humidity'] ?? null) !== null ? round((float) $latestReadings['humidity'], 1) : null,
+                'mq2' => ($latestReadings['mq2_value'] ?? null) !== null ? (int) $latestReadings['mq2_value'] : null,
+                'mq3' => ($latestReadings['mq3_value'] ?? null) !== null ? (int) $latestReadings['mq3_value'] : null,
+                'mq5' => ($latestReadings['mq5_value'] ?? null) !== null ? (int) $latestReadings['mq5_value'] : null,
+                'mq135' => ($latestReadings['mq135_value'] ?? null) !== null ? (int) $latestReadings['mq135_value'] : null,
                 'recorded_at' => $latest->record_timestamp->diffForHumans(),
             ] : null,
             'history' => $history,

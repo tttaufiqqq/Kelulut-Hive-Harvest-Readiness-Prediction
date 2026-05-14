@@ -9,6 +9,7 @@ use App\Models\HriSummary;
 use App\Models\Prediction;
 use App\Models\SensorLog;
 use App\Support\AppErrorReporter;
+use App\Support\SensorReadings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,18 +23,11 @@ class MlPredictionService
 
     public function runPrediction(SensorLog $log): PredictionRunResult
     {
-        if ($log->temp === null || $log->humidity === null) {
+        $payload = SensorReadings::fromLog($log);
+
+        if (SensorReadings::hasMissing($payload)) {
             return PredictionRunResult::skipped($log->id);
         }
-
-        $payload = [
-            'mq2_value' => $log->mq2_value,
-            'mq3_value' => $log->mq3_value,
-            'mq5_value' => $log->mq5_value,
-            'mq135_value' => $log->mq135_value,
-            'temp' => $log->temp,
-            'humidity' => $log->humidity,
-        ];
 
         try {
             $response = Http::timeout(10)->post(config('services.ml.url').'/predict', $payload);

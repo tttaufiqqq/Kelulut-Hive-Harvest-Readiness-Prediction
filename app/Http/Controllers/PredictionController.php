@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Hive;
 use App\Models\Prediction;
 use App\Models\SensorLog;
+use App\Support\SensorReadings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -65,17 +66,9 @@ class PredictionController extends Controller
             ->latest('record_timestamp')
             ->first(['temp', 'humidity', 'mq2_value', 'mq3_value', 'mq5_value', 'mq135_value']);
 
-        $sensorWarnings = $latestSensorLog ? collect([
-            'temp'       => 'Temperature',
-            'humidity'   => 'Humidity',
-            'mq2_value'  => 'MQ-2',
-            'mq3_value'  => 'MQ-3',
-            'mq5_value'  => 'MQ-5',
-            'mq135_value'=> 'MQ-135',
-        ])->filter(fn ($label, $field) => $latestSensorLog->$field === null)
-          ->values()
-          ->all()
-        : [];
+        $sensorWarnings = $latestSensorLog
+            ? SensorReadings::missingLabels(SensorReadings::fromLog($latestSensorLog))
+            : [];
 
         return Inertia::render('predictions', [
             'hive' => ['id' => $hive->id, 'name' => $hive->name],
@@ -96,6 +89,15 @@ class PredictionController extends Controller
     private function transformPrediction(Prediction $prediction): array
     {
         $sensorLog = $prediction->sensorLog;
+        $sensorValues = SensorReadings::fromLog($sensorLog);
+        $thresholdReadings = [
+            'temp' => $sensorValues['temp'] ?? null,
+            'humidity' => $sensorValues['humidity'] ?? null,
+            'mq2' => $sensorValues['mq2_value'] ?? null,
+            'mq3' => $sensorValues['mq3_value'] ?? null,
+            'mq5' => $sensorValues['mq5_value'] ?? null,
+            'mq135' => $sensorValues['mq135_value'] ?? null,
+        ];
 
         return [
             'id' => $prediction->id,
@@ -118,22 +120,22 @@ class PredictionController extends Controller
             'record_timestamp' => $sensorLog?->record_timestamp?->toIso8601String(),
             'record_timestamp_label' => $sensorLog?->record_timestamp?->format('d/m/Y H:i'),
             'sensor_values' => [
-                'temp' => $sensorLog?->temp !== null ? round((float) $sensorLog->temp, 1) : null,
-                'humidity' => $sensorLog?->humidity !== null ? round((float) $sensorLog->humidity, 1) : null,
-                'mq2_value' => $sensorLog?->mq2_value !== null ? (int) $sensorLog->mq2_value : null,
-                'mq3_value' => $sensorLog?->mq3_value !== null ? (int) $sensorLog->mq3_value : null,
-                'mq5_value' => $sensorLog?->mq5_value !== null ? (int) $sensorLog->mq5_value : null,
-                'mq135_value' => $sensorLog?->mq135_value !== null ? (int) $sensorLog->mq135_value : null,
+                'temp' => ($sensorValues['temp'] ?? null) !== null ? round((float) $sensorValues['temp'], 1) : null,
+                'humidity' => ($sensorValues['humidity'] ?? null) !== null ? round((float) $sensorValues['humidity'], 1) : null,
+                'mq2_value' => ($sensorValues['mq2_value'] ?? null) !== null ? (int) $sensorValues['mq2_value'] : null,
+                'mq3_value' => ($sensorValues['mq3_value'] ?? null) !== null ? (int) $sensorValues['mq3_value'] : null,
+                'mq5_value' => ($sensorValues['mq5_value'] ?? null) !== null ? (int) $sensorValues['mq5_value'] : null,
+                'mq135_value' => ($sensorValues['mq135_value'] ?? null) !== null ? (int) $sensorValues['mq135_value'] : null,
             ],
             'threshold_match_summaries' => $sensorLog?->matchedThresholds
-                ->map(function ($threshold) use ($sensorLog) {
+                ->map(function ($threshold) use ($thresholdReadings) {
                     $reading = match ($threshold->sensor_type) {
-                        'temp' => $sensorLog?->temp,
-                        'humidity' => $sensorLog?->humidity,
-                        'mq2' => $sensorLog?->mq2_value,
-                        'mq3' => $sensorLog?->mq3_value,
-                        'mq5' => $sensorLog?->mq5_value,
-                        'mq135' => $sensorLog?->mq135_value,
+                        'temp' => $thresholdReadings['temp'],
+                        'humidity' => $thresholdReadings['humidity'],
+                        'mq2' => $thresholdReadings['mq2'],
+                        'mq3' => $thresholdReadings['mq3'],
+                        'mq5' => $thresholdReadings['mq5'],
+                        'mq135' => $thresholdReadings['mq135'],
                         default => null,
                     };
 
@@ -158,6 +160,7 @@ class PredictionController extends Controller
         $sensorLog = $prediction->sensorLog;
         $predictionTimestamp = $prediction->prediction_timestamp;
         $isSameDay = $predictionTimestamp?->isSameDay(Carbon::parse($chartDate));
+        $sensorValues = SensorReadings::fromLog($sensorLog);
 
         return [
             'id' => $prediction->id,
@@ -166,8 +169,8 @@ class PredictionController extends Controller
                 : 'N/A',
             'hri_pct' => round((float) $prediction->hri_value * 100, 1),
             'confidence_pct' => round((float) $prediction->confidence_score * 100, 1),
-            'temp' => $sensorLog?->temp !== null ? round((float) $sensorLog->temp, 1) : null,
-            'humidity' => $sensorLog?->humidity !== null ? round((float) $sensorLog->humidity, 1) : null,
+            'temp' => ($sensorValues['temp'] ?? null) !== null ? round((float) $sensorValues['temp'], 1) : null,
+            'humidity' => ($sensorValues['humidity'] ?? null) !== null ? round((float) $sensorValues['humidity'], 1) : null,
             'warning_state' => $prediction->warning_state ?? 'normal',
         ];
     }

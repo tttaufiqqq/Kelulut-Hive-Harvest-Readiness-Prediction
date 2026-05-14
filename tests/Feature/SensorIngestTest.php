@@ -239,6 +239,35 @@ test('partial payload without gas sensors saves row with null gas fields', funct
     expect($log->mq3_value)->toBeNull();
     expect($log->mq5_value)->toBeNull();
     expect($log->mq135_value)->toBeNull();
+    expect(Prediction::count())->toBe(0);
+});
+
+test('zero sensor readings are normalized to null and prediction is skipped', function () {
+    fakeMlOk();
+    ['hive' => $hive] = sensorStack();
+
+    $payload = [
+        'device_id' => 'NODE-001',
+        'hive_id' => $hive->id,
+        'temp' => 0,
+        'humidity' => 0,
+        'mq2_value' => 0,
+        'mq3_value' => 0,
+        'mq5_value' => 0,
+        'mq135_value' => 0,
+    ];
+
+    $response = $this->postJson('/api/sensor-data', $payload, ['X-API-Key' => 'test-api-key']);
+
+    $response->assertStatus(201);
+    $log = SensorLog::first();
+    expect($log->temp)->toBeNull();
+    expect($log->humidity)->toBeNull();
+    expect($log->mq2_value)->toBeNull();
+    expect($log->mq3_value)->toBeNull();
+    expect($log->mq5_value)->toBeNull();
+    expect($log->mq135_value)->toBeNull();
+    expect(Prediction::count())->toBe(0);
 });
 
 // ── Test 11: missing temp + humidity → row saved, no prediction created ───

@@ -48,12 +48,12 @@ interface PredictionEntry {
     record_timestamp_label: string | null;
     device_identifier: string | null;
     sensor_values: {
-        temp: number;
-        humidity: number;
-        mq2_value: number;
-        mq3_value: number;
-        mq5_value: number;
-        mq135_value: number;
+        temp: number | null;
+        humidity: number | null;
+        mq2_value: number | null;
+        mq3_value: number | null;
+        mq5_value: number | null;
+        mq135_value: number | null;
     };
     threshold_match_summaries: {
         sensor_type: string;
@@ -70,8 +70,8 @@ interface Props {
         label: string;
         hri_pct: number;
         confidence_pct: number;
-        temp: number;
-        humidity: number;
+        temp: number | null;
+        humidity: number | null;
         warning_state: string;
     }[];
     historyPredictions: {
@@ -130,6 +130,18 @@ const TOOLTIP_STYLE = {
 
 function formatAnimatedReading(value: number, maxFractionDigits = 1): string {
     return value.toFixed(maxFractionDigits).replace(/\.0$/, '');
+}
+
+function formatSensorReading(
+    value: number | null,
+    suffix = '',
+    maxFractionDigits = 0,
+): string {
+    if (value === null) {
+        return '—';
+    }
+
+    return `${formatAnimatedReading(value, maxFractionDigits)}${suffix}`;
 }
 
 function useAnimatedNumber(value: number, durationMs = 700) {
@@ -280,7 +292,11 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
                     label: 'Temp',
                     value: (
                         <span className={sensorLevelClass('temp', thresholdMap)}>
-                            {prediction.sensor_values.temp}°C
+                            {formatSensorReading(
+                                prediction.sensor_values.temp,
+                                '°C',
+                                1,
+                            )}
                         </span>
                     ),
                 },
@@ -288,7 +304,11 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
                     label: 'Humidity',
                     value: (
                         <span className={sensorLevelClass('humidity', thresholdMap)}>
-                            {prediction.sensor_values.humidity}%
+                            {formatSensorReading(
+                                prediction.sensor_values.humidity,
+                                '%',
+                                1,
+                            )}
                         </span>
                     ),
                 },
@@ -296,7 +316,9 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
                     label: 'MQ2',
                     value: (
                         <span className={sensorLevelClass('mq2_value', thresholdMap)}>
-                            {prediction.sensor_values.mq2_value}
+                            {formatSensorReading(
+                                prediction.sensor_values.mq2_value,
+                            )}
                         </span>
                     ),
                 },
@@ -304,7 +326,9 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
                     label: 'MQ3',
                     value: (
                         <span className={sensorLevelClass('mq3_value', thresholdMap)}>
-                            {prediction.sensor_values.mq3_value}
+                            {formatSensorReading(
+                                prediction.sensor_values.mq3_value,
+                            )}
                         </span>
                     ),
                 },
@@ -312,7 +336,9 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
                     label: 'MQ5',
                     value: (
                         <span className={sensorLevelClass('mq5_value', thresholdMap)}>
-                            {prediction.sensor_values.mq5_value}
+                            {formatSensorReading(
+                                prediction.sensor_values.mq5_value,
+                            )}
                         </span>
                     ),
                 },
@@ -320,7 +346,9 @@ function SensorSnapshot({ prediction }: { prediction: PredictionEntry }) {
                     label: 'MQ135',
                     value: (
                         <span className={sensorLevelClass('mq135_value', thresholdMap)}>
-                            {prediction.sensor_values.mq135_value}
+                            {formatSensorReading(
+                                prediction.sensor_values.mq135_value,
+                            )}
                         </span>
                     ),
                 },
@@ -1466,11 +1494,12 @@ export default function Predictions({
                                             Temp
                                         </p>
                                         <p className="font-medium text-amber-950">
-                                            {
+                                            {formatSensorReading(
                                                 activeHistoryPrediction
-                                                    .sensor_values.temp
-                                            }
-                                            °C
+                                                    .sensor_values.temp,
+                                                '°C',
+                                                1,
+                                            )}
                                         </p>
                                     </div>
                                     <div>
@@ -1478,11 +1507,12 @@ export default function Predictions({
                                             Humidity
                                         </p>
                                         <p className="font-medium text-amber-950">
-                                            {
+                                            {formatSensorReading(
                                                 activeHistoryPrediction
-                                                    .sensor_values.humidity
-                                            }
-                                            %
+                                                    .sensor_values.humidity,
+                                                '%',
+                                                1,
+                                            )}
                                         </p>
                                     </div>
                                     <div>
@@ -1490,10 +1520,10 @@ export default function Predictions({
                                             MQ2
                                         </p>
                                         <p className="font-medium text-amber-950">
-                                            {
+                                            {formatSensorReading(
                                                 activeHistoryPrediction
-                                                    .sensor_values.mq2_value
-                                            }
+                                                    .sensor_values.mq2_value,
+                                            )}
                                         </p>
                                     </div>
                                     <div>
@@ -1501,10 +1531,10 @@ export default function Predictions({
                                             MQ3
                                         </p>
                                         <p className="font-medium text-amber-950">
-                                            {
+                                            {formatSensorReading(
                                                 activeHistoryPrediction
-                                                    .sensor_values.mq3_value
-                                            }
+                                                    .sensor_values.mq3_value,
+                                            )}
                                         </p>
                                     </div>
                                     <div>
@@ -1512,10 +1542,10 @@ export default function Predictions({
                                             MQ5
                                         </p>
                                         <p className="font-medium text-amber-950">
-                                            {
+                                            {formatSensorReading(
                                                 activeHistoryPrediction
-                                                    .sensor_values.mq5_value
-                                            }
+                                                    .sensor_values.mq5_value,
+                                            )}
                                         </p>
                                     </div>
                                     <div>
@@ -1523,10 +1553,10 @@ export default function Predictions({
                                             MQ135
                                         </p>
                                         <p className="font-medium text-amber-950">
-                                            {
+                                            {formatSensorReading(
                                                 activeHistoryPrediction
-                                                    .sensor_values.mq135_value
-                                            }
+                                                    .sensor_values.mq135_value,
+                                            )}
                                         </p>
                                     </div>
                                 </div>

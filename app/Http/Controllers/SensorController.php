@@ -9,6 +9,7 @@ use App\Models\IotNode;
 use App\Models\SensorLog;
 use App\Services\MlPredictionService;
 use App\Services\PredictionRunResult;
+use App\Support\SensorReadings;
 use App\Http\Middleware\AssignRequestId;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class SensorController extends Controller
             );
         }
 
-        $data = $this->validateSensorPayload($request);
+        $data = SensorReadings::normalize($this->validateSensorPayload($request));
         $node = $this->findActiveNode($data['device_id'], $data['hive_id']);
 
         if (! $node) {
@@ -70,7 +71,7 @@ class SensorController extends Controller
             );
         }
 
-        $data = $this->validateSensorPayload($request, true);
+        $data = SensorReadings::normalize($this->validateSensorPayload($request, true));
         $node = $this->findActiveNode($data['device_id'], $data['hive_id']);
 
         if (! $node) {
