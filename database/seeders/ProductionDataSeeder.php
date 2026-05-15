@@ -99,7 +99,6 @@ class ProductionDataSeeder extends Seeder
                 'password'          => Hash::make(env('ADMIN_SEED_PASSWORD', 'BuzzyHive@Admin2025!')),
                 'email_verified_at' => now(),
                 'status'            => 'active',
-                'role'              => 'admin',
             ]
         );
         $admin->assignRole($adminRole);
@@ -117,7 +116,6 @@ class ProductionDataSeeder extends Seeder
                     'password'          => $password,
                     'email_verified_at' => Carbon::parse('2025-01-01'),
                     'status'            => 'active',
-                    'role'              => 'beekeeper',
                 ]
             );
             $user->assignRole($beekeeperRole);
