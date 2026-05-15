@@ -42,6 +42,13 @@ class DashboardController extends Controller
             AppErrorCode::UnexpectedError,
         );
 
+        $fleetHriTrend = SafeSection::execute(
+            'admin.dashboard.fleet_hri_trend',
+            fn () => array_map(fn ($r) => (array) $r, DB::select('CALL sp_fleet_hri_trend(?)', [180])),
+            [],
+            AppErrorCode::UnexpectedError,
+        );
+
         return Inertia::render('admin/dashboard', [
             'stats' => [
                 'total' => (int) $stats->total,
@@ -51,6 +58,7 @@ class DashboardController extends Controller
             'hives' => $hives,
             'productivityRanking' => $productivity,
             'crossSiteComparison' => $crossSite,
+            'fleetHriTrend' => $fleetHriTrend,
         ]);
     }
 
@@ -77,9 +85,12 @@ class DashboardController extends Controller
             ->pluck('sensor_logs.hive_id')
             ->unique();
 
-        // Fetch sensor logs for union of today + ever IDs
+        // Fetch sensor logs for union of today + ever IDs (include MQ columns for radar)
         $allLogIds = $latestTodayLogIds->values()->merge($latestEverLogIds->values())->unique();
-        $sensorLogs = SensorLog::whereIn('id', $allLogIds)->get()->keyBy('id');
+        $sensorLogs = SensorLog::whereIn('id', $allLogIds)
+            ->select(['id', 'hive_id', 'temp', 'humidity', 'mq2_value', 'mq3_value', 'mq5_value', 'mq135_value', 'record_timestamp'])
+            ->get()
+            ->keyBy('id');
 
         // Query D: predictions for today's log IDs only
         $predictions = Prediction::whereIn('sensor_log_id', $latestTodayLogIds->values())->get()->keyBy('sensor_log_id');
@@ -115,6 +126,9 @@ class DashboardController extends Controller
                 'temp' => $todayLog ? round((float) $todayLog->temp, 1) : 0,
                 'humidity' => $todayLog ? (int) round((float) $todayLog->humidity) : 0,
                 'co2' => $todayLog ? (int) $todayLog->mq135_value : 0,
+                'mq2' => $todayLog ? (int) $todayLog->mq2_value : 0,
+                'mq3' => $todayLog ? (int) $todayLog->mq3_value : 0,
+                'mq5' => $todayLog ? (int) $todayLog->mq5_value : 0,
                 'readiness' => $prediction ? (int) round((float) $prediction->confidence_score * 100) : 0,
                 'status' => $status,
                 'last_reading' => $everLog ? Carbon::parse($everLog->record_timestamp)->toIso8601String() : null,
