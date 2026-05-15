@@ -32,7 +32,15 @@ class ReportingController extends Controller
             return [];
         }
 
-        return array_map(fn ($r) => (array) $r, DB::select('CALL sp_beekeeper_harvest_summary(?)', [$beekeeperId]));
+        return DB::table('harvests')
+            ->join('hives', 'hives.id', '=', 'harvests.hive_id')
+            ->where('harvests.beekeeper_id', $beekeeperId)
+            ->selectRaw("hives.id as hive_id, hives.name as hive_name, DATE_FORMAT(harvests.harvest_date, '%Y-%m') as harvest_month, SUM(harvests.weight) as total_weight, COUNT(*) as harvest_count")
+            ->groupByRaw("hives.id, hives.name, DATE_FORMAT(harvests.harvest_date, '%Y-%m')")
+            ->orderByDesc('total_weight')
+            ->get()
+            ->map(fn ($r) => (array) $r)
+            ->all();
     }
 
     private function sensorProfiles(Collection $hiveIds): array

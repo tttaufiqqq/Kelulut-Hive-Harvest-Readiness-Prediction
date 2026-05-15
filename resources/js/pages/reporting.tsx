@@ -46,6 +46,7 @@ interface ReadinessTrend {
 interface HarvestSummaryItem {
     hive_id: number;
     hive_name: string;
+    harvest_month: string;
     total_weight: number;
     harvest_count: number;
 }
@@ -193,32 +194,30 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
             eyebrow="Readiness Trend"
             title="Recent readiness movement"
             description="Monitor how HRI is changing across the selected reporting window."
-            actions={
-                <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-                    <div className="w-full sm:w-[220px]">
-                        <DatePickerField
-                            value={selectedMonth}
-                            onChange={setSelectedMonth}
-                            mode="month"
-                            maxDate="today"
-                            placeholder="Month"
-                            clearable
-                            defaultValue={latestMonthValue ?? undefined}
-                        />
-                    </div>
-                    <div className="w-full sm:w-[220px]">
-                        <SelectField
-                            value={activeHive}
-                            onChange={setSelectedHive}
-                            options={hiveOptions}
-                        />
-                    </div>
-                </div>
-            }
         >
+            <div className="mb-3 flex flex-wrap gap-2">
+                <div className="w-full sm:w-[200px]">
+                    <DatePickerField
+                        value={selectedMonth}
+                        onChange={setSelectedMonth}
+                        mode="month"
+                        maxDate="today"
+                        placeholder="Month"
+                        clearable
+                        defaultValue={latestMonthValue ?? undefined}
+                    />
+                </div>
+                <div className="w-full sm:w-[200px]">
+                    <SelectField
+                        value={activeHive}
+                        onChange={setSelectedHive}
+                        options={hiveOptions}
+                    />
+                </div>
+            </div>
             <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                 {mounted && filtered.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={220}>
+                    <ResponsiveContainer width="100%" height={280}>
                         <AreaChart
                             data={filtered}
                             margin={{ top: 8, right: 8, left: 8, bottom: 18 }}
@@ -309,7 +308,7 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
                         </AreaChart>
                     </ResponsiveContainer>
                 ) : mounted ? (
-                    <div className="flex h-[220px] items-center justify-center px-4 text-center text-sm text-amber-900/40">
+                    <div className="flex h-[280px] items-center justify-center px-4 text-center text-sm text-amber-900/40">
                         No HRI history for the selected hive and month.
                     </div>
                 ) : null}
@@ -320,30 +319,67 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
 
 function HarvestBarChart({ data }: { data: HarvestSummaryItem[] }) {
     const [mounted, setMounted] = useState(false);
+    const availableMonths = [...new Set(data.map((d) => d.harvest_month))].sort();
+    const latestMonth = availableMonths[availableMonths.length - 1] ?? 'all_time';
+    const [selected, setSelected] = useState<string>(latestMonth);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
+    const monthOptions = [
+        { value: 'all_time', label: 'All Time' },
+        ...availableMonths.map((m) => ({ value: m, label: m })),
+    ];
+
+    const filtered =
+        selected === 'all_time'
+            ? Object.values(
+                  data.reduce<Record<number, HarvestSummaryItem>>((acc, d) => {
+                      if (!acc[d.hive_id]) {
+                          acc[d.hive_id] = { ...d };
+                      } else {
+                          acc[d.hive_id].total_weight += d.total_weight;
+                          acc[d.hive_id].harvest_count += d.harvest_count;
+                      }
+                      return acc;
+                  }, {}),
+              ).sort((a, b) => b.total_weight - a.total_weight)
+            : data.filter((d) => d.harvest_month === selected);
+
     return (
         <ChartCard
             eyebrow="Harvest Summary"
             title="Total honey harvested per hive"
+            description={
+                selected === 'all_time'
+                    ? 'Cumulative harvest weight across all recorded months.'
+                    : 'Cumulative harvest weight recorded for the selected month.'
+            }
         >
+            <div className="mb-3 flex flex-wrap gap-2">
+                <div className="w-full sm:w-[200px]">
+                    <SelectField
+                        value={selected}
+                        onChange={setSelected}
+                        options={monthOptions}
+                    />
+                </div>
+            </div>
             <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
-                {data.length === 0 || !mounted ? (
-                    <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/40">
-                        No harvest records yet.
+                {filtered.length === 0 || !mounted ? (
+                    <div className="flex h-[280px] items-center justify-center text-sm text-amber-900/40">
+                        {data.length === 0 ? 'No harvest records yet.' : 'No harvests for the selected month.'}
                     </div>
                 ) : (
                     <ResponsiveContainer
                         width="100%"
-                        height={Math.max(120, data.length * 48)}
+                        height={Math.max(280, filtered.length * 48)}
                     >
                         <BarChart
                             layout="vertical"
-                            data={data}
+                            data={filtered}
                             margin={{ top: 8, right: 24, left: 8, bottom: 8 }}
                         >
                             <CartesianGrid
@@ -370,7 +406,7 @@ function HarvestBarChart({ data }: { data: HarvestSummaryItem[] }) {
                             />
                             <Tooltip
                                 contentStyle={TOOLTIP_STYLE}
-                                formatter={(v) => [`${v} g`, 'Total Harvest']}
+                                formatter={(v) => [v + ' g', 'Total Harvest']}
                             />
                             <Bar
                                 dataKey="total_weight"
@@ -423,22 +459,23 @@ export default function Reporting({ hriGauges, readinessTrends, harvestSummary, 
                     </p>
                 </div>
 
-                {/* ── Hero: HRI Gauges (2/3) + Donut (1/3) ── */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
-                        <h2 className="mb-4 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                            HRI Gauge
-                        </h2>
-                        <HriGaugeGrid gauges={hriGauges} />
-                    </div>
-                    <div className="lg:col-span-1">
-                        <ReadinessDonutChart
-                            data={donutData}
-                            title="Readiness Distribution"
-                            description="Current readiness breakdown across your hives"
-                        />
-                    </div>
+                {/* ── HRI Gauges ── */}
+                <div>
+                    <h2 className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                        HRI Gauge
+                    </h2>
+                    <p className="mt-1 mb-4 text-sm text-amber-700">
+                        Latest readiness index and prediction confidence for each of your hives.
+                    </p>
+                    <HriGaugeGrid gauges={hriGauges} />
                 </div>
+
+                {/* ── Readiness Distribution Donut (separate group) ── */}
+                <ReadinessDonutChart
+                    data={donutData}
+                    title="Readiness Distribution"
+                    description="Current readiness breakdown across your hives"
+                />
 
                 {/* ── Trend + Harvest Bar (side by side) ── */}
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -449,9 +486,12 @@ export default function Reporting({ hriGauges, readinessTrends, harvestSummary, 
                 {/* ── Sensor Profiles ── */}
                 {hivesWithProfiles.length > 0 && (
                     <div>
-                        <h2 className="mb-4 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                        <h2 className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                             Sensor Profiles
                         </h2>
+                        <p className="mt-1 mb-4 text-sm text-amber-700">
+                            Environmental radar based on the latest sensor readings across temperature, humidity, and gas sensors.
+                        </p>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {hivesWithProfiles.map((gauge) => (
                                 <SensorRadarChart

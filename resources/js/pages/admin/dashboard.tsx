@@ -333,10 +333,8 @@ export default function AdminDashboard({
             <Head title="Admin Dashboard" />
 
             <div className="space-y-6">
-                {/* ── V2 Hero: Action Cards (left) + Fleet Readiness Donut (right) ── */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    {/* Left: beekeeper summary + action cards */}
-                    <div className="flex flex-col gap-4">
+                {/* ── V2 Hero: Beekeeper summary + Action Cards ── */}
+                <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-2 px-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
                             <Users className="h-3.5 w-3.5" />
                             <span>{stats.total} beekeepers</span>
@@ -407,17 +405,14 @@ export default function AdminDashboard({
                                 </div>
                             </Card>
                         </div>
-                    </div>
-
-                    {/* Right: Fleet Readiness Donut */}
-                    <div className="lg:col-span-1">
-                        <ReadinessDonutChart
-                            data={adminDonutData}
-                            title="Fleet Readiness"
-                            description="Current readiness breakdown across all hives"
-                        />
-                    </div>
                 </div>
+
+                {/* ── Fleet Readiness Donut (separate group) ── */}
+                <ReadinessDonutChart
+                    data={adminDonutData}
+                    title="Fleet Readiness"
+                    description="Current readiness breakdown across all hives"
+                />
 
                 {/* ── Live Hive Monitor ──────────────────────────────────── */}
                 <Card className="overflow-hidden p-0">
@@ -562,10 +557,7 @@ export default function AdminDashboard({
                             </h3>
                             <ResponsiveContainer
                                 width="100%"
-                                height={Math.max(
-                                    160,
-                                    productivityRanking.length * 52,
-                                )}
+                                height={Math.max(320, productivityRanking.length * 44)}
                             >
                                 <BarChart
                                     layout="vertical"
@@ -625,7 +617,7 @@ export default function AdminDashboard({
                             <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
                                 Cross-Site Comparison
                             </h3>
-                            <ResponsiveContainer width="100%" height={320}>
+                            <ResponsiveContainer width="100%" height={Math.max(320, productivityRanking.length * 44)}>
                                 <BarChart
                                     data={crossSiteComparison}
                                     margin={{

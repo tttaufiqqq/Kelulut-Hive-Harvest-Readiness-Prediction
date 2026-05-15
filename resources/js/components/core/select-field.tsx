@@ -58,12 +58,19 @@ export function SelectField({
 
         if (!open && triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom - 8;
+            const spaceAbove = rect.top - 8;
+            const maxH = 256; // matches max-h-64
+            const openUpward = spaceBelow < maxH && spaceAbove > spaceBelow;
             setMenuStyle({
                 position: 'fixed',
-                top: rect.bottom + 4,
+                ...(openUpward
+                    ? { bottom: window.innerHeight - rect.top + 4, top: 'auto' }
+                    : { top: rect.bottom + 4 }),
                 left: rect.left,
                 width: rect.width,
                 zIndex: 9999,
+                maxHeight: Math.min(maxH, openUpward ? spaceAbove : spaceBelow),
             });
         }
 
@@ -119,8 +126,9 @@ export function SelectField({
                                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
                                 transition={{ duration: 0.15, ease: 'easeOut' }}
                                 style={menuStyle}
-                                className="overflow-hidden rounded-2xl border border-yellow-100 bg-white py-1 shadow-xl"
+                                className="overflow-hidden rounded-2xl border border-yellow-100 bg-white shadow-xl"
                             >
+                                <div style={{ maxHeight: menuStyle.maxHeight ?? 256, overflowY: 'auto' }} className="[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-amber-50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-amber-400 py-1">
                                 {options.map((opt) => {
                                     const isSelected =
                                         String(opt.value) === String(value);
@@ -147,6 +155,7 @@ export function SelectField({
                                         </button>
                                     );
                                 })}
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>,
