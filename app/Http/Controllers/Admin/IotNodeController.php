@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateIotNodeRequest;
 use App\Models\Hive;
 use App\Models\IotNode;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,7 +54,11 @@ class IotNodeController extends Controller
 
     public function store(StoreIotNodeRequest $request): RedirectResponse
     {
-        IotNode::create($request->validated());
+        do {
+            $identifier = 'NODE-' . strtoupper(Str::random(6));
+        } while (IotNode::where('node_identifier', $identifier)->exists());
+
+        IotNode::create(array_merge($request->validated(), ['node_identifier' => $identifier]));
 
         return redirect()->route('admin.devices.index')->with('success', 'Device registered.');
     }

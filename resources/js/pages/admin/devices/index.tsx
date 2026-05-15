@@ -14,7 +14,6 @@ import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
-import { Input } from '@/components/core/input';
 import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Modal } from '@/components/core/modal';
 import { SelectField } from '@/components/core/select-field';
@@ -48,7 +47,6 @@ type ActiveModal =
     | null;
 
 type DeviceFormData = {
-    node_identifier: string;
     hive_id: string;
     device_status: string;
     installation_date: string;
@@ -119,7 +117,6 @@ export default function DevicesIndex({
     }, [viewIndex, devices.length]);
 
     const createForm = useForm<DeviceFormData>({
-        node_identifier: '',
         hive_id: '',
         device_status: 'active',
         installation_date: '',
@@ -127,7 +124,6 @@ export default function DevicesIndex({
     });
 
     const editForm = useForm<DeviceFormData>({
-        node_identifier: '',
         hive_id: '',
         device_status: 'active',
         installation_date: '',
@@ -136,7 +132,6 @@ export default function DevicesIndex({
 
     const openEdit = (device: DeviceRow) => {
         editForm.setData({
-            node_identifier: device.node_identifier,
             hive_id: String(device.hive_id),
             device_status: device.device_status,
             installation_date: device.installation_date ?? '',
@@ -492,16 +487,14 @@ export default function DevicesIndex({
                 maxWidth="sm"
             >
                 <form onSubmit={submitCreate} className="space-y-4">
-                    <Input
-                        label="Device ID"
-                        value={createForm.data.node_identifier}
-                        onChange={(e) =>
-                            createForm.setData('node_identifier', e.target.value)
-                        }
-                        placeholder="e.g. NODE-001"
-                        autoFocus
-                        error={createForm.errors.node_identifier}
-                    />
+                    <div>
+                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                            Device ID
+                        </p>
+                        <p className="rounded-xl border border-dashed border-amber-200 bg-amber-50/60 px-3 py-2 font-mono text-sm text-amber-900/40">
+                            Auto-assigned on register
+                        </p>
+                    </div>
                     <SelectField
                         label="Hive"
                         value={createForm.data.hive_id}
@@ -561,15 +554,14 @@ export default function DevicesIndex({
             {activeModal?.type === 'edit' && (
                 <Modal isOpen onClose={close} title="Edit Device" maxWidth="sm">
                     <form onSubmit={submitEdit} className="space-y-4">
-                        <Input
-                            label="Device ID"
-                            value={editForm.data.node_identifier}
-                            onChange={(e) =>
-                                editForm.setData('node_identifier', e.target.value)
-                            }
-                            autoFocus
-                            error={editForm.errors.node_identifier}
-                        />
+                        <div>
+                            <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                Device ID
+                            </p>
+                            <p className="rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2 font-mono text-sm font-semibold text-amber-900">
+                                {activeModal.device.node_identifier}
+                            </p>
+                        </div>
                         <SelectField
                             label="Hive"
                             value={editForm.data.hive_id}
