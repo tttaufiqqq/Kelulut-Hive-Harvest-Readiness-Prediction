@@ -14,6 +14,7 @@ import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Input } from '@/components/core/input';
+import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Modal } from '@/components/core/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
 
@@ -32,6 +33,7 @@ type ActiveModal =
     | { type: 'create' }
     | { type: 'view'; index: number }
     | { type: 'edit'; site: SiteRow }
+    | { type: 'confirm-edit'; site: SiteRow }
     | { type: 'delete'; site: SiteRow }
     | null;
 
@@ -104,6 +106,14 @@ export default function SitesIndex({ sites }: PageProps) {
         e.preventDefault();
 
         if (activeModal?.type !== 'edit') {
+            return;
+        }
+
+        setActiveModal({ type: 'confirm-edit', site: activeModal.site });
+    };
+
+    const confirmEdit = () => {
+        if (activeModal?.type !== 'confirm-edit') {
             return;
         }
 
@@ -455,48 +465,43 @@ export default function SitesIndex({ sites }: PageProps) {
 
             {/* ── Delete Confirmation ── */}
             {activeModal?.type === 'delete' && (
-                <Modal isOpen onClose={close} title="Delete Site" maxWidth="sm">
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            Delete{' '}
-                            <span className="font-semibold text-amber-950">
-                                "{activeModal.site.name}"
-                            </span>
-                            ?
+                <ConfirmModal
+                    isOpen
+                    onClose={close}
+                    onConfirm={confirmDelete}
+                    title="Delete Site"
+                    message={
+                        <>
+                            Delete <span className="font-semibold text-amber-950">"{activeModal.site.name}"</span>?
                             {activeModal.site.hive_count > 0 && (
                                 <span className="mt-2 block font-medium text-rose-600">
-                                    This site has {activeModal.site.hive_count}{' '}
-                                    hive(s) assigned. Reassign them first.
+                                    This site has {activeModal.site.hive_count} hive(s) assigned. Reassign them first.
                                 </span>
                             )}
                             {activeModal.site.hive_count === 0 && (
                                 <span> This cannot be undone.</span>
                             )}
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={confirmDelete}
-                                disabled={
-                                    deleting || activeModal.site.hive_count > 0
-                                }
-                                className="flex-1"
-                            >
-                                {deleting ? 'Deleting...' : 'Delete Site'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                        </>
+                    }
+                    confirmLabel={deleting ? 'Deleting...' : 'Delete Site'}
+                    variant="destructive"
+                    loading={deleting}
+                    confirmDisabled={activeModal.site.hive_count > 0}
+                />
+            )}
+
+            {/* ── Confirm Edit Modal ── */}
+            {activeModal?.type === 'confirm-edit' && (
+                <ConfirmModal
+                    isOpen
+                    onClose={close}
+                    onConfirm={confirmEdit}
+                    title="Save Changes"
+                    message={<>Save changes to site <span className="font-semibold text-amber-950">{activeModal.site.name}</span>?</>}
+                    confirmLabel={editForm.processing ? 'Saving...' : 'Save Changes'}
+                    loading={editForm.processing}
+                    variant="warning"
+                />
             )}
         </AdminLayout>
     );

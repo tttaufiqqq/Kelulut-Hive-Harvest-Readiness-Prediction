@@ -12,7 +12,7 @@ import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
-import { Modal } from '@/components/core/modal';
+import { ConfirmModal } from '@/components/core/confirm-modal';
 import { AdminLayout } from '@/layouts/admin-layout';
 
 type Props = {
@@ -299,39 +299,16 @@ export default function ThesisPage({
                     )}
                 </Card>
             </div>
-            <Modal
+            <ConfirmModal
                 isOpen={showRemoveModal}
                 onClose={() => setShowRemoveModal(false)}
+                onConfirm={confirmRemove}
                 title="Remove Thesis"
-                maxWidth="sm"
-            >
-                <div className="space-y-4">
-                    <p className="text-sm text-amber-900/70">
-                        Are you sure you want to remove the uploaded thesis?
-                        Visitors will no longer be able to view it.
-                    </p>
-                    <div className="flex gap-3">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => setShowRemoveModal(false)}
-                            disabled={deleting}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={confirmRemove}
-                            disabled={deleting}
-                            className="flex-1"
-                        >
-                            {deleting ? 'Deleting...' : 'Remove'}
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
+                message="Are you sure you want to remove the uploaded thesis? Visitors will no longer be able to view it."
+                confirmLabel={deleting ? 'Deleting...' : 'Remove'}
+                variant="destructive"
+                loading={deleting}
+            />
         </AdminLayout>
     );
 }

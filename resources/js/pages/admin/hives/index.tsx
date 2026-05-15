@@ -15,6 +15,7 @@ import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Input } from '@/components/core/input';
+import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Modal } from '@/components/core/modal';
 import { SelectField } from '@/components/core/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
@@ -47,6 +48,7 @@ type ActiveModal =
     | { type: 'create' }
     | { type: 'view'; index: number }
     | { type: 'edit'; hive: HiveRow }
+    | { type: 'confirm-edit'; hive: HiveRow }
     | { type: 'delete'; hive: HiveRow }
     | { type: 'toggle'; hive: HiveRow }
     | null;
@@ -181,6 +183,14 @@ export default function HivesIndex({
         e.preventDefault();
 
         if (activeModal?.type !== 'edit') {
+            return;
+        }
+
+        setActiveModal({ type: 'confirm-edit', hive: activeModal.hive });
+    };
+
+    const confirmEdit = () => {
+        if (activeModal?.type !== 'confirm-edit') {
             return;
         }
 
@@ -693,84 +703,45 @@ export default function HivesIndex({
 
             {/* ── Toggle Status Confirmation ── */}
             {activeModal?.type === 'toggle' && (
-                <Modal
+                <ConfirmModal
                     isOpen
                     onClose={close}
-                    title={
-                        activeModal.hive.status === 'active'
-                            ? 'Set Hive Inactive'
-                            : 'Set Hive Active'
-                    }
-                    maxWidth="sm"
-                >
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            {activeModal.hive.status === 'active'
-                                ? `Setting "${activeModal.hive.name}" to inactive will stop it from receiving sensor data.`
-                                : `Setting "${activeModal.hive.name}" to active will allow it to receive sensor data again.`}
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant={
-                                    activeModal.hive.status === 'active'
-                                        ? 'destructive'
-                                        : 'primary'
-                                }
-                                onClick={confirmToggle}
-                                className="flex-1"
-                            >
-                                {activeModal.hive.status === 'active'
-                                    ? 'Set Inactive'
-                                    : 'Set Active'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                    onConfirm={confirmToggle}
+                    title={activeModal.hive.status === 'active' ? 'Set Hive Inactive' : 'Set Hive Active'}
+                    message={activeModal.hive.status === 'active'
+                        ? `Setting "${activeModal.hive.name}" to inactive will stop it from receiving sensor data.`
+                        : `Setting "${activeModal.hive.name}" to active will allow it to receive sensor data again.`}
+                    confirmLabel={activeModal.hive.status === 'active' ? 'Set Inactive' : 'Set Active'}
+                    variant={activeModal.hive.status === 'active' ? 'destructive' : 'warning'}
+                />
             )}
 
             {/* ── Delete Confirmation ── */}
             {activeModal?.type === 'delete' && (
-                <Modal isOpen onClose={close} title="Delete Hive" maxWidth="sm">
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            Delete{' '}
-                            <span className="font-semibold text-amber-950">
-                                "{activeModal.hive.name}"
-                            </span>
-                            ? This will permanently remove the hive and all its
-                            data. This cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={confirmDelete}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                {deleting ? 'Deleting...' : 'Delete Hive'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                <ConfirmModal
+                    isOpen
+                    onClose={close}
+                    onConfirm={confirmDelete}
+                    title="Delete Hive"
+                    message={<>Delete <span className="font-semibold text-amber-950">"{activeModal.hive.name}"</span>? This will permanently remove the hive and all its data. This cannot be undone.</>}
+                    confirmLabel={deleting ? 'Deleting...' : 'Delete Hive'}
+                    variant="destructive"
+                    loading={deleting}
+                />
+            )}
+
+            {/* ── Confirm Edit Modal ── */}
+            {activeModal?.type === 'confirm-edit' && (
+                <ConfirmModal
+                    isOpen
+                    onClose={close}
+                    onConfirm={confirmEdit}
+                    title="Save Changes"
+                    message={<>Save changes to hive <span className="font-semibold text-amber-950">{activeModal.hive.name}</span>?</>}
+                    confirmLabel={editForm.processing ? 'Saving...' : 'Save Changes'}
+                    loading={editForm.processing}
+                    variant="warning"
+                />
             )}
         </AdminLayout>
     );

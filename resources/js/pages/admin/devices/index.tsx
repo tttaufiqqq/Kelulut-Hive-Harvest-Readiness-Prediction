@@ -15,6 +15,7 @@ import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Input } from '@/components/core/input';
+import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Modal } from '@/components/core/modal';
 import { SelectField } from '@/components/core/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
@@ -42,6 +43,7 @@ type ActiveModal =
     | { type: 'create' }
     | { type: 'view'; index: number }
     | { type: 'edit'; device: DeviceRow }
+    | { type: 'confirm-edit'; device: DeviceRow }
     | { type: 'delete'; device: DeviceRow }
     | null;
 
@@ -157,6 +159,14 @@ export default function DevicesIndex({
         e.preventDefault();
 
         if (activeModal?.type !== 'edit') {
+            return;
+        }
+
+        setActiveModal({ type: 'confirm-edit', device: activeModal.device });
+    };
+
+    const confirmEdit = () => {
+        if (activeModal?.type !== 'confirm-edit') {
             return;
         }
 
@@ -620,54 +630,42 @@ export default function DevicesIndex({
 
             {/* ── Delete Confirmation ── */}
             {activeModal?.type === 'delete' && (
-                <Modal
+                <ConfirmModal
                     isOpen
                     onClose={close}
+                    onConfirm={confirmDelete}
                     title="Remove Device"
-                    maxWidth="sm"
-                >
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            Remove{' '}
-                            <span className="font-mono font-semibold text-amber-950">
-                                "{activeModal.device.node_identifier}"
-                            </span>
-                            ?
+                    message={
+                        <>
+                            Remove <span className="font-mono font-semibold text-amber-950">"{activeModal.device.node_identifier}"</span>?
                             {activeModal.device.sensor_log_count > 0 ? (
                                 <span className="mt-2 block font-medium text-rose-600">
-                                    This device has{' '}
-                                    {activeModal.device.sensor_log_count} sensor
-                                    log(s). Delete the logs first.
+                                    This device has {activeModal.device.sensor_log_count} sensor log(s). Delete the logs first.
                                 </span>
                             ) : (
                                 <span> This cannot be undone.</span>
                             )}
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={confirmDelete}
-                                disabled={
-                                    deleting ||
-                                    activeModal.device.sensor_log_count > 0
-                                }
-                                className="flex-1"
-                            >
-                                {deleting ? 'Removing...' : 'Remove Device'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                        </>
+                    }
+                    confirmLabel={deleting ? 'Removing...' : 'Remove Device'}
+                    variant="destructive"
+                    loading={deleting}
+                    confirmDisabled={activeModal.device.sensor_log_count > 0}
+                />
+            )}
+
+            {/* ── Confirm Edit Modal ── */}
+            {activeModal?.type === 'confirm-edit' && (
+                <ConfirmModal
+                    isOpen
+                    onClose={close}
+                    onConfirm={confirmEdit}
+                    title="Save Changes"
+                    message={<>Save changes to device <span className="font-mono font-semibold text-amber-950">{activeModal.device.node_identifier}</span>?</>}
+                    confirmLabel={editForm.processing ? 'Saving...' : 'Save Changes'}
+                    loading={editForm.processing}
+                    variant="warning"
+                />
             )}
         </AdminLayout>
     );

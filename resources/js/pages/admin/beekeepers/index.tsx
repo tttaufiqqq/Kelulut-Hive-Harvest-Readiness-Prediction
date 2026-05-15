@@ -16,6 +16,7 @@ import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Input } from '@/components/core/input';
+import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Modal } from '@/components/core/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
 import type { PaginatedUsers, User } from '@/types';
@@ -29,6 +30,7 @@ type ActiveModal =
     | { type: 'create' }
     | { type: 'view'; index: number }
     | { type: 'edit'; user: User }
+    | { type: 'confirm-edit'; user: User }
     | { type: 'toggle'; user: User }
     | { type: 'resend'; user: User }
     | { type: 'delete'; user: User }
@@ -189,6 +191,14 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
         if (Object.keys(errors).length > 0) {
             editForm.setError(errors as never);
 
+            return;
+        }
+
+        setActiveModal({ type: 'confirm-edit', user: activeModal.user });
+    };
+
+    const confirmEdit = () => {
+        if (activeModal?.type !== 'confirm-edit') {
             return;
         }
 
@@ -708,126 +718,58 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
 
             {/* ── Toggle Status Confirmation Modal ───────────────────── */}
             {activeModal?.type === 'toggle' && (
-                <Modal
+                <ConfirmModal
                     isOpen
                     onClose={close}
-                    title={
-                        activeModal.user.status === 'active'
-                            ? 'Deactivate Beekeeper'
-                            : 'Reactivate Beekeeper'
-                    }
-                    maxWidth="sm"
-                >
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            {activeModal.user.status === 'active'
-                                ? `Deactivating ${activeModal.user.name} will prevent them from logging in. You can reactivate them at any time.`
-                                : `Reactivating ${activeModal.user.name} will restore their access to BuzzyHive.`}
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant={
-                                    activeModal.user.status === 'active'
-                                        ? 'destructive'
-                                        : 'primary'
-                                }
-                                onClick={confirmToggle}
-                                className="flex-1"
-                            >
-                                {activeModal.user.status === 'active'
-                                    ? 'Deactivate'
-                                    : 'Reactivate'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                    onConfirm={confirmToggle}
+                    title={activeModal.user.status === 'active' ? 'Deactivate Beekeeper' : 'Reactivate Beekeeper'}
+                    message={activeModal.user.status === 'active'
+                        ? `Deactivating ${activeModal.user.name} will prevent them from logging in. You can reactivate them at any time.`
+                        : `Reactivating ${activeModal.user.name} will restore their access to BuzzyHive.`}
+                    confirmLabel={activeModal.user.status === 'active' ? 'Deactivate' : 'Reactivate'}
+                    variant={activeModal.user.status === 'active' ? 'destructive' : 'warning'}
+                />
             )}
 
             {/* ── Delete Confirmation Modal ───────────────────────────── */}
             {activeModal?.type === 'delete' && (
-                <Modal
+                <ConfirmModal
                     isOpen
                     onClose={close}
+                    onConfirm={confirmDelete}
                     title="Delete Beekeeper"
-                    maxWidth="sm"
-                >
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            Are you sure you want to delete{' '}
-                            <span className="font-semibold text-amber-950">
-                                {activeModal.user.name}
-                            </span>
-                            ? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={confirmDelete}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                {deleting ? 'Deleting...' : 'Delete'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                    message={<>Are you sure you want to delete <span className="font-semibold text-amber-950">{activeModal.user.name}</span>? This action cannot be undone.</>}
+                    confirmLabel={deleting ? 'Deleting...' : 'Delete'}
+                    variant="destructive"
+                    loading={deleting}
+                />
             )}
 
             {/* ── Resend Invite Confirmation Modal ───────────────────── */}
             {activeModal?.type === 'resend' && (
-                <Modal
+                <ConfirmModal
                     isOpen
                     onClose={close}
+                    onConfirm={confirmResend}
                     title="Resend Invite"
-                    maxWidth="sm"
-                >
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            A new invite email will be sent to{' '}
-                            <span className="font-semibold text-amber-950">
-                                {activeModal.user.email}
-                            </span>
-                            . The previous link will be replaced.
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="primary"
-                                onClick={confirmResend}
-                                className="flex-1"
-                            >
-                                Resend
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                    message={<>A new invite email will be sent to <span className="font-semibold text-amber-950">{activeModal.user.email}</span>. The previous link will be replaced.</>}
+                    confirmLabel="Resend"
+                    variant="warning"
+                />
+            )}
+
+            {/* ── Confirm Edit Modal ──────────────────────────────────── */}
+            {activeModal?.type === 'confirm-edit' && (
+                <ConfirmModal
+                    isOpen
+                    onClose={close}
+                    onConfirm={confirmEdit}
+                    title="Save Changes"
+                    message={<>Save changes to <span className="font-semibold text-amber-950">{activeModal.user.name}</span>?</>}
+                    confirmLabel={editForm.processing ? 'Saving...' : 'Save Changes'}
+                    loading={editForm.processing}
+                    variant="warning"
+                />
             )}
         </AdminLayout>
     );
