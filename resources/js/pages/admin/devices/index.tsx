@@ -155,14 +155,17 @@ export default function DevicesIndex({
         });
     };
 
-    const submitEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const openEditConfirm = () => {
         if (activeModal?.type !== 'edit') {
             return;
         }
 
         setActiveModal({ type: 'confirm-edit', device: activeModal.device });
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        openEditConfirm();
     };
 
     const confirmEdit = () => {
@@ -614,9 +617,10 @@ export default function DevicesIndex({
                                 Cancel
                             </Button>
                             <Button
-                                type="submit"
+                                type="button"
                                 variant="primary"
                                 disabled={editForm.processing}
+                                onClick={openEditConfirm}
                                 className="w-full"
                             >
                                 {editForm.processing

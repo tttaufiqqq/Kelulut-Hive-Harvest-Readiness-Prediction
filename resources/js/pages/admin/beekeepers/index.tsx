@@ -159,9 +159,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
         });
     };
 
-    const submitEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const openEditConfirm = () => {
         if (activeModal?.type !== 'edit') {
             return;
         }
@@ -195,6 +193,11 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
         }
 
         setActiveModal({ type: 'confirm-edit', user: activeModal.user });
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        openEditConfirm();
     };
 
     const confirmEdit = () => {
@@ -702,9 +705,10 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
                                 Cancel
                             </Button>
                             <Button
-                                type="submit"
+                                type="button"
                                 variant="primary"
                                 disabled={editForm.processing}
+                                onClick={openEditConfirm}
                                 className="flex-1"
                             >
                                 {editForm.processing

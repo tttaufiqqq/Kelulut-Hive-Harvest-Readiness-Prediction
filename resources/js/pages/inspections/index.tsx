@@ -214,14 +214,17 @@ export default function InspectionsIndex({
         });
     };
 
-    const submitEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const openEditConfirm = () => {
         if (activeModal?.type !== 'edit') {
             return;
         }
 
         setActiveModal({ type: 'confirm-edit', inspection: activeModal.inspection });
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        openEditConfirm();
     };
 
     const confirmEdit = () => {
@@ -902,9 +905,10 @@ export default function InspectionsIndex({
                                 Cancel
                             </Button>
                             <Button
-                                type="submit"
+                                type="button"
                                 variant="primary"
                                 disabled={editForm.processing}
+                                onClick={openEditConfirm}
                                 className="flex-1"
                             >
                                 {editForm.processing

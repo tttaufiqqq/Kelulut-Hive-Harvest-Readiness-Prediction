@@ -102,14 +102,17 @@ export default function SitesIndex({ sites }: PageProps) {
         });
     };
 
-    const submitEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const openEditConfirm = () => {
         if (activeModal?.type !== 'edit') {
             return;
         }
 
         setActiveModal({ type: 'confirm-edit', site: activeModal.site });
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        openEditConfirm();
     };
 
     const confirmEdit = () => {
@@ -449,9 +452,10 @@ export default function SitesIndex({ sites }: PageProps) {
                                 Cancel
                             </Button>
                             <Button
-                                type="submit"
+                                type="button"
                                 variant="primary"
                                 disabled={editForm.processing}
+                                onClick={openEditConfirm}
                                 className="flex-1"
                             >
                                 {editForm.processing

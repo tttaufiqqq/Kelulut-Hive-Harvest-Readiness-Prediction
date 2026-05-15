@@ -170,14 +170,17 @@ export default function HarvestsIndex({
         });
     };
 
-    const submitEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const openEditConfirm = () => {
         if (activeModal?.type !== 'edit') {
             return;
         }
 
         setActiveModal({ type: 'confirm-edit', harvest: activeModal.harvest });
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        openEditConfirm();
     };
 
     const confirmEdit = () => {
@@ -733,9 +736,10 @@ export default function HarvestsIndex({
                                 Cancel
                             </Button>
                             <Button
-                                type="submit"
+                                type="button"
                                 variant="primary"
                                 disabled={editForm.processing}
+                                onClick={openEditConfirm}
                                 className="flex-1"
                             >
                                 {editForm.processing
