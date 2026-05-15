@@ -68,6 +68,7 @@ return new class extends Migration
                 LEFT JOIN predictions p ON p.sensor_log_id = sl.id
                 WHERE sl.hive_id                    = v_hive_id
                   AND DATE(sl.record_timestamp)     = v_reading_date
+                GROUP BY sl.hive_id, DATE(sl.record_timestamp)
                 ON DUPLICATE KEY UPDATE
                     avg_temperature        = VALUES(avg_temperature),
                     avg_humidity           = VALUES(avg_humidity),

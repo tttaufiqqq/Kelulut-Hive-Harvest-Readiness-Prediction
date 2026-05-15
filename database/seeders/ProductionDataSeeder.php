@@ -90,6 +90,20 @@ class ProductionDataSeeder extends Seeder
 
     public function run(): void
     {
+        // Admin user — created here so --seeder=ProductionDataSeeder works standalone
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin     = User::firstOrCreate(
+            ['email' => 'admin@buzzyhive.urban-alert.com'],
+            [
+                'name'              => 'Admin',
+                'password'          => Hash::make(env('ADMIN_SEED_PASSWORD', 'BuzzyHive@Admin2025!')),
+                'email_verified_at' => now(),
+                'status'            => 'active',
+                'role'              => 'admin',
+            ]
+        );
+        $admin->assignRole($adminRole);
+
         $password       = Hash::make(env('BEEKEEPER_SEED_PASSWORD', 'Beekeeper@2025!'));
         $beekeeperRole  = Role::firstOrCreate(['name' => 'beekeeper', 'guard_name' => 'web']);
 
