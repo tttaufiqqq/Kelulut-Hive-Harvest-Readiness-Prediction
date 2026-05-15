@@ -206,7 +206,15 @@ function FleetHriLineChart({ trend }: { trend: FleetTrendItem[] }) {
                                 tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
                                 dy={8}
                                 tickMargin={8}
-                                interval="preserveStartEnd"
+                                interval={Math.floor(filtered.length / 8)}
+                                tickFormatter={(d: string, index: number) => {
+                                    const date = new Date(d);
+                                    const prev = filtered[index - Math.floor(filtered.length / 8)];
+                                    const isNewYear = !prev || new Date(prev.summary_date).getFullYear() !== date.getFullYear();
+                                    return isNewYear
+                                        ? date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+                                        : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                                }}
                             />
                             <YAxis
                                 yAxisId="hri"
@@ -223,6 +231,7 @@ function FleetHriLineChart({ trend }: { trend: FleetTrendItem[] }) {
                                 yAxisId="harvests"
                                 orientation="right"
                                 unit=" harvests"
+                                allowDecimals={false}
                                 axisLine={false}
                                 tickLine={false}
                                 tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
@@ -552,9 +561,13 @@ export default function AdminDashboard({
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {mounted && productivityRanking.length > 0 && (
                         <Card>
-                            <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
+                            <h3 className="mb-1 text-sm font-black tracking-widest text-amber-900/60 uppercase">
                                 Productivity Ranking
                             </h3>
+                            <p className="mb-4 text-xs text-amber-800/50">
+                                Ranked by total yield × harvest frequency — hives that produce more <em>and</em> harvest more often rank higher.
+                            </p>
+                            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                             <ResponsiveContainer
                                 width="100%"
                                 height={Math.max(320, productivityRanking.length * 44)}
@@ -566,7 +579,7 @@ export default function AdminDashboard({
                                         left: 20,
                                         right: 32,
                                         top: 8,
-                                        bottom: 8,
+                                        bottom: 18,
                                     }}
                                 >
                                     <CartesianGrid
@@ -597,10 +610,13 @@ export default function AdminDashboard({
                                             border: '1px solid #fef3c7',
                                             fontSize: 12,
                                         }}
-                                        formatter={(v) => [
-                                            `${v ?? 0} g`,
-                                            'Harvest Weight',
-                                        ]}
+                                        formatter={(value, _name, props) => {
+                                            const count = (props as { payload?: { harvest_count?: number } }).payload?.harvest_count ?? 0;
+                                            return [
+                                                `${value ?? 0} g · ${count} harvest${count !== 1 ? 's' : ''}`,
+                                                'Total Yield',
+                                            ];
+                                        }}
                                     />
                                     <Bar
                                         dataKey="total_weight"
@@ -609,14 +625,19 @@ export default function AdminDashboard({
                                     />
                                 </BarChart>
                             </ResponsiveContainer>
+                            </div>
                         </Card>
                     )}
 
                     {mounted && crossSiteComparison.length > 0 && (
                         <Card>
-                            <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
+                            <h3 className="mb-1 text-sm font-black tracking-widest text-amber-900/60 uppercase">
                                 Cross-Site Comparison
                             </h3>
+                            <p className="mb-4 text-xs text-amber-800/50">
+                                Compares average readiness (HRI %) and total harvest yield per site — reveals which sites are consistently ready versus high volume.
+                            </p>
+                            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                             <ResponsiveContainer width="100%" height={Math.max(320, productivityRanking.length * 44)}>
                                 <BarChart
                                     data={crossSiteComparison}
@@ -652,7 +673,8 @@ export default function AdminDashboard({
                                     <YAxis
                                         yAxisId="weight"
                                         orientation="right"
-                                        unit=" g"
+                                        unit=" kg"
+                                        tickFormatter={(v) => (v / 1000).toFixed(0)}
                                         tick={{ fontSize: 11, fill: '#92400e' }}
                                         axisLine={false}
                                         tickLine={false}
@@ -665,6 +687,11 @@ export default function AdminDashboard({
                                             border: '1px solid #fef3c7',
                                             fontSize: 12,
                                         }}
+                                        formatter={(value, name) =>
+                                            name === 'Total Harvest (kg)'
+                                                ? [`${((value as number) / 1000).toFixed(2)} kg`, name]
+                                                : [`${value}%`, name]
+                                        }
                                     />
                                     <Legend
                                         wrapperStyle={{
@@ -683,12 +710,13 @@ export default function AdminDashboard({
                                     <Bar
                                         yAxisId="weight"
                                         dataKey="total_weight"
-                                        name="Total Harvest (g)"
+                                        name="Total Harvest (kg)"
                                         fill="#6EE7B7"
                                         radius={[4, 4, 0, 0]}
                                     />
                                 </BarChart>
                             </ResponsiveContainer>
+                            </div>
                         </Card>
                     )}
                 </div>

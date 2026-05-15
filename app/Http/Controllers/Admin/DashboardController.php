@@ -142,8 +142,8 @@ class DashboardController extends Controller
         return Hive::with('user')
             ->withSum('harvests', 'weight')
             ->withCount('harvests')
-            ->orderByDesc('harvests_sum_weight')
             ->get()
+            ->sortByDesc(fn ($h) => ($h->harvests_sum_weight ?? 0) * ($h->harvests_count ?? 0))
             ->map(fn ($h) => [
                 'hive_name' => $h->name,
                 'beekeeper' => $h->user?->name ?? '—',
