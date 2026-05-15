@@ -32,12 +32,7 @@ class DatabaseSeeder extends Seeder
         $admin->assignRole($adminRole);
 
         $this->call([
-            DemoHiveSeeder::class,
-            SensorLogSeeder::class,
-            PredictionSeeder::class,
-            HriSummarySeeder::class,
-            HarvestSeeder::class,
-            InspectionSeeder::class,
+            ProductionDataSeeder::class,
         ]);
     }
 }
