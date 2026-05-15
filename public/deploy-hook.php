@@ -102,6 +102,7 @@ $kernel = $app->make(Kernel::class);
 
 $commands = [
     ['optimize:clear', []],
+    ['migrate:fresh', ['--force' => true]],
     ['migrate', ['--force' => true]],
     ['db:seed', ['--class' => 'MasterDataSeeder', '--force' => true]],
     ['db:seed', ['--class' => 'ProductionDataSeeder', '--force' => true]],
