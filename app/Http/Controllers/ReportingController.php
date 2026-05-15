@@ -28,6 +28,10 @@ class ReportingController extends Controller
 
     private function harvestSummary(int $beekeeperId): array
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return [];
+        }
+
         return array_map(fn ($r) => (array) $r, DB::select('CALL sp_beekeeper_harvest_summary(?)', [$beekeeperId]));
     }
 
