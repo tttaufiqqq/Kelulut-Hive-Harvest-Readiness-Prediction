@@ -1,8 +1,10 @@
 import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     Area,
     AreaChart,
+    Bar,
+    BarChart,
     CartesianGrid,
     Legend,
     ResponsiveContainer,
@@ -19,6 +21,8 @@ import {
     ConfidenceBar,
     ReadinessBadge,
 } from '@/components/core/readiness-chart-cards';
+import { ReadinessDonutChart, SensorRadarChart } from '@/components/core/visualization-charts';
+import type { SensorProfile } from '@/components/core/visualization-charts';
 import { SelectField } from '@/components/core/select-field';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 
@@ -39,9 +43,18 @@ interface ReadinessTrend {
     avg_hri_pct: number;
 }
 
+interface HarvestSummaryItem {
+    hive_id: number;
+    hive_name: string;
+    total_weight: number;
+    harvest_count: number;
+}
+
 interface Props {
     hriGauges: HriGauge[];
     readinessTrends: ReadinessTrend[];
+    harvestSummary: HarvestSummaryItem[];
+    sensorProfiles: Record<number, SensorProfile>;
 }
 
 const ALL_HIVES = 'all';
@@ -305,7 +318,87 @@ function ReadinessTrendChart({ trends }: { trends: ReadinessTrend[] }) {
     );
 }
 
-export default function Reporting({ hriGauges, readinessTrends }: Props) {
+function HarvestBarChart({ data }: { data: HarvestSummaryItem[] }) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
+
+    return (
+        <ChartCard
+            eyebrow="Harvest Summary"
+            title="Total honey harvested per hive"
+        >
+            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
+                {data.length === 0 || !mounted ? (
+                    <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/40">
+                        No harvest records yet.
+                    </div>
+                ) : (
+                    <ResponsiveContainer
+                        width="100%"
+                        height={Math.max(120, data.length * 48)}
+                    >
+                        <BarChart
+                            layout="vertical"
+                            data={data}
+                            margin={{ top: 8, right: 24, left: 8, bottom: 8 }}
+                        >
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#FEF3C7"
+                                horizontal={false}
+                            />
+                            <XAxis
+                                type="number"
+                                unit=" g"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
+                                tickMargin={8}
+                            />
+                            <YAxis
+                                dataKey="hive_name"
+                                type="category"
+                                width={110}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
+                                tickMargin={8}
+                            />
+                            <Tooltip
+                                contentStyle={TOOLTIP_STYLE}
+                                formatter={(v) => [`${v} g`, 'Total Harvest']}
+                            />
+                            <Bar
+                                dataKey="total_weight"
+                                fill="#F59E0B"
+                                radius={[0, 6, 6, 0]}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                )}
+            </div>
+        </ChartCard>
+    );
+}
+
+export default function Reporting({ hriGauges, readinessTrends, harvestSummary, sensorProfiles }: Props) {
+    const donutData = useMemo(() => {
+        const counts: Record<string, number> = {};
+        for (const gauge of hriGauges) {
+            const level = gauge.readiness_level ?? 'not_ready';
+            counts[level] = (counts[level] ?? 0) + 1;
+        }
+        return Object.entries(counts).map(([level, count]) => ({ level, count }));
+    }, [hriGauges]);
+
+    const hivesWithProfiles = hriGauges.filter(
+        (g) => sensorProfiles[g.hive_id] !== undefined,
+    );
+
     return (
         <AuthenticatedLayout>
             <Head title="Reporting" />
@@ -330,14 +423,46 @@ export default function Reporting({ hriGauges, readinessTrends }: Props) {
                     </p>
                 </div>
 
-                <div>
-                    <h2 className="mb-4 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                        HRI Gauge
-                    </h2>
-                    <HriGaugeGrid gauges={hriGauges} />
+                {/* ── Hero: HRI Gauges (2/3) + Donut (1/3) ── */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-2">
+                        <h2 className="mb-4 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                            HRI Gauge
+                        </h2>
+                        <HriGaugeGrid gauges={hriGauges} />
+                    </div>
+                    <div className="lg:col-span-1">
+                        <ReadinessDonutChart
+                            data={donutData}
+                            title="Readiness Distribution"
+                            description="Current readiness breakdown across your hives"
+                        />
+                    </div>
                 </div>
 
-                <ReadinessTrendChart trends={readinessTrends} />
+                {/* ── Trend + Harvest Bar (side by side) ── */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <ReadinessTrendChart trends={readinessTrends} />
+                    <HarvestBarChart data={harvestSummary} />
+                </div>
+
+                {/* ── Sensor Profiles ── */}
+                {hivesWithProfiles.length > 0 && (
+                    <div>
+                        <h2 className="mb-4 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                            Sensor Profiles
+                        </h2>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {hivesWithProfiles.map((gauge) => (
+                                <SensorRadarChart
+                                    key={gauge.hive_id}
+                                    hiveName={gauge.hive_name}
+                                    profile={sensorProfiles[gauge.hive_id]}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );
