@@ -17,7 +17,7 @@ const READINESS_SOFT_STYLES: Record<string, string> = {
     ready: 'bg-emerald-100 text-emerald-700',
 };
 
-const READINESS_SOLID_COLORS: Record<string, string> = {
+export const READINESS_SOLID_COLORS: Record<string, string> = {
     not_ready: '#dc2626',
     approaching: '#d97706',
     nearly_ready: '#ca8a04',
