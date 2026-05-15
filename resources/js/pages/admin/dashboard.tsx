@@ -10,7 +10,7 @@ import {
     ChevronLeft,
     ChevronRight,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     ResponsiveContainer,
     BarChart,
@@ -20,9 +20,14 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
+    LineChart,
+    Line,
 } from 'recharts';
 import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
+import { ChartCard } from '@/components/core/readiness-chart-cards';
+import { SelectField } from '@/components/core/select-field';
+import { ReadinessDonutChart, SensorRadarChart } from '@/components/core/visualization-charts';
 import { AdminLayout } from '@/layouts/admin-layout';
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -35,9 +40,18 @@ export type HiveData = {
     temp: number;
     humidity: number;
     co2: number;
+    mq2: number;
+    mq3: number;
+    mq5: number;
     readiness: number;
     status: 'ready' | 'growing' | 'alert' | 'offline' | 'no_data';
     last_reading: string | null;
+};
+
+type FleetTrendItem = {
+    summary_date: string;
+    avg_hri_pct: number;
+    total_harvests: number;
 };
 
 type ProductivityItem = {
@@ -64,6 +78,7 @@ type Props = {
     hives: HiveData[];
     productivityRanking: ProductivityItem[];
     crossSiteComparison: CrossSiteItem[];
+    fleetHriTrend: FleetTrendItem[];
 };
 
 // ── Display constants ──────────────────────────────────────────────────
@@ -91,10 +106,27 @@ const STATUS_LABEL: Record<HiveData['status'], string> = {
     no_data: 'No Data',
 };
 
+const STATUS_TO_LEVEL: Record<HiveData['status'], string> = {
+    ready: 'ready',
+    growing: 'approaching',
+    alert: 'not_ready',
+    offline: 'not_ready',
+    no_data: 'not_ready',
+};
+
 // ── Sensor warning thresholds ──────────────────────────────────────────
 const WARN_TEMP_ABOVE = 35; // °C
 const WARN_HUMID_ABOVE = 85; // %
 const WARN_CO2_ABOVE = 800; // ADC (MQ135)
+
+const TOOLTIP_STYLE = {
+    backgroundColor: '#FFFBEB',
+    border: '1px solid #FEF3C7',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    color: '#78350F',
+};
 
 // ── Helpers ────────────────────────────────────────────────────────────
 function formatLastReading(ts: string | null): string {
@@ -118,12 +150,128 @@ function formatLastReading(ts: string | null): string {
     return `${diffDays} days ago`;
 }
 
+// ── FleetHriLineChart ──────────────────────────────────────────────────
+const DAY_OPTIONS = [
+    { value: '30', label: 'Last 30 days' },
+    { value: '90', label: 'Last 90 days' },
+    { value: '180', label: 'Last 180 days' },
+];
+
+function FleetHriLineChart({ trend }: { trend: FleetTrendItem[] }) {
+    const [mounted, setMounted] = useState(false);
+    const [selectedDays, setSelectedDays] = useState('90');
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
+
+    const days = parseInt(selectedDays, 10);
+    const filtered = trend.slice(-days);
+
+    return (
+        <ChartCard
+            eyebrow="Fleet Trend"
+            title="System-wide readiness over time"
+            actions={
+                <div className="w-full sm:w-[160px]">
+                    <SelectField
+                        value={selectedDays}
+                        onChange={setSelectedDays}
+                        options={DAY_OPTIONS}
+                    />
+                </div>
+            }
+        >
+            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
+                {filtered.length === 0 || !mounted ? (
+                    <div className="flex h-[260px] items-center justify-center text-sm text-amber-900/40">
+                        No fleet trend data yet.
+                    </div>
+                ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                        <LineChart
+                            data={filtered}
+                            margin={{ top: 8, right: 24, left: 8, bottom: 18 }}
+                        >
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                vertical={false}
+                                stroke="#FEF3C7"
+                            />
+                            <XAxis
+                                dataKey="summary_date"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
+                                dy={8}
+                                tickMargin={8}
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis
+                                yAxisId="hri"
+                                orientation="left"
+                                unit="%"
+                                domain={[0, 100]}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
+                                width={40}
+                                tickMargin={8}
+                            />
+                            <YAxis
+                                yAxisId="harvests"
+                                orientation="right"
+                                unit=" harvests"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
+                                width={72}
+                                tickMargin={8}
+                            />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                            <Legend
+                                wrapperStyle={{
+                                    fontSize: 12,
+                                    paddingTop: 16,
+                                    lineHeight: '20px',
+                                }}
+                            />
+                            <Line
+                                yAxisId="hri"
+                                type="monotone"
+                                dataKey="avg_hri_pct"
+                                name="Avg HRI %"
+                                stroke="#F59E0B"
+                                strokeWidth={2.5}
+                                dot={false}
+                                activeDot={{ r: 4 }}
+                            />
+                            <Line
+                                yAxisId="harvests"
+                                type="monotone"
+                                dataKey="total_harvests"
+                                name="Total Harvests"
+                                stroke="#10b981"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4 }}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                )}
+            </div>
+        </ChartCard>
+    );
+}
+
 // ── AdminDashboard ─────────────────────────────────────────────────────
 export default function AdminDashboard({
     stats,
     hives = [],
     productivityRanking = [],
     crossSiteComparison = [],
+    fleetHriTrend = [],
 }: Props) {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -143,6 +291,15 @@ export default function AdminDashboard({
     const hasPrev = selectedIndex !== null && selectedIndex > 0;
     const hasNext =
         selectedIndex !== null && selectedIndex < sortedHives.length - 1;
+
+    const adminDonutData = useMemo(() => {
+        const counts: Record<string, number> = {};
+        for (const hive of hives) {
+            const level = STATUS_TO_LEVEL[hive.status];
+            counts[level] = (counts[level] ?? 0) + 1;
+        }
+        return Object.entries(counts).map(([level, count]) => ({ level, count }));
+    }, [hives]);
 
     useEffect(() => {
         if (selectedIndex === null) {
@@ -176,64 +333,90 @@ export default function AdminDashboard({
             <Head title="Admin Dashboard" />
 
             <div className="space-y-6">
-                {/* ── Action Cards ───────────────────────────────────────── */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <Card
-                        className="flex cursor-pointer items-center gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50"
-                        onClick={() =>
-                            router.visit(route('admin.sensors.index'))
-                        }
-                    >
-                        <div className="shrink-0 rounded-2xl bg-red-100 p-3">
-                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                {/* ── V2 Hero: Action Cards (left) + Fleet Readiness Donut (right) ── */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    {/* Left: beekeeper summary + action cards */}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-2 px-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                            <Users className="h-3.5 w-3.5" />
+                            <span>{stats.total} beekeepers</span>
+                            <span className="opacity-30">·</span>
+                            <span className="text-emerald-600">
+                                {stats.active} active
+                            </span>
+                            <span className="opacity-30">·</span>
+                            <span className="text-amber-600">
+                                {stats.pending} pending
+                            </span>
                         </div>
-                        <div>
-                            <p className="text-2xl font-black text-amber-950">
-                                {alertCount}
-                            </p>
-                            <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                Need Attention
-                            </p>
-                        </div>
-                    </Card>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <Card
+                                className="flex cursor-pointer items-center gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50"
+                                onClick={() =>
+                                    router.visit(route('admin.sensors.index'))
+                                }
+                            >
+                                <div className="shrink-0 rounded-2xl bg-red-100 p-3">
+                                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-amber-950">
+                                        {alertCount}
+                                    </p>
+                                    <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Need Attention
+                                    </p>
+                                </div>
+                            </Card>
 
-                    <Card
-                        className="flex cursor-pointer items-center gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50"
-                        onClick={() =>
-                            router.visit(route('admin.sensors.index'))
-                        }
-                    >
-                        <div className="shrink-0 rounded-2xl bg-emerald-100 p-3">
-                            <TrendingUp className="h-5 w-5 text-emerald-600" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-black text-amber-950">
-                                {readyCount}
-                            </p>
-                            <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                Ready to Harvest
-                            </p>
-                        </div>
-                    </Card>
+                            <Card
+                                className="flex cursor-pointer items-center gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50"
+                                onClick={() =>
+                                    router.visit(route('admin.sensors.index'))
+                                }
+                            >
+                                <div className="shrink-0 rounded-2xl bg-emerald-100 p-3">
+                                    <TrendingUp className="h-5 w-5 text-emerald-600" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-amber-950">
+                                        {readyCount}
+                                    </p>
+                                    <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Ready to Harvest
+                                    </p>
+                                </div>
+                            </Card>
 
-                    <Card
-                        className="flex cursor-pointer items-center gap-4 border-l-4 border-l-amber-400 transition-colors hover:bg-yellow-50/50"
-                        onClick={() =>
-                            router.visit(route('admin.beekeepers.index'))
-                        }
-                    >
-                        <div className="shrink-0 rounded-2xl bg-amber-100 p-3">
-                            <Clock className="h-5 w-5 text-amber-600" />
+                            <Card
+                                className="flex cursor-pointer items-center gap-4 border-l-4 border-l-amber-400 transition-colors hover:bg-yellow-50/50"
+                                onClick={() =>
+                                    router.visit(route('admin.beekeepers.index'))
+                                }
+                            >
+                                <div className="shrink-0 rounded-2xl bg-amber-100 p-3">
+                                    <Clock className="h-5 w-5 text-amber-600" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-amber-950">
+                                        {stats.pending}
+                                    </p>
+                                    <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                        Pending Invites
+                                    </p>
+                                </div>
+                            </Card>
                         </div>
-                        <div>
-                            <p className="text-2xl font-black text-amber-950">
-                                {stats.pending}
-                            </p>
-                            <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                Pending Invites
-                            </p>
-                        </div>
-                    </Card>
+                    </div>
+
+                    {/* Right: Fleet Readiness Donut */}
+                    <div className="lg:col-span-1">
+                        <ReadinessDonutChart
+                            data={adminDonutData}
+                            title="Fleet Readiness"
+                            description="Current readiness breakdown across all hives"
+                        />
+                    </div>
                 </div>
 
                 {/* ── Live Hive Monitor ──────────────────────────────────── */}
@@ -367,165 +550,155 @@ export default function AdminDashboard({
                     )}
                 </Card>
 
-                {/* ── P6.3 Productivity Ranking ──────────────────────────── */}
-                {mounted && productivityRanking.length > 0 && (
-                    <Card>
-                        <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
-                            Productivity Ranking
-                        </h3>
-                        <ResponsiveContainer
-                            width="100%"
-                            height={Math.max(
-                                120,
-                                productivityRanking.length * 48,
-                            )}
-                        >
-                            <BarChart
-                                layout="vertical"
-                                data={productivityRanking}
-                                margin={{
-                                    left: 20,
-                                    right: 24,
-                                    top: 8,
-                                    bottom: 8,
-                                }}
-                            >
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="#fef3c7"
-                                    horizontal={false}
-                                />
-                                <XAxis
-                                    type="number"
-                                    unit=" kg"
-                                    tick={{ fontSize: 11, fill: '#92400e' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tickMargin={8}
-                                />
-                                <YAxis
-                                    dataKey="hive_name"
-                                    type="category"
-                                    width={92}
-                                    tick={{ fontSize: 11, fill: '#92400e' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tickMargin={8}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        borderRadius: 12,
-                                        border: '1px solid #fef3c7',
-                                        fontSize: 12,
-                                    }}
-                                    formatter={(v) => [
-                                        `${v ?? 0} kg`,
-                                        'Harvest Weight',
-                                    ]}
-                                />
-                                <Bar
-                                    dataKey="total_weight"
-                                    fill="#F59E0B"
-                                    radius={[0, 6, 6, 0]}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
+                {/* ── Fleet HRI Trend (full width, after monitor) ────────── */}
+                <FleetHriLineChart trend={fleetHriTrend} />
 
-                {/* ── P6.4 Cross-Site Comparison ─────────────────────────── */}
-                {mounted && crossSiteComparison.length > 0 && (
-                    <Card>
-                        <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
-                            Cross-Site Comparison
-                        </h3>
-                        <ResponsiveContainer width="100%" height={240}>
-                            <BarChart
-                                data={crossSiteComparison}
-                                margin={{
-                                    left: 12,
-                                    right: 20,
-                                    top: 8,
-                                    bottom: 18,
-                                }}
+                {/* ── Productivity Ranking + Cross-Site Comparison (2-col) ── */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    {mounted && productivityRanking.length > 0 && (
+                        <Card>
+                            <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
+                                Productivity Ranking
+                            </h3>
+                            <ResponsiveContainer
+                                width="100%"
+                                height={Math.max(
+                                    120,
+                                    productivityRanking.length * 48,
+                                )}
                             >
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="#fef3c7"
-                                />
-                                <XAxis
-                                    dataKey="site_name"
-                                    tick={{ fontSize: 11, fill: '#92400e' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tickMargin={8}
-                                    dy={8}
-                                />
-                                <YAxis
-                                    yAxisId="hri"
-                                    orientation="left"
-                                    unit="%"
-                                    tick={{ fontSize: 11, fill: '#92400e' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    width={36}
-                                    tickMargin={8}
-                                />
-                                <YAxis
-                                    yAxisId="weight"
-                                    orientation="right"
-                                    unit=" kg"
-                                    tick={{ fontSize: 11, fill: '#92400e' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    width={44}
-                                    tickMargin={8}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        borderRadius: 12,
-                                        border: '1px solid #fef3c7',
-                                        fontSize: 12,
+                                <BarChart
+                                    layout="vertical"
+                                    data={productivityRanking}
+                                    margin={{
+                                        left: 20,
+                                        right: 24,
+                                        top: 8,
+                                        bottom: 8,
                                     }}
-                                />
-                                <Legend
-                                    wrapperStyle={{
-                                        fontSize: 12,
-                                        paddingTop: 16,
-                                        lineHeight: '20px',
-                                    }}
-                                />
-                                <Bar
-                                    yAxisId="hri"
-                                    dataKey="avg_hri_pct"
-                                    name="Avg HRI (%)"
-                                    fill="#F59E0B"
-                                    radius={[4, 4, 0, 0]}
-                                />
-                                <Bar
-                                    yAxisId="weight"
-                                    dataKey="total_weight"
-                                    name="Total Harvest (kg)"
-                                    fill="#6EE7B7"
-                                    radius={[4, 4, 0, 0]}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-                )}
+                                >
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        stroke="#fef3c7"
+                                        horizontal={false}
+                                    />
+                                    <XAxis
+                                        type="number"
+                                        unit=" kg"
+                                        tick={{ fontSize: 11, fill: '#92400e' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tickMargin={8}
+                                    />
+                                    <YAxis
+                                        dataKey="hive_name"
+                                        type="category"
+                                        width={92}
+                                        tick={{ fontSize: 11, fill: '#92400e' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tickMargin={8}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            borderRadius: 12,
+                                            border: '1px solid #fef3c7',
+                                            fontSize: 12,
+                                        }}
+                                        formatter={(v) => [
+                                            `${v ?? 0} kg`,
+                                            'Harvest Weight',
+                                        ]}
+                                    />
+                                    <Bar
+                                        dataKey="total_weight"
+                                        fill="#F59E0B"
+                                        radius={[0, 6, 6, 0]}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    )}
 
-                {/* ── Beekeeper Summary ──────────────────────────────────── */}
-                <div className="flex items-center gap-2 px-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                    <Users className="h-3.5 w-3.5" />
-                    <span>{stats.total} beekeepers</span>
-                    <span className="opacity-30">·</span>
-                    <span className="text-emerald-600">
-                        {stats.active} active
-                    </span>
-                    <span className="opacity-30">·</span>
-                    <span className="text-amber-600">
-                        {stats.pending} pending
-                    </span>
+                    {mounted && crossSiteComparison.length > 0 && (
+                        <Card>
+                            <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
+                                Cross-Site Comparison
+                            </h3>
+                            <ResponsiveContainer width="100%" height={240}>
+                                <BarChart
+                                    data={crossSiteComparison}
+                                    margin={{
+                                        left: 12,
+                                        right: 20,
+                                        top: 8,
+                                        bottom: 18,
+                                    }}
+                                >
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        stroke="#fef3c7"
+                                    />
+                                    <XAxis
+                                        dataKey="site_name"
+                                        tick={{ fontSize: 11, fill: '#92400e' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tickMargin={8}
+                                        dy={8}
+                                    />
+                                    <YAxis
+                                        yAxisId="hri"
+                                        orientation="left"
+                                        unit="%"
+                                        tick={{ fontSize: 11, fill: '#92400e' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        width={36}
+                                        tickMargin={8}
+                                    />
+                                    <YAxis
+                                        yAxisId="weight"
+                                        orientation="right"
+                                        unit=" kg"
+                                        tick={{ fontSize: 11, fill: '#92400e' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        width={44}
+                                        tickMargin={8}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            borderRadius: 12,
+                                            border: '1px solid #fef3c7',
+                                            fontSize: 12,
+                                        }}
+                                    />
+                                    <Legend
+                                        wrapperStyle={{
+                                            fontSize: 12,
+                                            paddingTop: 16,
+                                            lineHeight: '20px',
+                                        }}
+                                    />
+                                    <Bar
+                                        yAxisId="hri"
+                                        dataKey="avg_hri_pct"
+                                        name="Avg HRI (%)"
+                                        fill="#F59E0B"
+                                        radius={[4, 4, 0, 0]}
+                                    />
+                                    <Bar
+                                        yAxisId="weight"
+                                        dataKey="total_weight"
+                                        name="Total Harvest (kg)"
+                                        fill="#6EE7B7"
+                                        radius={[4, 4, 0, 0]}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    )}
                 </div>
             </div>
 
@@ -539,6 +712,7 @@ export default function AdminDashboard({
                 {selectedHive &&
                     (() => {
                         const hive = selectedHive;
+                        const hasMqData = hive.mq2 > 0;
 
                         return (
                             <div className="space-y-6">
@@ -634,7 +808,7 @@ export default function AdminDashboard({
                                 <div>
                                     <div className="mb-3 flex items-baseline gap-2">
                                         <p className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                            Latest Sensor Readings
+                                            Sensor Profile
                                         </p>
                                         <span className="text-[10px] text-amber-900/30">
                                             {formatLastReading(
@@ -646,6 +820,35 @@ export default function AdminDashboard({
                                         <div className="rounded-xl bg-yellow-50/50 py-4 text-center text-sm text-amber-900/40">
                                             No sensor data received today
                                         </div>
+                                    ) : hasMqData ? (
+                                        <>
+                                            <SensorRadarChart
+                                                hiveName=""
+                                                profile={{
+                                                    avg_temperature: hive.temp,
+                                                    avg_humidity: hive.humidity,
+                                                    avg_mq2: hive.mq2,
+                                                    avg_mq3: hive.mq3,
+                                                    avg_mq5: hive.mq5,
+                                                    avg_mq135: hive.co2,
+                                                }}
+                                                height={240}
+                                            />
+                                            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-0.5 px-1">
+                                                {[
+                                                    { label: 'Temp', value: `${hive.temp}°C` },
+                                                    { label: 'Humid', value: `${hive.humidity}%` },
+                                                    { label: 'MQ2', value: String(hive.mq2) },
+                                                    { label: 'MQ3', value: String(hive.mq3) },
+                                                    { label: 'MQ5', value: String(hive.mq5) },
+                                                    { label: 'MQ135', value: String(hive.co2) },
+                                                ].map((s) => (
+                                                    <span key={s.label} className="text-[11px] text-amber-900/60">
+                                                        {s.label} {s.value}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </>
                                     ) : (
                                         <div className="grid grid-cols-1 gap-3">
                                             {[
