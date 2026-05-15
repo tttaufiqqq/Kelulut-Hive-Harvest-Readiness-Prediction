@@ -6,6 +6,8 @@ use App\Models\Hive;
 use App\Models\HriSummary;
 use App\Models\Prediction;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ReportingController extends Controller
@@ -19,7 +21,44 @@ class ReportingController extends Controller
         return Inertia::render('reporting', [
             'hriGauges' => $this->hriGauges($hives),
             'readinessTrends' => $this->readinessTrends($hiveIds),
+            'harvestSummary' => $this->harvestSummary($beekeeperId),
+            'sensorProfiles' => $this->sensorProfiles($hiveIds),
         ]);
+    }
+
+    private function harvestSummary(int $beekeeperId): array
+    {
+        return array_map(fn ($r) => (array) $r, DB::select('CALL sp_beekeeper_harvest_summary(?)', [$beekeeperId]));
+    }
+
+    private function sensorProfiles(Collection $hiveIds): array
+    {
+        $latestIds = HriSummary::whereIn('hive_id', $hiveIds)
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('hive_id')
+            ->pluck('id');
+
+        return HriSummary::whereIn('id', $latestIds)
+            ->select([
+                'hive_id',
+                'avg_temperature',
+                'avg_humidity',
+                'avg_mq2',
+                'avg_mq3',
+                'avg_mq5',
+                'avg_mq135',
+            ])
+            ->get()
+            ->keyBy('hive_id')
+            ->map(fn ($r) => [
+                'avg_temperature' => (float) ($r->avg_temperature ?? 0),
+                'avg_humidity' => (float) ($r->avg_humidity ?? 0),
+                'avg_mq2' => (float) ($r->avg_mq2 ?? 0),
+                'avg_mq3' => (float) ($r->avg_mq3 ?? 0),
+                'avg_mq5' => (float) ($r->avg_mq5 ?? 0),
+                'avg_mq135' => (float) ($r->avg_mq135 ?? 0),
+            ])
+            ->toArray();
     }
 
     private function hriGauges($hives): array
