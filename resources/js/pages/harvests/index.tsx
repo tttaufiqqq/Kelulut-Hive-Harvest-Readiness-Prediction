@@ -16,6 +16,7 @@ import { DatePickerField } from '@/components/core/date-picker';
 import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
+import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Modal } from '@/components/core/modal';
 import { Breadcrumbs } from '@/components/core/navigation';
 import { NumberInput } from '@/components/core/number-input';
@@ -42,6 +43,7 @@ type ActiveModal =
     | { type: 'create' }
     | { type: 'view'; index: number }
     | { type: 'edit'; harvest: Harvest }
+    | { type: 'confirm-edit'; harvest: Harvest }
     | { type: 'delete'; harvest: Harvest }
     | null;
 
@@ -172,6 +174,14 @@ export default function HarvestsIndex({
         e.preventDefault();
 
         if (activeModal?.type !== 'edit') {
+            return;
+        }
+
+        setActiveModal({ type: 'confirm-edit', harvest: activeModal.harvest });
+    };
+
+    const confirmEdit = () => {
+        if (activeModal?.type !== 'confirm-edit') {
             return;
         }
 
@@ -739,48 +749,30 @@ export default function HarvestsIndex({
 
             {/* ── Delete Confirmation Modal ── */}
             {activeModal?.type === 'delete' && (
-                <Modal
+                <ConfirmModal
                     isOpen
                     onClose={close}
+                    onConfirm={confirmDelete}
                     title="Delete Harvest Record"
-                    maxWidth="sm"
-                >
-                    <div className="space-y-4">
-                        <p className="text-sm text-amber-900/70">
-                            Delete the harvest record for{' '}
-                            <span className="font-semibold text-amber-950">
-                                {activeModal.harvest.hive?.name}
-                            </span>{' '}
-                            on{' '}
-                            <span className="font-semibold text-amber-950">
-                                {new Date(
-                                    activeModal.harvest.harvest_date,
-                                ).toLocaleDateString()}
-                            </span>
-                            ? This cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={confirmDelete}
-                                disabled={deleting}
-                                className="flex-1"
-                            >
-                                {deleting ? 'Deleting...' : 'Delete'}
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                    message={<>Delete the harvest record for <span className="font-semibold text-amber-950">{activeModal.harvest.hive?.name}</span> on <span className="font-semibold text-amber-950">{new Date(activeModal.harvest.harvest_date).toLocaleDateString()}</span>? This cannot be undone.</>}
+                    confirmLabel={deleting ? 'Deleting...' : 'Delete'}
+                    variant="destructive"
+                    loading={deleting}
+                />
+            )}
+
+            {/* ── Confirm Edit Modal ── */}
+            {activeModal?.type === 'confirm-edit' && (
+                <ConfirmModal
+                    isOpen
+                    onClose={close}
+                    onConfirm={confirmEdit}
+                    title="Save Changes"
+                    message={<>Save changes to the harvest record for <span className="font-semibold text-amber-950">{activeModal.harvest.hive?.name}</span>?</>}
+                    confirmLabel={editForm.processing ? 'Saving...' : 'Save Changes'}
+                    loading={editForm.processing}
+                    variant="warning"
+                />
             )}
         </AuthenticatedLayout>
     );
