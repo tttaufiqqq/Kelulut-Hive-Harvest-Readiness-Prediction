@@ -96,15 +96,22 @@ if ($lockHash !== $previousHash) {
 }
 
 // Bootstrap Laravel and run artisan commands
+echo "checkpoint: loading autoload\n";
+flush();
 require dirname(__DIR__).'/vendor/autoload.php';
+echo "checkpoint: autoload OK\n";
+flush();
 $app = require dirname(__DIR__).'/bootstrap/app.php';
+echo "checkpoint: app bootstrapped\n";
+flush();
 $kernel = $app->make(Kernel::class);
+echo "checkpoint: kernel ready\n";
+flush();
 
 $commands = [
     ['optimize:clear', []],
     ['migrate', ['--force' => true]],
     ['db:seed', ['--class' => 'MasterDataSeeder', '--force' => true]],
-    ['db:seed', ['--class' => 'ProductionDataSeeder', '--force' => true]],
     ['config:cache', []],
     ['route:cache', []],
     ['view:cache', []],
