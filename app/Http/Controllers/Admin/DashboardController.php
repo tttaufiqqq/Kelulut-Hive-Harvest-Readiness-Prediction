@@ -109,8 +109,9 @@ class DashboardController extends Controller
                 $status = 'alert';
             } elseif ($prediction) {
                 $status = match ($prediction->readiness_level) {
-                    'Ready to Harvest' => 'ready',
-                    'Nearly Ready', 'Approaching', 'Not Ready' => 'growing',
+                    'Ready to Harvest', 'ready' => 'ready',
+                    'Nearly Ready', 'Approaching', 'Not Ready',
+                    'nearly_ready', 'approaching', 'not_ready' => 'growing',
                     default => 'offline',
                 };
             } else {

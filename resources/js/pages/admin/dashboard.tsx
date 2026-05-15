@@ -189,7 +189,7 @@ function FleetHriLineChart({ trend }: { trend: FleetTrendItem[] }) {
                         No fleet trend data yet.
                     </div>
                 ) : (
-                    <ResponsiveContainer width="100%" height={260}>
+                    <ResponsiveContainer width="100%" height={320}>
                         <LineChart
                             data={filtered}
                             margin={{ top: 8, right: 24, left: 8, bottom: 18 }}
@@ -563,8 +563,8 @@ export default function AdminDashboard({
                             <ResponsiveContainer
                                 width="100%"
                                 height={Math.max(
-                                    120,
-                                    productivityRanking.length * 48,
+                                    160,
+                                    productivityRanking.length * 52,
                                 )}
                             >
                                 <BarChart
@@ -572,7 +572,7 @@ export default function AdminDashboard({
                                     data={productivityRanking}
                                     margin={{
                                         left: 20,
-                                        right: 24,
+                                        right: 32,
                                         top: 8,
                                         bottom: 8,
                                     }}
@@ -584,7 +584,7 @@ export default function AdminDashboard({
                                     />
                                     <XAxis
                                         type="number"
-                                        unit=" kg"
+                                        unit=" g"
                                         tick={{ fontSize: 11, fill: '#92400e' }}
                                         axisLine={false}
                                         tickLine={false}
@@ -593,7 +593,7 @@ export default function AdminDashboard({
                                     <YAxis
                                         dataKey="hive_name"
                                         type="category"
-                                        width={92}
+                                        width={110}
                                         tick={{ fontSize: 11, fill: '#92400e' }}
                                         axisLine={false}
                                         tickLine={false}
@@ -606,7 +606,7 @@ export default function AdminDashboard({
                                             fontSize: 12,
                                         }}
                                         formatter={(v) => [
-                                            `${v ?? 0} kg`,
+                                            `${v ?? 0} g`,
                                             'Harvest Weight',
                                         ]}
                                     />
@@ -625,7 +625,7 @@ export default function AdminDashboard({
                             <h3 className="mb-4 text-sm font-black tracking-widest text-amber-900/60 uppercase">
                                 Cross-Site Comparison
                             </h3>
-                            <ResponsiveContainer width="100%" height={240}>
+                            <ResponsiveContainer width="100%" height={320}>
                                 <BarChart
                                     data={crossSiteComparison}
                                     margin={{
@@ -660,7 +660,7 @@ export default function AdminDashboard({
                                     <YAxis
                                         yAxisId="weight"
                                         orientation="right"
-                                        unit=" kg"
+                                        unit=" g"
                                         tick={{ fontSize: 11, fill: '#92400e' }}
                                         axisLine={false}
                                         tickLine={false}
@@ -691,7 +691,7 @@ export default function AdminDashboard({
                                     <Bar
                                         yAxisId="weight"
                                         dataKey="total_weight"
-                                        name="Total Harvest (kg)"
+                                        name="Total Harvest (g)"
                                         fill="#6EE7B7"
                                         radius={[4, 4, 0, 0]}
                                     />

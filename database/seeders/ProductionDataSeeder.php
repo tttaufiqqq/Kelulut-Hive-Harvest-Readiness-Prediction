@@ -81,6 +81,26 @@ class ProductionDataSeeder extends Seeder
         ['tempBase' => 34.4, 'humBase' => 72.5, 'mqBase' => 210],
     ];
 
+    // ── Today's readiness per hive (for live admin dashboard + beekeeper donut) ──
+    // Each beekeeper's 3 hives get mixed levels for chart variety
+    private array $todayReadiness = [
+        0  => ['level' => 'ready',        'hri' => 0.88, 'confidence' => 0.91],
+        1  => ['level' => 'nearly_ready', 'hri' => 0.68, 'confidence' => 0.83],
+        2  => ['level' => 'approaching',  'hri' => 0.43, 'confidence' => 0.76],
+        3  => ['level' => 'ready',        'hri' => 0.85, 'confidence' => 0.89],
+        4  => ['level' => 'approaching',  'hri' => 0.40, 'confidence' => 0.74],
+        5  => ['level' => 'not_ready',    'hri' => 0.18, 'confidence' => 0.71],
+        6  => ['level' => 'nearly_ready', 'hri' => 0.71, 'confidence' => 0.84],
+        7  => ['level' => 'ready',        'hri' => 0.91, 'confidence' => 0.93],
+        8  => ['level' => 'not_ready',    'hri' => 0.15, 'confidence' => 0.69],
+        9  => ['level' => 'approaching',  'hri' => 0.45, 'confidence' => 0.78],
+        10 => ['level' => 'ready',        'hri' => 0.87, 'confidence' => 0.90],
+        11 => ['level' => 'nearly_ready', 'hri' => 0.65, 'confidence' => 0.81],
+        12 => ['level' => 'not_ready',    'hri' => 0.22, 'confidence' => 0.72],
+        13 => ['level' => 'ready',        'hri' => 0.89, 'confidence' => 0.92],
+        14 => ['level' => 'approaching',  'hri' => 0.38, 'confidence' => 0.73],
+    ];
+
     // ── 10 inspection dates per hive (~every 7 weeks, 2025–2026) ──────────
     private array $inspectionDates = [
         '2025-01-15', '2025-03-05', '2025-04-23',
@@ -164,7 +184,10 @@ class ProductionDataSeeder extends Seeder
         // 4. Sensor logs + predictions — prediction trigger auto-populates hri_summary
         $this->seedSensorData($hiveModels, $nodeModels);
 
-        // 5. Inspections
+        // 5. Today's live readings (for admin dashboard status + beekeeper donut variety)
+        $this->seedTodayReadings($hiveModels, $nodeModels);
+
+        // 6. Inspections
         $this->seedInspections($hiveModels, $users);
     }
 
@@ -342,6 +365,50 @@ class ProductionDataSeeder extends Seeder
         $confidence = round(0.62 + rand(0, 33) / 100, 2);
 
         return [$level, $hri, $confidence];
+    }
+
+    // ── Today's live readings ─────────────────────────────────────────────
+
+    private function seedTodayReadings(array $hives, array $nodes): void
+    {
+        foreach ($hives as $hiveIndex => $hive) {
+            $node    = $nodes[$hiveIndex];
+            $profile = $this->profiles[$hiveIndex];
+            $info    = $this->todayReadiness[$hiveIndex];
+            $ts      = Carbon::now()->subMinutes(rand(5, 55));
+
+            $logId = DB::table('sensor_logs')->insertGetId([
+                'hive_id'          => $hive->id,
+                'device_id'        => $node->id,
+                'temp'             => round($profile['tempBase'] + (rand(-5, 5) / 10), 1),
+                'humidity'         => round($profile['humBase'] + (rand(-5, 5) / 10), 1),
+                'mq2_value'        => max(50, $profile['mqBase'] + rand(-30, 30)),
+                'mq3_value'        => max(50, $profile['mqBase'] + rand(-30, 30)),
+                'mq5_value'        => max(50, $profile['mqBase'] + rand(-30, 30)),
+                'mq135_value'      => max(50, $profile['mqBase'] + rand(-30, 30)),
+                'record_timestamp' => $ts->toDateTimeString(),
+                'created_at'       => $ts->toDateTimeString(),
+            ]);
+
+            DB::table('predictions')->insert([
+                'sensor_log_id'                => $logId,
+                'readiness_level'              => $info['level'],
+                'raw_readiness_level'          => $info['level'],
+                'hri_value'                    => $info['hri'],
+                'raw_hri_value'                => $info['hri'],
+                'confidence_score'             => $info['confidence'],
+                'model_version'                => 'v1.0-seeded',
+                'warning_state'                => 'none',
+                'guardrail_action'             => 'none',
+                'threshold_warning_level'      => 'none',
+                'out_of_distribution'          => false,
+                'out_of_distribution_features' => null,
+                'prediction_warning'           => null,
+                'prediction_timestamp'         => $ts->toDateTimeString(),
+            ]);
+        }
+
+        $this->command->info('Today\'s readings: ' . count($hives) . ' sensor logs + predictions seeded.');
     }
 
     // ── Inspections ───────────────────────────────────────────────────────
