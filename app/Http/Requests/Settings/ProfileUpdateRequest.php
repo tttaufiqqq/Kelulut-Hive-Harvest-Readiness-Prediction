@@ -18,6 +18,7 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return array_merge($this->profileRules($this->user()->id), [
+            'phone' => ['nullable', 'string', 'regex:/^(\+?60|0)[0-9\-\s]{8,14}$/'],
             'telegram_id' => ['nullable', 'string', 'max:100'],
         ]);
     }

@@ -69,6 +69,18 @@ export default function Profile({
                                     />
 
                                     <Input
+                                        id="phone"
+                                        type="tel"
+                                        label="Phone (optional)"
+                                        defaultValue={
+                                            (auth.user as any).phone ?? ''
+                                        }
+                                        name="phone"
+                                        placeholder="+60 12-345 6789"
+                                        error={(errors as any).phone}
+                                    />
+
+                                    <Input
                                         id="telegram_id"
                                         label="Telegram Chat ID"
                                         defaultValue={
