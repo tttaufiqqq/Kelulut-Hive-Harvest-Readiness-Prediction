@@ -398,12 +398,12 @@ export default function AdminDashboard({
                         </div>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <Card
-                                className="flex cursor-pointer items-center gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50"
+                                className="flex cursor-pointer items-start gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50"
                                 onClick={() =>
                                     router.visit(route('admin.sensors.index'))
                                 }
                             >
-                                <div className="shrink-0 rounded-2xl bg-red-100 p-3">
+                                <div className="mt-1 shrink-0 rounded-2xl bg-red-100 p-3">
                                     <AlertTriangle className="h-5 w-5 text-red-500" />
                                 </div>
                                 <div>
@@ -413,16 +413,19 @@ export default function AdminDashboard({
                                     <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
                                         Need Attention
                                     </p>
+                                    <p className="mt-0.5 text-xs text-amber-900/40">
+                                        Hives with sensor readings exceeding safe thresholds today
+                                    </p>
                                 </div>
                             </Card>
 
                             <Card
-                                className="flex cursor-pointer items-center gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50"
+                                className="flex cursor-pointer items-start gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50"
                                 onClick={() =>
                                     router.visit(route('admin.sensors.index'))
                                 }
                             >
-                                <div className="shrink-0 rounded-2xl bg-emerald-100 p-3">
+                                <div className="mt-1 shrink-0 rounded-2xl bg-emerald-100 p-3">
                                     <TrendingUp className="h-5 w-5 text-emerald-600" />
                                 </div>
                                 <div>
@@ -432,16 +435,19 @@ export default function AdminDashboard({
                                     <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
                                         Ready to Harvest
                                     </p>
+                                    <p className="mt-0.5 text-xs text-amber-900/40">
+                                        Hives predicted by ML model as ready for honey harvest today
+                                    </p>
                                 </div>
                             </Card>
 
                             <Card
-                                className="flex cursor-pointer items-center gap-4 border-l-4 border-l-amber-400 transition-colors hover:bg-yellow-50/50"
+                                className="flex cursor-pointer items-start gap-4 border-l-4 border-l-amber-400 transition-colors hover:bg-yellow-50/50"
                                 onClick={() =>
                                     router.visit(route('admin.beekeepers.index'))
                                 }
                             >
-                                <div className="shrink-0 rounded-2xl bg-amber-100 p-3">
+                                <div className="mt-1 shrink-0 rounded-2xl bg-amber-100 p-3">
                                     <Clock className="h-5 w-5 text-amber-600" />
                                 </div>
                                 <div>
@@ -450,6 +456,9 @@ export default function AdminDashboard({
                                     </p>
                                     <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
                                         Pending Invites
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-amber-900/40">
+                                        Beekeeper accounts invited but not yet activated
                                     </p>
                                 </div>
                             </Card>
@@ -493,7 +502,7 @@ export default function AdminDashboard({
                             title="Fleet Readiness"
                             description={
                                 isLiveMode
-                                    ? 'Current readiness breakdown across all hives'
+                                    ? `Today's readiness breakdown across all hives — ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
                                     : 'Historical readiness breakdown for selected date'
                             }
                         />
