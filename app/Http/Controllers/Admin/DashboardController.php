@@ -8,8 +8,11 @@ use App\Models\Hive;
 use App\Models\Prediction;
 use App\Models\SensorLog;
 use App\Support\SafeSection;
+use App\Models\HriSummary;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -176,5 +179,48 @@ class DashboardController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    public function readinessSnapshot(Request $request): JsonResponse
+    {
+        $date = $request->input('date');
+
+        if (!$date || !Carbon::canBeCreatedFromFormat($date, 'Y-m-d')) {
+            return response()->json(['has_data' => false, 'data' => []], 422);
+        }
+
+        $parsedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
+
+        if ($parsedDate->isFuture()) {
+            return response()->json(['has_data' => false, 'data' => []], 422);
+        }
+
+        $totalHives = Hive::count();
+
+        $rows = HriSummary::whereDate('summary_date', $parsedDate)
+            ->whereNotNull('latest_readiness_level')
+            ->select(['latest_readiness_level'])
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                'has_data' => false,
+                'data' => [['level' => 'no_data', 'count' => $totalHives]],
+            ]);
+        }
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $level = $row->latest_readiness_level;
+            $counts[$level] = ($counts[$level] ?? 0) + 1;
+        }
+
+        $data = array_map(
+            fn ($level, $count) => ['level' => $level, 'count' => $count],
+            array_keys($counts),
+            array_values($counts),
+        );
+
+        return response()->json(['has_data' => true, 'data' => $data]);
     }
 }

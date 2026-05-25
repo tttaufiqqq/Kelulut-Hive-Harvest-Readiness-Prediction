@@ -26,6 +26,7 @@ import {
 import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
+import { DatePicker } from '@/components/core/date-picker';
 import { SelectField } from '@/components/core/select-field';
 import { ReadinessDonutChart, SensorRadarChart } from '@/components/core/visualization-charts';
 import { AdminLayout } from '@/layouts/admin-layout';
@@ -66,6 +67,11 @@ type CrossSiteItem = {
     avg_hri_pct: number;
     total_weight: number;
     hive_count: number;
+};
+
+type ReadinessSnapshotResponse = {
+    has_data: boolean;
+    data: { level: string; count: number }[];
 };
 
 // ── Props ──────────────────────────────────────────────────────────────
@@ -111,7 +117,7 @@ const STATUS_TO_LEVEL: Record<HiveData['status'], string> = {
     growing: 'approaching',
     alert: 'not_ready',
     offline: 'not_ready',
-    no_data: 'not_ready',
+    no_data: 'no_data',
 };
 
 // ── Sensor warning thresholds ──────────────────────────────────────────
@@ -255,6 +261,7 @@ function FleetHriLineChart({ trend }: { trend: FleetTrendItem[] }) {
                                 strokeWidth={2.5}
                                 dot={false}
                                 activeDot={{ r: 4 }}
+                                connectNulls={true}
                             />
                             <Line
                                 yAxisId="harvests"
@@ -284,11 +291,41 @@ export default function AdminDashboard({
 }: Props) {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
+    const [snapshotData, setSnapshotData] = useState<{ level: string; count: number }[] | null>(null);
+    const [snapshotLoading, setSnapshotLoading] = useState(false);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (!snapshotDate) {
+            setSnapshotData(null);
+            return;
+        }
+
+        let cancelled = false;
+        setSnapshotLoading(true);
+
+        fetch(`/admin/dashboard/readiness-snapshot?date=${snapshotDate}`, {
+            headers: { Accept: 'application/json' },
+        })
+            .then((res) => res.json() as Promise<ReadinessSnapshotResponse>)
+            .then((payload) => {
+                if (cancelled) return;
+                setSnapshotData(payload.has_data ? payload.data : []);
+            })
+            .catch(() => {
+                if (!cancelled) setSnapshotData([]);
+            })
+            .finally(() => {
+                if (!cancelled) setSnapshotLoading(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [snapshotDate]);
 
     const sortedHives = [...hives].sort((a, b) => b.readiness - a.readiness);
     const selectedHive =
@@ -309,6 +346,9 @@ export default function AdminDashboard({
         }
         return Object.entries(counts).map(([level, count]) => ({ level, count }));
     }, [hives]);
+
+    const activeDonutData = snapshotDate !== null ? (snapshotData ?? []) : adminDonutData;
+    const isLiveMode = snapshotDate === null;
 
     useEffect(() => {
         if (selectedIndex === null) {
@@ -417,11 +457,48 @@ export default function AdminDashboard({
                 </div>
 
                 {/* ── Fleet Readiness Donut (separate group) ── */}
-                <ReadinessDonutChart
-                    data={adminDonutData}
-                    title="Fleet Readiness"
-                    description="Current readiness breakdown across all hives"
-                />
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3 px-1">
+                        <div className="flex items-center gap-2">
+                            {isLiveMode ? (
+                                <>
+                                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                                    <span className="text-xs font-bold text-emerald-700">Live</span>
+                                </>
+                            ) : (
+                                <span className="text-xs font-bold text-amber-700">
+                                    Viewing:{' '}
+                                    {new Date(`${snapshotDate}T00:00:00`).toLocaleDateString('en-GB', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                    })}
+                                </span>
+                            )}
+                        </div>
+                        <DatePicker
+                            value={snapshotDate}
+                            onChange={setSnapshotDate}
+                            placeholder="Pick date…"
+                        />
+                    </div>
+
+                    {snapshotLoading ? (
+                        <div className="flex h-[300px] items-center justify-center text-sm text-amber-900/40">
+                            Loading…
+                        </div>
+                    ) : (
+                        <ReadinessDonutChart
+                            data={activeDonutData}
+                            title="Fleet Readiness"
+                            description={
+                                isLiveMode
+                                    ? 'Current readiness breakdown across all hives'
+                                    : 'Historical readiness breakdown for selected date'
+                            }
+                        />
+                    )}
+                </div>
 
                 {/* ── Live Hive Monitor ──────────────────────────────────── */}
                 <Card className="overflow-hidden p-0">

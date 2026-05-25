@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/readiness-snapshot', [DashboardController::class, 'readinessSnapshot'])->name('dashboard.readiness-snapshot');
 
     Route::get('/beekeepers', [BeekeeperController::class, 'index'])->name('beekeepers.index');
     Route::post('/beekeepers', [BeekeeperController::class, 'store'])->name('beekeepers.store');

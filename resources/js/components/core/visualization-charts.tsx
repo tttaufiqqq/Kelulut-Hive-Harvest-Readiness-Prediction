@@ -39,15 +39,17 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
         setMounted(true);
     }, []);
 
-    const total = data.reduce((sum, d) => sum + d.count, 0);
-    const sortedData = [...data].sort(
+    const isNoData = data.length === 0 || (data.length === 1 && data[0].level === 'no_data');
+    const chartData = isNoData ? [{ level: 'no_data', count: 1 }] : data;
+    const total = isNoData ? 0 : data.reduce((sum, d) => sum + d.count, 0);
+    const sortedData = [...chartData].sort(
         (a, b) => LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level),
     );
 
     return (
         <ChartCard eyebrow="Readiness" title={title} description={description}>
             <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-4">
-                {data.length === 0 || !mounted ? (
+                {!mounted ? (
                     <div className="flex h-[300px] items-center justify-center text-sm text-amber-900/40">
                         No readiness data yet.
                     </div>
@@ -61,7 +63,7 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
                                         dataKey="count"
                                         innerRadius={70}
                                         outerRadius={108}
-                                        paddingAngle={3}
+                                        paddingAngle={isNoData ? 0 : 3}
                                         cx="50%"
                                         cy="50%"
                                     >
@@ -72,19 +74,21 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
                                             />
                                         ))}
                                     </Pie>
-                                    <Tooltip
-                                        contentStyle={TOOLTIP_STYLE}
-                                        formatter={(value, _name, props) => {
-                                            const level = props.payload?.level as string | undefined;
-                                            const label = level
-                                                ? (READINESS_LABELS[level] ?? level)
-                                                : '';
-                                            return [
-                                                `${value} hive${Number(value) !== 1 ? 's' : ''}`,
-                                                label,
-                                            ];
-                                        }}
-                                    />
+                                    {!isNoData && (
+                                        <Tooltip
+                                            contentStyle={TOOLTIP_STYLE}
+                                            formatter={(value, _name, props) => {
+                                                const level = props.payload?.level as string | undefined;
+                                                const label = level
+                                                    ? (READINESS_LABELS[level] ?? level)
+                                                    : '';
+                                                return [
+                                                    `${value} hive${Number(value) !== 1 ? 's' : ''}`,
+                                                    label,
+                                                ];
+                                            }}
+                                        />
+                                    )}
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -97,23 +101,33 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
 
                         {/* Legend */}
                         <div className="mt-3 space-y-2 px-1">
-                            {sortedData.map((entry) => (
-                                <div key={entry.level} className="flex items-center gap-2.5">
-                                    <div
-                                        className="h-3 w-3 flex-shrink-0 rounded-full"
-                                        style={{
-                                            backgroundColor:
-                                                READINESS_SOLID_COLORS[entry.level] ?? '#78716c',
-                                        }}
-                                    />
-                                    <span className="flex-1 text-xs font-semibold text-amber-900/70">
-                                        {READINESS_LABELS[entry.level] ?? entry.level}
+                            {isNoData ? (
+                                <div className="flex items-center gap-2.5">
+                                    <div className="h-3 w-3 flex-shrink-0 rounded-full bg-stone-300" />
+                                    <span className="flex-1 text-xs font-semibold text-amber-900/40">
+                                        No Data
                                     </span>
-                                    <span className="text-xs font-black text-amber-950">
-                                        {entry.count}
-                                    </span>
+                                    <span className="text-xs font-black text-amber-950">0</span>
                                 </div>
-                            ))}
+                            ) : (
+                                sortedData.map((entry) => (
+                                    <div key={entry.level} className="flex items-center gap-2.5">
+                                        <div
+                                            className="h-3 w-3 flex-shrink-0 rounded-full"
+                                            style={{
+                                                backgroundColor:
+                                                    READINESS_SOLID_COLORS[entry.level] ?? '#78716c',
+                                            }}
+                                        />
+                                        <span className="flex-1 text-xs font-semibold text-amber-900/70">
+                                            {READINESS_LABELS[entry.level] ?? entry.level}
+                                        </span>
+                                        <span className="text-xs font-black text-amber-950">
+                                            {entry.count}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </>
                 )}

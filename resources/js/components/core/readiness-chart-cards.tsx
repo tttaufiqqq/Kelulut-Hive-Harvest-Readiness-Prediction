@@ -8,6 +8,7 @@ export const READINESS_LABELS: Record<string, string> = {
     approaching: 'Approaching',
     nearly_ready: 'Nearly Ready',
     ready: 'Ready to Harvest',
+    no_data: 'No Data',
 };
 
 const READINESS_SOFT_STYLES: Record<string, string> = {
@@ -22,6 +23,7 @@ export const READINESS_SOLID_COLORS: Record<string, string> = {
     approaching: '#d97706',
     nearly_ready: '#ca8a04',
     ready: '#16a34a',
+    no_data: '#d6d3d1',
 };
 
 export interface ReadinessBadgeProps {
