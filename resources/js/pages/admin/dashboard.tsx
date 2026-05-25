@@ -302,6 +302,7 @@ export default function AdminDashboard({
 
     useEffect(() => {
         if (!snapshotDate) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSnapshotData(null);
             return;
         }
