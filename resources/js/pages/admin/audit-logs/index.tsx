@@ -79,14 +79,9 @@ function formatTime(iso: string): string {
     const d = new Date(iso);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
-    const isThisYear = d.getFullYear() === now.getFullYear();
     const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     if (isToday) return time;
-    const date = d.toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        ...(isThisYear ? {} : { year: 'numeric' }),
-    });
+    const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     return `${date}, ${time}`;
 }
 
@@ -277,10 +272,7 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                                         />
                                     </td>
                                     <td className="hidden px-6 py-4 text-amber-900/60 md:table-cell">
-                                        {log.auditable_type === 'Harvest' ||
-                                        log.auditable_type === 'Inspection'
-                                            ? (log.user?.name ?? '—')
-                                            : '—'}
+                                        {log.user?.name ?? '—'}
                                     </td>
                                     <td className="hidden px-6 py-4 font-mono text-xs text-amber-900/50 lg:table-cell">
                                         {changedPreview(log)}
@@ -324,13 +316,11 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                             <span className="text-amber-900/40">
                                 {formatTime(activeLog.created_at)}
                             </span>
-                            {(activeLog.auditable_type === 'Harvest' ||
-                                activeLog.auditable_type === 'Inspection') &&
-                                activeLog.user && (
-                                    <span className="text-amber-900/60">
-                                        by {activeLog.user.name}
-                                    </span>
-                                )}
+                            {activeLog.user && (
+                                <span className="text-amber-900/60">
+                                    by {activeLog.user.name}
+                                </span>
+                            )}
                         </div>
 
                         <DiffTable log={activeLog} />

@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             ProductionDataSeeder::class,
+            AuditLogSeeder::class,
         ]);
     }
 }
