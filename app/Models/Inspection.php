@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Inspection extends Model
 {
+    use Auditable;
     protected $fillable = [
         'hive_id', 'beekeeper_id', 'inspection_date',
         'blooming_status', 'vegetation_density', 'nectar_source_availability',
