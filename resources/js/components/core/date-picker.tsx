@@ -192,18 +192,53 @@ export function DatePicker({
     const [viewDate, setViewDate] = useState(() =>
         parsePickerValue(value, mode),
     );
-    const ref = useRef<HTMLDivElement>(null);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
+        const handler = (e: MouseEvent | TouchEvent) => {
+            const target = (e instanceof TouchEvent ? e.touches[0]?.target : e.target) as Node;
+
+            if (
+                !triggerRef.current?.contains(target) &&
+                !menuRef.current?.contains(target)
+            ) {
                 setOpen(false);
             }
         };
         document.addEventListener('mousedown', handler);
+        document.addEventListener('touchstart', handler as EventListener);
 
-        return () => document.removeEventListener('mousedown', handler);
+        return () => {
+            document.removeEventListener('mousedown', handler);
+            document.removeEventListener('touchstart', handler as EventListener);
+        };
     }, []);
+
+    useEffect(() => {
+        if (!open || typeof window === 'undefined') {
+            return;
+        }
+
+        if (triggerRef.current) {
+            setMenuStyle(buildMenuStyle(triggerRef.current, mode));
+        }
+
+        const syncMenuPosition = () => {
+            if (triggerRef.current) {
+                setMenuStyle(buildMenuStyle(triggerRef.current, mode));
+            }
+        };
+
+        window.addEventListener('resize', syncMenuPosition);
+        window.addEventListener('scroll', syncMenuPosition, true);
+
+        return () => {
+            window.removeEventListener('resize', syncMenuPosition);
+            window.removeEventListener('scroll', syncMenuPosition, true);
+        };
+    }, [open, mode]);
 
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -272,11 +307,20 @@ export function DatePicker({
         setOpen(false);
     };
 
+    const handleOpen = () => {
+        if (!open && triggerRef.current && typeof window !== 'undefined') {
+            setMenuStyle(buildMenuStyle(triggerRef.current, mode));
+        }
+
+        setOpen((o) => !o);
+    };
+
     return (
-        <div ref={ref} className={cn('relative inline-block', className)}>
+        <div className={cn('relative inline-block', className)}>
             <button
+                ref={triggerRef}
                 type="button"
-                onClick={() => setOpen((o) => !o)}
+                onClick={handleOpen}
                 className={cn(
                     'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-200 bg-yellow-50/50 px-4 py-2.5 text-sm whitespace-nowrap transition-all',
                     'focus:ring-2 focus:ring-yellow-400/50 focus:outline-none',
@@ -315,104 +359,112 @@ export function DatePicker({
                 </button>
             )}
 
-            {open && (
-                <div className="absolute top-full left-0 z-30 mt-2 w-72 rounded-2xl border border-yellow-100 bg-white p-4 shadow-lg">
-                    <div className="mb-4 flex items-center justify-between">
-                        <button
-                            type="button"
-                            onClick={prevView}
-                            className="rounded-xl p-1.5 transition-colors hover:bg-yellow-50"
+            {typeof document !== 'undefined' &&
+                createPortal(
+                    open ? (
+                        <div
+                            ref={menuRef}
+                            style={menuStyle}
+                            className="max-w-[calc(100vw-1.5rem)] rounded-2xl border border-yellow-100 bg-white p-4 shadow-xl"
                         >
-                            <ChevronLeft className="h-4 w-4 text-amber-900" />
-                        </button>
-                        <span className="text-sm font-black text-amber-900">
-                            {headerLabel}
-                        </span>
-                        <button
-                            type="button"
-                            onClick={nextView}
-                            disabled={isNextDisabled}
-                            className="rounded-xl p-1.5 transition-colors hover:bg-yellow-50 disabled:cursor-not-allowed disabled:opacity-25"
-                        >
-                            <ChevronRight className="h-4 w-4 text-amber-900" />
-                        </button>
-                    </div>
+                            <div className="mb-4 flex items-center justify-between">
+                                <button
+                                    type="button"
+                                    onClick={prevView}
+                                    className="rounded-xl p-1.5 transition-colors hover:bg-yellow-50"
+                                >
+                                    <ChevronLeft className="h-4 w-4 text-amber-900" />
+                                </button>
+                                <span className="text-sm font-black text-amber-900">
+                                    {headerLabel}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={nextView}
+                                    disabled={isNextDisabled}
+                                    className="rounded-xl p-1.5 transition-colors hover:bg-yellow-50 disabled:cursor-not-allowed disabled:opacity-25"
+                                >
+                                    <ChevronRight className="h-4 w-4 text-amber-900" />
+                                </button>
+                            </div>
 
-                    {mode === 'month' ? (
-                        renderMonthGrid({
-                            value,
-                            year,
-                            today,
-                            onSelect: selectMonth,
-                            restrictToToday: true,
-                        })
-                    ) : (
-                        <>
-                            <div className="mb-1 grid grid-cols-7">
-                                {DAY_HEADERS.map((header) => (
-                                    <div
-                                        key={header}
-                                        className="py-1 text-center text-[10px] font-black tracking-widest text-amber-900/40 uppercase"
-                                    >
-                                        {header}
+                            {mode === 'month' ? (
+                                renderMonthGrid({
+                                    value,
+                                    year,
+                                    today,
+                                    onSelect: selectMonth,
+                                    restrictToToday: true,
+                                })
+                            ) : (
+                                <>
+                                    <div className="mb-1 grid grid-cols-7">
+                                        {DAY_HEADERS.map((header) => (
+                                            <div
+                                                key={header}
+                                                className="py-1 text-center text-[10px] font-black tracking-widest text-amber-900/40 uppercase"
+                                            >
+                                                {header}
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
 
-                            <div className="grid grid-cols-7 gap-y-1">
-                                {cells.map((day, index) => {
-                                    if (!day) {
-                                        return <div key={index} />;
-                                    }
+                                    <div className="grid grid-cols-7 gap-y-1">
+                                        {cells.map((day, index) => {
+                                            if (!day) {
+                                                return <div key={index} />;
+                                            }
 
-                                    const dateValue = formatPickerValue(
-                                        year,
-                                        month,
-                                        day,
-                                        'day',
-                                    );
-                                    const future =
-                                        new Date(`${dateValue}T00:00:00`) >
-                                        today;
-                                    const selected = value === dateValue;
-                                    const todayDay =
-                                        new Date(
-                                            year,
-                                            month,
-                                            day,
-                                        ).toDateString() ===
-                                        new Date().toDateString();
+                                            const dateValue = formatPickerValue(
+                                                year,
+                                                month,
+                                                day,
+                                                'day',
+                                            );
+                                            const future =
+                                                new Date(`${dateValue}T00:00:00`) >
+                                                today;
+                                            const selected = value === dateValue;
+                                            const todayDay =
+                                                new Date(
+                                                    year,
+                                                    month,
+                                                    day,
+                                                ).toDateString() ===
+                                                new Date().toDateString();
 
-                                    return (
-                                        <button
-                                            key={index}
-                                            type="button"
-                                            onClick={() => selectDay(day)}
-                                            disabled={future}
-                                            className={cn(
-                                                'mx-auto flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-colors',
-                                                selected &&
-                                                    'bg-yellow-400 font-black text-amber-950',
-                                                !selected &&
-                                                    todayDay &&
-                                                    'bg-yellow-100 font-bold text-amber-900',
-                                                !selected &&
-                                                    !todayDay &&
-                                                    !future &&
-                                                    'font-medium text-amber-900 hover:bg-yellow-50',
-                                                future &&
-                                                    'cursor-not-allowed font-medium text-amber-900/20',
-                                            )}
-                                        >
-                                            {day}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    )}
-                </div>
-            )}
+                                            return (
+                                                <button
+                                                    key={index}
+                                                    type="button"
+                                                    onClick={() => selectDay(day)}
+                                                    disabled={future}
+                                                    className={cn(
+                                                        'mx-auto flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-colors',
+                                                        selected &&
+                                                            'bg-yellow-400 font-black text-amber-950',
+                                                        !selected &&
+                                                            todayDay &&
+                                                            'bg-yellow-100 font-bold text-amber-900',
+                                                        !selected &&
+                                                            !todayDay &&
+                                                            !future &&
+                                                            'font-medium text-amber-900 hover:bg-yellow-50',
+                                                        future &&
+                                                            'cursor-not-allowed font-medium text-amber-900/20',
+                                                    )}
+                                                >
+                                                    {day}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ) : null,
+                    document.body,
+                )}
         </div>
     );
 }
@@ -440,8 +492,8 @@ export function DatePickerField({
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            const target = e.target as Node;
+        const handler = (e: MouseEvent | TouchEvent) => {
+            const target = (e instanceof TouchEvent ? e.touches[0]?.target : e.target) as Node;
 
             if (
                 !triggerRef.current?.contains(target) &&
@@ -451,8 +503,12 @@ export function DatePickerField({
             }
         };
         document.addEventListener('mousedown', handler);
+        document.addEventListener('touchstart', handler as EventListener);
 
-        return () => document.removeEventListener('mousedown', handler);
+        return () => {
+            document.removeEventListener('mousedown', handler);
+            document.removeEventListener('touchstart', handler as EventListener);
+        };
     }, []);
 
     useEffect(() => {

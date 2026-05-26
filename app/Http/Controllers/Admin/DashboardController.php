@@ -65,14 +65,14 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function liveHiveMonitor(): array
+    private function liveHiveMonitor(?Carbon $date = null): array
     {
         $hives = Hive::with(['user', 'species'])->withSum('harvests', 'weight')->get();
-        $today = today();
+        $targetDate = $date ?? today();
 
         // Query A: latest sensor_log id per hive — today only
         $latestTodayLogIds = SensorLog::selectRaw('MAX(id) as log_id, hive_id')
-            ->whereDate('record_timestamp', $today)
+            ->whereDate('record_timestamp', $targetDate)
             ->groupBy('hive_id')
             ->pluck('log_id', 'hive_id');
 
@@ -84,7 +84,7 @@ class DashboardController extends Controller
         // Query C: hive IDs with threshold violations today
         $alertHiveIds = DB::table('sensor_log_thresholds')
             ->join('sensor_logs', 'sensor_log_thresholds.sensor_log_id', '=', 'sensor_logs.id')
-            ->whereDate('sensor_logs.record_timestamp', $today)
+            ->whereDate('sensor_logs.record_timestamp', $targetDate)
             ->pluck('sensor_logs.hive_id')
             ->unique();
 
@@ -99,14 +99,14 @@ class DashboardController extends Controller
         $predictions = Prediction::whereIn('sensor_log_id', $latestTodayLogIds->values())->get()->keyBy('sensor_log_id');
 
         return $hives->map(function ($hive) use ($latestTodayLogIds, $latestEverLogIds, $sensorLogs, $predictions, $alertHiveIds) {
-            $todayLogId = $latestTodayLogIds->get($hive->id);
+            $targetDateLogId = $latestTodayLogIds->get($hive->id);
             $everLogId = $latestEverLogIds->get($hive->id);
-            $todayLog = $todayLogId ? $sensorLogs->get($todayLogId) : null;
+            $targetDateLog = $targetDateLogId ? $sensorLogs->get($targetDateLogId) : null;
             $everLog = $everLogId ? $sensorLogs->get($everLogId) : null;
-            $prediction = $todayLogId ? $predictions->get($todayLogId) : null;
+            $prediction = $targetDateLogId ? $predictions->get($targetDateLogId) : null;
             $hasAlert = $alertHiveIds->contains($hive->id);
 
-            if (! $todayLog) {
+            if (! $targetDateLog) {
                 $status = 'no_data';
             } elseif ($hasAlert) {
                 $status = 'alert';
@@ -127,12 +127,12 @@ class DashboardController extends Controller
                 'beekeeper' => $hive->user?->name ?? '—',
                 'species' => $hive->species?->name ?? '—',
                 'weight' => round((float) ($hive->harvests_sum_weight ?? 0), 1),
-                'temp' => $todayLog ? round((float) $todayLog->temp, 1) : 0,
-                'humidity' => $todayLog ? (int) round((float) $todayLog->humidity) : 0,
-                'co2' => $todayLog ? (int) $todayLog->mq135_value : 0,
-                'mq2' => $todayLog ? (int) $todayLog->mq2_value : 0,
-                'mq3' => $todayLog ? (int) $todayLog->mq3_value : 0,
-                'mq5' => $todayLog ? (int) $todayLog->mq5_value : 0,
+                'temp' => $targetDateLog ? round((float) $targetDateLog->temp, 1) : 0,
+                'humidity' => $targetDateLog ? (int) round((float) $targetDateLog->humidity) : 0,
+                'co2' => $targetDateLog ? (int) $targetDateLog->mq135_value : 0,
+                'mq2' => $targetDateLog ? (int) $targetDateLog->mq2_value : 0,
+                'mq3' => $targetDateLog ? (int) $targetDateLog->mq3_value : 0,
+                'mq5' => $targetDateLog ? (int) $targetDateLog->mq5_value : 0,
                 'readiness' => $prediction ? (int) round((float) $prediction->confidence_score * 100) : 0,
                 'status' => $status,
                 'last_reading' => $everLog ? Carbon::parse($everLog->record_timestamp)->toIso8601String() : null,
@@ -222,5 +222,25 @@ class DashboardController extends Controller
         );
 
         return response()->json(['has_data' => true, 'data' => $data]);
+    }
+
+    public function hiveMonitorSnapshot(Request $request): JsonResponse
+    {
+        $date = $request->input('date');
+
+        if (!$date || !Carbon::canBeCreatedFromFormat($date, 'Y-m-d')) {
+            return response()->json(['has_data' => false, 'data' => []], 422);
+        }
+
+        $parsedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
+
+        if ($parsedDate->isFuture()) {
+            return response()->json(['has_data' => false, 'data' => []], 422);
+        }
+
+        $data = $this->liveHiveMonitor($parsedDate);
+        $hasData = collect($data)->contains(fn ($h) => $h['status'] !== 'no_data');
+
+        return response()->json(['has_data' => $hasData, 'data' => $data]);
     }
 }

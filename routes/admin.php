@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/readiness-snapshot', [DashboardController::class, 'readinessSnapshot'])->name('dashboard.readiness-snapshot');
+    Route::get('/dashboard/hive-monitor-snapshot', [DashboardController::class, 'hiveMonitorSnapshot'])->name('dashboard.hive-monitor-snapshot');
 
     Route::get('/beekeepers', [BeekeeperController::class, 'index'])->name('beekeepers.index');
     Route::post('/beekeepers', [BeekeeperController::class, 'store'])->name('beekeepers.store');

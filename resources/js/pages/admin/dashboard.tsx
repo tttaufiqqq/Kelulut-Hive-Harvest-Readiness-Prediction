@@ -294,6 +294,9 @@ export default function AdminDashboard({
     const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
     const [snapshotData, setSnapshotData] = useState<{ level: string; count: number }[] | null>(null);
     const [snapshotLoading, setSnapshotLoading] = useState(false);
+    const [monitorDate, setMonitorDate] = useState<string | null>(null);
+    const [monitorData, setMonitorData] = useState<HiveData[] | null>(null);
+    const [monitorLoading, setMonitorLoading] = useState(false);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -328,7 +331,37 @@ export default function AdminDashboard({
         return () => { cancelled = true; };
     }, [snapshotDate]);
 
-    const sortedHives = [...hives].sort((a, b) => b.readiness - a.readiness);
+    useEffect(() => {
+        if (!monitorDate) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setMonitorData(null);
+            return;
+        }
+
+        let cancelled = false;
+        setMonitorLoading(true);
+
+        fetch(`/admin/dashboard/hive-monitor-snapshot?date=${monitorDate}`, {
+            headers: { Accept: 'application/json' },
+        })
+            .then((res) => res.json() as Promise<{ has_data: boolean; data: HiveData[] }>)
+            .then((payload) => {
+                if (cancelled) return;
+                setMonitorData(payload.data);
+            })
+            .catch(() => {
+                if (!cancelled) setMonitorData([]);
+            })
+            .finally(() => {
+                if (!cancelled) setMonitorLoading(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [monitorDate]);
+
+    const activeHives = monitorDate !== null ? (monitorData ?? []) : hives;
+    const isMonitorLive = monitorDate === null;
+    const sortedHives = [...activeHives].sort((a, b) => b.readiness - a.readiness);
     const selectedHive =
         selectedIndex !== null ? sortedHives[selectedIndex] : null;
 
@@ -512,14 +545,39 @@ export default function AdminDashboard({
 
                 {/* ── Live Hive Monitor ──────────────────────────────────── */}
                 <Card className="overflow-hidden p-0">
-                    <div className="px-4 pt-4 pb-2">
-                        <h3 className="text-sm font-black tracking-widest text-amber-900/60 uppercase">
-                            Live Hive Monitor
-                        </h3>
+                    <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
+                        <div className="flex items-center gap-2">
+                            {isMonitorLive ? (
+                                <>
+                                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                                    <h3 className="text-sm font-black tracking-widest text-amber-900/60 uppercase">
+                                        Live Hive Monitor
+                                    </h3>
+                                </>
+                            ) : (
+                                <h3 className="text-sm font-black tracking-widest text-amber-700 uppercase">
+                                    Hive Monitor &mdash;{' '}
+                                    {new Date(`${monitorDate}T00:00:00`).toLocaleDateString('en-GB', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                    })}
+                                </h3>
+                            )}
+                        </div>
+                        <DatePicker
+                            value={monitorDate}
+                            onChange={setMonitorDate}
+                            placeholder="Pick date..."
+                        />
                     </div>
-                    {hives.length === 0 ? (
+                    {monitorLoading ? (
+                        <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/40">
+                            Loading...
+                        </div>
+                    ) : activeHives.length === 0 ? (
                         <p className="px-4 py-6 text-center text-sm text-amber-900/40">
-                            No hives registered yet.
+                            {isMonitorLive ? 'No hives registered yet.' : 'No data for this date.'}
                         </p>
                     ) : (
                         <div className="overflow-x-auto">
