@@ -132,7 +132,7 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
         router.get(
             route('admin.audit-logs.index'),
             { ...filters, [key]: value ?? undefined },
-            { preserveState: true, preserveScroll: true, only: ['logs'] },
+            { preserveState: true, preserveScroll: true, only: ['logs', 'filters'] },
         );
     };
 
