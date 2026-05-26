@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
     { title: 'Harvests', href: '/admin/harvests', icon: null },
     { title: 'Inspections', href: '/admin/inspections', icon: null },
     { title: 'Thesis', href: '/admin/thesis', icon: null },
+    { title: 'Audit Log', href: '/admin/audit-logs', icon: null },
 ];
 
 export function AdminLayout({ children }: PropsWithChildren) {
