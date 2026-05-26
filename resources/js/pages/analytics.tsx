@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { fmtDateTime } from '@/lib/format';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
@@ -123,16 +124,6 @@ function formatDate(ymd: string): string {
     });
 }
 
-function formatTimestamp(iso: string): string {
-    return new Date(iso).toLocaleString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-    });
-}
 
 const READINESS_BAR_STYLES: Record<string, string> = {
     not_ready: 'bg-rose-400',
@@ -512,7 +503,7 @@ function LatestPredictionCard({
                             Timestamp
                         </p>
                         <p className="text-sm font-semibold text-amber-900">
-                            {formatTimestamp(prediction.prediction_timestamp)}
+                            {fmtDateTime(prediction.prediction_timestamp)}
                         </p>
                     </div>
                 </div>

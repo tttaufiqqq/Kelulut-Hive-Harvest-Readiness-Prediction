@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { fmtDate } from '@/lib/format';
 import {
     MoreVertical,
     Plus,
@@ -289,10 +290,7 @@ export default function HarvestsIndex({
                                 key: 'date',
                                 header: 'Date',
                                 cellClassName: 'px-6 py-4 text-amber-900/70',
-                                render: (harvest) =>
-                                    new Date(
-                                        harvest.harvest_date,
-                                    ).toLocaleDateString(),
+                                render: (harvest) => fmtDate(harvest.harvest_date),
                             },
                             {
                                 key: 'weight',
@@ -573,9 +571,7 @@ export default function HarvestsIndex({
                                     Date
                                 </p>
                                 <p className="font-medium text-amber-950">
-                                    {new Date(
-                                        viewHarvest.harvest_date,
-                                    ).toLocaleDateString()}
+                                    {fmtDate(viewHarvest.harvest_date)}
                                 </p>
                             </div>
                             <div>
@@ -758,7 +754,7 @@ export default function HarvestsIndex({
                     onClose={close}
                     onConfirm={confirmDelete}
                     title="Delete Harvest Record"
-                    message={<>Delete the harvest record for <span className="font-semibold text-amber-950">{activeModal.harvest.hive?.name}</span> on <span className="font-semibold text-amber-950">{new Date(activeModal.harvest.harvest_date).toLocaleDateString()}</span>? This cannot be undone.</>}
+                    message={<>Delete the harvest record for <span className="font-semibold text-amber-950">{activeModal.harvest.hive?.name}</span> on <span className="font-semibold text-amber-950">{fmtDate(activeModal.harvest.harvest_date)}</span>? This cannot be undone.</>}
                     confirmLabel={deleting ? 'Deleting...' : 'Delete'}
                     variant="destructive"
                     loading={deleting}

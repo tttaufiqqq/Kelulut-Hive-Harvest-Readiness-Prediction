@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { fmtSmartTime } from '@/lib/format';
 import { useState } from 'react';
 import { DatePickerField } from '@/components/core/date-picker';
 import { Modal } from '@/components/core/modal';
@@ -75,15 +76,6 @@ function changedPreview(log: AuditLog): string {
     return shown.join(', ') + (extra > 0 ? ` +${extra}` : '');
 }
 
-function formatTime(iso: string): string {
-    const d = new Date(iso);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    if (isToday) return time;
-    const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-    return `${date}, ${time}`;
-}
 
 function DiffTable({ log }: { log: AuditLog }) {
     const allKeys = Array.from(
@@ -251,7 +243,7 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                                     onClick={() => setActiveLog(log)}
                                 >
                                     <td className="px-6 py-4 tabular-nums text-amber-900/60">
-                                        {formatTime(log.created_at)}
+                                        {fmtSmartTime(log.created_at)}
                                     </td>
                                     <td className="px-6 py-4 font-medium text-amber-950">
                                         {log.auditable_type === 'IotNode'
@@ -314,7 +306,7 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                                 </span>
                             </span>
                             <span className="text-amber-900/40">
-                                {formatTime(activeLog.created_at)}
+                                {fmtSmartTime(activeLog.created_at)}
                             </span>
                             {activeLog.user && (
                                 <span className="text-amber-900/60">

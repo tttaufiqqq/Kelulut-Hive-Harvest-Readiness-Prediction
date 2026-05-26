@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { fmtDate } from '@/lib/format';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
@@ -210,9 +211,7 @@ export default function AdminHarvestsIndex({
                                             {harvest.beekeeper?.name ?? '—'}
                                         </td>
                                         <td className="px-6 py-4 text-amber-900/70">
-                                            {new Date(
-                                                harvest.harvest_date,
-                                            ).toLocaleDateString()}
+                                            {fmtDate(harvest.harvest_date)}
                                         </td>
                                         <td className="px-6 py-4 text-amber-900/70">
                                             {harvest.weight} kg
@@ -336,9 +335,7 @@ export default function AdminHarvestsIndex({
                                     Date
                                 </p>
                                 <p className="font-medium text-amber-950">
-                                    {new Date(
-                                        viewHarvest.harvest_date,
-                                    ).toLocaleDateString()}
+                                    {fmtDate(viewHarvest.harvest_date)}
                                 </p>
                             </div>
                             <div>

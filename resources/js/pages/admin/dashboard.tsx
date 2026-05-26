@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { fmtDate } from '@/lib/format';
 import {
     TrendingUp,
     AlertTriangle,
@@ -511,11 +512,7 @@ export default function AdminDashboard({
                             ) : (
                                 <span className="text-xs font-bold text-amber-700">
                                     Viewing:{' '}
-                                    {new Date(`${snapshotDate}T00:00:00`).toLocaleDateString('en-GB', {
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric',
-                                    })}
+                                    {fmtDate(snapshotDate)}
                                 </span>
                             )}
                         </div>
@@ -536,7 +533,7 @@ export default function AdminDashboard({
                             title="Fleet Readiness"
                             description={
                                 isLiveMode
-                                    ? `Today's readiness breakdown across all hives — ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                                    ? `Today's readiness breakdown across all hives — ${fmtDate(new Date().toISOString())}`
                                     : 'Historical readiness breakdown for selected date'
                             }
                         />

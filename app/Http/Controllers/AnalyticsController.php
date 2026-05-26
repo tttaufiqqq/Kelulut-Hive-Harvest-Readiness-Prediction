@@ -80,7 +80,7 @@ class AnalyticsController extends Controller
             'readiness_level' => $latestPredictionRow->readiness_level,
             'hri_value' => (float) $latestPredictionRow->hri_value,
             'confidence_score' => (float) $latestPredictionRow->confidence_score,
-            'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->format('d M Y, H:i'),
+            'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->format('d/m/Y, H:i'),
         ] : null;
 
         // ── Q4: Harvest history ───────────────────────────────────────────────

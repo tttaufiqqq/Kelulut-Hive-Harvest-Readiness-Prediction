@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { fmtDate } from '@/lib/format';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
@@ -222,9 +223,7 @@ export default function AdminInspectionsIndex({
                                             {inspection.beekeeper?.name ?? '—'}
                                         </td>
                                         <td className="px-6 py-4 text-amber-900/70">
-                                            {new Date(
-                                                inspection.inspection_date,
-                                            ).toLocaleDateString()}
+                                            {fmtDate(inspection.inspection_date)}
                                         </td>
                                         <td className="hidden px-6 py-4 md:table-cell">
                                             <BloomingBadge
@@ -346,9 +345,7 @@ export default function AdminInspectionsIndex({
                                     Date
                                 </p>
                                 <p className="font-medium text-amber-950">
-                                    {new Date(
-                                        viewInspection.inspection_date,
-                                    ).toLocaleDateString()}
+                                    {fmtDate(viewInspection.inspection_date)}
                                 </p>
                             </div>
                             <div>

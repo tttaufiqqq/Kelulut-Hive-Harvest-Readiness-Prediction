@@ -165,7 +165,7 @@ class PredictionController extends Controller
         return [
             'id' => $prediction->id,
             'label' => $predictionTimestamp
-                ? $predictionTimestamp->format($isSameDay ? 'H:i' : 'd M, H:i')
+                ? $predictionTimestamp->format($isSameDay ? 'H:i' : 'd/m/Y, H:i')
                 : 'N/A',
             'hri_pct' => round((float) $prediction->hri_value * 100, 1),
             'confidence_pct' => round((float) $prediction->confidence_score * 100, 1),

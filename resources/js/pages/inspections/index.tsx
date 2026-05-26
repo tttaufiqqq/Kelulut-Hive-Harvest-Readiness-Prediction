@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { fmtDate } from '@/lib/format';
 import {
     MoreVertical,
     Plus,
@@ -357,10 +358,7 @@ export default function InspectionsIndex({
                                 key: 'date',
                                 header: 'Date',
                                 cellClassName: 'px-6 py-4 text-amber-900/70',
-                                render: (inspection) =>
-                                    new Date(
-                                        inspection.inspection_date,
-                                    ).toLocaleDateString(),
+                                render: (inspection) => fmtDate(inspection.inspection_date),
                             },
                             {
                                 key: 'blooming',
@@ -669,9 +667,7 @@ export default function InspectionsIndex({
                                     Date
                                 </p>
                                 <p className="font-medium text-amber-950">
-                                    {new Date(
-                                        viewInspection.inspection_date,
-                                    ).toLocaleDateString()}
+                                    {fmtDate(viewInspection.inspection_date)}
                                 </p>
                             </div>
                             <div>
@@ -927,7 +923,7 @@ export default function InspectionsIndex({
                     onClose={close}
                     onConfirm={confirmDelete}
                     title="Delete Inspection Record"
-                    message={<>Delete the inspection record for <span className="font-semibold text-amber-950">{activeModal.inspection.hive?.name}</span> on <span className="font-semibold text-amber-950">{new Date(activeModal.inspection.inspection_date).toLocaleDateString()}</span>? This cannot be undone.</>}
+                    message={<>Delete the inspection record for <span className="font-semibold text-amber-950">{activeModal.inspection.hive?.name}</span> on <span className="font-semibold text-amber-950">{fmtDate(activeModal.inspection.inspection_date)}</span>? This cannot be undone.</>}
                     confirmLabel={deleting ? 'Deleting...' : 'Delete'}
                     variant="destructive"
                     loading={deleting}

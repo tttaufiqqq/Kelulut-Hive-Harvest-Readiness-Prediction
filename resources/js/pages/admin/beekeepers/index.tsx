@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { fmtDate } from '@/lib/format';
 import {
     MoreVertical,
     Plus,
@@ -356,9 +357,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
                                             />
                                         </td>
                                         <td className="hidden px-6 py-4 text-amber-900/50 lg:table-cell">
-                                            {new Date(
-                                                user.created_at,
-                                            ).toLocaleDateString()}
+                                            {fmtDate(user.created_at)}
                                         </td>
                                         <td
                                             className="px-6 py-4 text-right"
@@ -625,9 +624,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
                                     Member Since
                                 </p>
                                 <p className="font-medium text-amber-950">
-                                    {new Date(
-                                        viewBeekeeper.created_at,
-                                    ).toLocaleDateString()}
+                                    {fmtDate(viewBeekeeper.created_at)}
                                 </p>
                             </div>
                         </div>
