@@ -60,11 +60,34 @@ const EVENT_OPTIONS = [
 ];
 
 function changedPreview(log: AuditLog): string {
-    const values = log.new_values ?? log.old_values ?? {};
-    const keys = Object.keys(values).slice(0, 2);
+    if (log.event === 'created') {
+        const count = Object.keys(log.new_values ?? {}).filter((k) => k !== 'id').length;
+        return count > 0 ? `${count} fields` : '—';
+    }
+    if (log.event === 'deleted') {
+        const count = Object.keys(log.old_values ?? {}).filter((k) => k !== 'id').length;
+        return count > 0 ? `${count} fields` : '—';
+    }
+    const keys = Object.keys(log.new_values ?? {}).filter((k) => k !== 'id');
     if (keys.length === 0) return '—';
-    const extra = Object.keys(values).length - keys.length;
-    return keys.join(', ') + (extra > 0 ? ` +${extra}` : '');
+    const shown = keys.slice(0, 3);
+    const extra = keys.length - shown.length;
+    return shown.join(', ') + (extra > 0 ? ` +${extra}` : '');
+}
+
+function formatTime(iso: string): string {
+    const d = new Date(iso);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const isThisYear = d.getFullYear() === now.getFullYear();
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (isToday) return time;
+    const date = d.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        ...(isThisYear ? {} : { year: 'numeric' }),
+    });
+    return `${date}, ${time}`;
 }
 
 function DiffTable({ log }: { log: AuditLog }) {
@@ -128,10 +151,20 @@ function DiffTable({ log }: { log: AuditLog }) {
 export default function AuditLogsIndex({ logs, filters }: Props) {
     const [activeLog, setActiveLog] = useState<AuditLog | null>(null);
 
+    const activeFilterCount = [filters.event, filters.model, filters.date].filter(Boolean).length;
+
     const applyFilter = (key: string, value: string | null) => {
         router.get(
             route('admin.audit-logs.index'),
             { ...filters, [key]: value ?? undefined },
+            { preserveState: true, preserveScroll: true, only: ['logs', 'filters'] },
+        );
+    };
+
+    const clearFilters = () => {
+        router.get(
+            route('admin.audit-logs.index'),
+            {},
             { preserveState: true, preserveScroll: true, only: ['logs', 'filters'] },
         );
     };
@@ -143,7 +176,22 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
             <CrudIndexShell>
                 <CrudIndexHeader
                     title="Audit Log"
-                    description={`${logs.total} event${logs.total !== 1 ? 's' : ''} recorded`}
+                    description={
+                        <span className="flex items-center gap-2">
+                            <span>{logs.total} event{logs.total !== 1 ? 's' : ''} recorded</span>
+                            {activeFilterCount > 0 && (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                                    {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} active
+                                    <button
+                                        onClick={clearFilters}
+                                        className="font-normal underline underline-offset-2 hover:no-underline"
+                                    >
+                                        clear
+                                    </button>
+                                </span>
+                            )}
+                        </span>
+                    }
                     actions={
                         <div className="flex flex-wrap items-center gap-2">
                             <div className="w-36">
@@ -208,7 +256,7 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                                     onClick={() => setActiveLog(log)}
                                 >
                                     <td className="px-6 py-4 tabular-nums text-amber-900/60">
-                                        {new Date(log.created_at).toLocaleString()}
+                                        {formatTime(log.created_at)}
                                     </td>
                                     <td className="px-6 py-4 font-medium text-amber-950">
                                         {log.auditable_type === 'IotNode'
@@ -274,7 +322,7 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                                 </span>
                             </span>
                             <span className="text-amber-900/40">
-                                {new Date(activeLog.created_at).toLocaleString()}
+                                {formatTime(activeLog.created_at)}
                             </span>
                             {(activeLog.auditable_type === 'Harvest' ||
                                 activeLog.auditable_type === 'Inspection') &&
