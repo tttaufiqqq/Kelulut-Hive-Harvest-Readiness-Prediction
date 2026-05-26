@@ -112,6 +112,7 @@ $commands = [
     ['optimize:clear', []],
     ['migrate', ['--force' => true]],
     ['db:seed', ['--class' => 'MasterDataSeeder', '--force' => true]],
+    ['db:seed', ['--class' => 'AuditLogSeeder', '--force' => true]],
     ['config:cache', []],
     ['route:cache', []],
     ['view:cache', []],
