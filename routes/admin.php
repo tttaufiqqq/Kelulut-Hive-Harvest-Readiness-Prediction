@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BeekeeperController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HarvestController as AdminHarvestController;
@@ -49,4 +50,6 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/harvests', [AdminHarvestController::class, 'index'])->name('harvests.index');
 
     Route::get('/inspections', [AdminInspectionController::class, 'index'])->name('inspections.index');
+
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 });
