@@ -11,6 +11,12 @@ class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'event' => ['nullable', 'in:created,updated,deleted'],
+            'model' => ['nullable', 'in:Hive,IotNode,Harvest,Inspection'],
+            'date'  => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
+        ]);
+
         $logs = AuditLog::with('user')
             ->when($request->event, fn ($q) => $q->where('event', $request->event))
             ->when($request->model, fn ($q) => $q->where('auditable_type', $request->model))

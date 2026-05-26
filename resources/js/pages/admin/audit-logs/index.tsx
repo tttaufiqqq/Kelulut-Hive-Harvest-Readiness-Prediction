@@ -150,6 +150,7 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                                 <DatePickerField
                                     value={filters.date ?? null}
                                     onChange={(v) => applyFilter('date', v)}
+                                    maxDate="today"
                                     clearable
                                     placeholder="Filter by date"
                                 />
