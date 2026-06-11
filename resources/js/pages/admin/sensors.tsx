@@ -7,6 +7,7 @@ import {
     ChevronDown,
     Check,
     AlertCircle,
+    CalendarDays,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState, useRef, useEffect } from 'react';
@@ -23,6 +24,9 @@ import type { NameType, ValueType } from 'recharts/types/component/DefaultToolti
 import type { TooltipProps } from 'recharts/types/component/Tooltip';
 import { Card } from '@/components/core/card';
 import { DatePicker } from '@/components/core/date-picker';
+import { Modal } from '@/components/core/modal';
+import { SensorRadarChart } from '@/components/core/visualization-charts';
+import { fmtDate } from '@/lib/format';
 import { AdminLayout } from '@/layouts/admin-layout';
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -699,6 +703,18 @@ function HiveDropdown({
     );
 }
 
+type DayRow = {
+    date: string;
+    avg_temp: number;
+    avg_humidity: number;
+    avg_mq2: number;
+    avg_mq3: number;
+    avg_mq5: number;
+    avg_mq135: number;
+    avg_hri_pct: number;
+    reading_count: number;
+};
+
 // ── AdminSensors ─────────────────────────────────────────────────────────
 export default function AdminSensors({
     hives,
@@ -710,6 +726,29 @@ export default function AdminSensors({
     last_seen,
 }: Props) {
     const liveReloadInFlight = useRef(false);
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historyRows, setHistoryRows] = useState<DayRow[] | null>(null);
+    const [historyLoading, setHistoryLoading] = useState(false);
+
+    const openDailyHistory = () => {
+        setHistoryOpen(true);
+        if (historyRows !== null) return; // cached — don't refetch
+        let cancelled = false;
+        setHistoryLoading(true);
+        fetch(`/admin/sensors/${selected}/daily-history`, {
+            headers: { Accept: 'application/json' },
+        })
+            .then((res) => res.json() as Promise<{ days: DayRow[] }>)
+            .then((data) => { if (!cancelled) setHistoryRows(data.days ?? []); })
+            .catch(() => { if (!cancelled) setHistoryRows([]); })
+            .finally(() => { if (!cancelled) setHistoryLoading(false); });
+        return () => { cancelled = true; };
+    };
+
+    // Reset cache when selected hive changes
+    useEffect(() => {
+        setHistoryRows(null);
+    }, [selected]);
     const normalizedLatest = latest
         ? {
               ...latest,
@@ -981,6 +1020,7 @@ export default function AdminSensors({
     }, [sensorChannelName]);
 
     return (
+        <>
         <AdminLayout>
             <Head title="Sensor Readings" />
 
@@ -993,6 +1033,13 @@ export default function AdminSensors({
                             selected={selected}
                             onSelect={(id) => navigate({ hive_id: id })}
                         />
+                        <button
+                            onClick={openDailyHistory}
+                            className="flex items-center gap-1.5 rounded-xl border border-yellow-200 bg-white px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-yellow-50/50"
+                        >
+                            <CalendarDays className="h-3.5 w-3.5 text-amber-600" />
+                            Daily History
+                        </button>
                         {normalizedLatest !== null ? (
                             <div className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-1.5 sm:justify-start">
                                 <span className="relative flex h-2 w-2">
@@ -1215,5 +1262,62 @@ export default function AdminSensors({
                 )}
             </div>
         </AdminLayout>
+
+        {/* ── Daily History Modal ────────────────────────────────── */}
+
+        <Modal
+            isOpen={historyOpen}
+            onClose={() => setHistoryOpen(false)}
+            title={`${hives.find((h) => h.id === selected)?.name ?? 'Hive'} — Daily History`}
+            maxWidth="lg"
+        >
+            {historyLoading ? (
+                <div className="flex h-40 items-center justify-center text-sm text-amber-900/40">Loading…</div>
+            ) : !historyRows || historyRows.length === 0 ? (
+                <p className="py-8 text-center text-sm text-amber-900/40">No daily data available.</p>
+            ) : (
+                <div className="space-y-4">
+                    <SensorRadarChart
+                        hiveName=""
+                        profile={{
+                            avg_temperature: historyRows[0].avg_temp,
+                            avg_humidity: historyRows[0].avg_humidity,
+                            avg_mq2: historyRows[0].avg_mq2,
+                            avg_mq3: historyRows[0].avg_mq3,
+                            avg_mq5: historyRows[0].avg_mq5,
+                            avg_mq135: historyRows[0].avg_mq135,
+                        }}
+                        height={220}
+                    />
+                    <div className="overflow-hidden rounded-2xl border border-yellow-100">
+                        <table className="w-full text-xs">
+                            <thead>
+                                <tr className="border-b border-yellow-100 bg-yellow-50/50">
+                                    <th className="px-3 py-2 text-left font-bold tracking-widest text-amber-900/50 uppercase">Date</th>
+                                    <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">Temp</th>
+                                    <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">Humid</th>
+                                    <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">MQ135</th>
+                                    <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">HRI %</th>
+                                    <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">Readings</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-yellow-50">
+                                {historyRows.map((row) => (
+                                    <tr key={row.date} className={row === historyRows[0] ? 'bg-amber-50/40' : ''}>
+                                        <td className="px-3 py-2 font-medium text-amber-950">{fmtDate(row.date)}</td>
+                                        <td className="px-3 py-2 text-right tabular-nums text-amber-800">{row.avg_temp}°C</td>
+                                        <td className="px-3 py-2 text-right tabular-nums text-amber-800">{row.avg_humidity}%</td>
+                                        <td className="px-3 py-2 text-right tabular-nums text-amber-800">{row.avg_mq135}</td>
+                                        <td className="px-3 py-2 text-right tabular-nums text-amber-800">{row.avg_hri_pct}%</td>
+                                        <td className="px-3 py-2 text-right tabular-nums text-amber-800">{row.reading_count}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </Modal>
+        </>
     );
 }

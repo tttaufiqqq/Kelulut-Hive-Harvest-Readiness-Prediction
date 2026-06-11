@@ -70,17 +70,15 @@ class AnalyticsController extends Controller
             ]);
 
         // ── Q3: Latest prediction ─────────────────────────────────────────────
-        $latestPredictionRow = Prediction::join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
-            ->where('sensor_logs.hive_id', $hive->id)
-            ->orderByDesc('predictions.prediction_timestamp')
-            ->select('predictions.*')
+        $latestPredictionRow = DB::table('vw_hive_latest_prediction')
+            ->where('hive_id', $hive->id)
             ->first();
 
         $latestPrediction = $latestPredictionRow ? [
             'readiness_level' => $latestPredictionRow->readiness_level,
             'hri_value' => (float) $latestPredictionRow->hri_value,
             'confidence_score' => (float) $latestPredictionRow->confidence_score,
-            'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->format('d/m/Y, H:i'),
+            'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->toIso8601String(),
         ] : null;
 
         // ── Q4: Harvest history ───────────────────────────────────────────────
@@ -97,8 +95,9 @@ class AnalyticsController extends Controller
 
         // ── Q5: Hive summary ──────────────────────────────────────────────────
         $summary = $hive->summary;
-        $totalHarvests = Harvest::where('hive_id', $hive->id)->count();
-        $lastHarvestDate = Harvest::where('hive_id', $hive->id)->max('harvest_date');
+        $harvestSummary = DB::table('vw_harvest_summary_per_hive')->where('hive_id', $hive->id)->first();
+        $totalHarvests = (int) ($harvestSummary?->total_harvests ?? 0);
+        $lastHarvestDate = $harvestSummary?->last_harvest_date;
 
         return Inertia::render('analytics', [
             'hive' => [

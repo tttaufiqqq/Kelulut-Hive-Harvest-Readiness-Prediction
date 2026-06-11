@@ -142,16 +142,17 @@ class DashboardController extends Controller
 
     private function productivityRanking(): array
     {
-        return Hive::with('user')
-            ->withSum('harvests', 'weight')
-            ->withCount('harvests')
+        return DB::table('vw_harvest_summary_per_hive as vs')
+            ->join('hives', 'hives.id', '=', 'vs.hive_id')
+            ->join('users', 'users.id', '=', 'hives.beekeeper_id')
+            ->select('hives.name as hive_name', 'users.name as beekeeper', 'vs.total_weight', 'vs.total_harvests as harvest_count')
+            ->orderByDesc(DB::raw('vs.total_weight * vs.total_harvests'))
             ->get()
-            ->sortByDesc(fn ($h) => ($h->harvests_sum_weight ?? 0) * ($h->harvests_count ?? 0))
-            ->map(fn ($h) => [
-                'hive_name' => $h->name,
-                'beekeeper' => $h->user?->name ?? '—',
-                'total_weight' => round((float) ($h->harvests_sum_weight ?? 0), 1),
-                'harvest_count' => (int) ($h->harvests_count ?? 0),
+            ->map(fn ($r) => [
+                'hive_name' => $r->hive_name,
+                'beekeeper' => $r->beekeeper,
+                'total_weight' => round((float) $r->total_weight, 1),
+                'harvest_count' => (int) $r->harvest_count,
             ])
             ->values()
             ->all();

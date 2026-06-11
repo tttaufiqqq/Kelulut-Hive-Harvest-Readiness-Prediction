@@ -7,7 +7,9 @@ use App\Models\Hive;
 use App\Models\SensorLog;
 use App\Support\SensorReadings;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class SensorDashboardController extends Controller
@@ -82,6 +84,30 @@ class SensorDashboardController extends Controller
             ] : null,
             'history' => $history,
             'last_seen' => $lastSeen,
+        ]);
+    }
+
+    public function dailyHistory(Hive $hive): JsonResponse
+    {
+        $rows = DB::table('vw_hive_sensor_daily_avg')
+            ->where('hive_id', $hive->id)
+            ->orderByDesc('reading_date')
+            ->limit(14)
+            ->get();
+
+        return response()->json([
+            'hive_name' => $hive->name,
+            'days' => $rows->map(fn ($r) => [
+                'date'          => $r->reading_date,
+                'avg_temp'      => round((float) $r->avg_temp, 1),
+                'avg_humidity'  => round((float) $r->avg_humidity, 1),
+                'avg_mq2'       => round((float) $r->avg_mq2, 1),
+                'avg_mq3'       => round((float) $r->avg_mq3, 1),
+                'avg_mq5'       => round((float) $r->avg_mq5, 1),
+                'avg_mq135'     => round((float) $r->avg_mq135, 1),
+                'avg_hri_pct'   => round((float) $r->avg_hri_value * 100, 1),
+                'reading_count' => (int) $r->reading_count,
+            ])->all(),
         ]);
     }
 }

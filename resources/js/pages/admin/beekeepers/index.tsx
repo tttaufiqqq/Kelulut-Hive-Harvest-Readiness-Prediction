@@ -37,6 +37,13 @@ type ActiveModal =
     | { type: 'delete'; user: User }
     | null;
 
+type HarvestRow = {
+    hive_id: number;
+    hive_name: string;
+    total_weight: number;
+    harvest_count: number;
+};
+
 function StatusBadge({ status }: { status: string }) {
     if (status === 'pending') {
         return (
@@ -67,6 +74,8 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
+    const [harvestRows, setHarvestRows] = useState<HarvestRow[] | null>(null);
+    const [harvestLoading, setHarvestLoading] = useState(false);
     const close = () => setActiveModal(null);
 
     const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
@@ -105,6 +114,23 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
 
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, beekeepers.data.length]);
+
+    useEffect(() => {
+        if (!viewBeekeeper) {
+            setHarvestRows(null);
+            return;
+        }
+        let cancelled = false;
+        setHarvestLoading(true);
+        fetch(`/admin/beekeepers/${viewBeekeeper.id}/harvest-summary`, {
+            headers: { Accept: 'application/json' },
+        })
+            .then((res) => res.json() as Promise<{ hives: HarvestRow[] }>)
+            .then((data) => { if (!cancelled) setHarvestRows(data.hives ?? []); })
+            .catch(() => { if (!cancelled) setHarvestRows([]); })
+            .finally(() => { if (!cancelled) setHarvestLoading(false); });
+        return () => { cancelled = true; };
+    }, [viewBeekeeper?.id]);
 
     // Create form
     const createForm = useForm({ name: '', email: '', phone: '' });
@@ -628,6 +654,47 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
                                 </p>
                             </div>
                         </div>
+                        {/* ── Harvest by Hive ─────────────────────── */}
+                        <div>
+                            <p className="mb-2 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
+                                Harvest by Hive
+                            </p>
+                            {harvestLoading ? (
+                                <div className="flex h-14 items-center justify-center text-xs text-amber-900/40">
+                                    Loading…
+                                </div>
+                            ) : !harvestRows || harvestRows.length === 0 ? (
+                                <p className="py-3 text-center text-xs text-amber-900/40">
+                                    No harvests recorded yet.
+                                </p>
+                            ) : (
+                                <div className="overflow-hidden rounded-2xl border border-yellow-100">
+                                    <table className="w-full text-xs">
+                                        <thead>
+                                            <tr className="border-b border-yellow-100 bg-yellow-50/50">
+                                                <th className="px-3 py-2 text-left font-bold tracking-widest text-amber-900/50 uppercase">Hive</th>
+                                                <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">Total</th>
+                                                <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">Harvests</th>
+                                                <th className="px-3 py-2 text-right font-bold tracking-widest text-amber-900/50 uppercase">Avg</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-yellow-50">
+                                            {harvestRows.map((row) => (
+                                                <tr key={row.hive_id}>
+                                                    <td className="px-3 py-2 font-medium text-amber-950">{row.hive_name}</td>
+                                                    <td className="px-3 py-2 text-right tabular-nums text-amber-800">{row.total_weight} kg</td>
+                                                    <td className="px-3 py-2 text-right tabular-nums text-amber-800">{row.harvest_count}</td>
+                                                    <td className="px-3 py-2 text-right tabular-nums text-amber-800">
+                                                        {(row.total_weight / row.harvest_count).toFixed(1)} kg
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
                         <p className="text-center text-[10px] tracking-widest text-amber-900/25 uppercase">
                             Use arrow keys to navigate
                         </p>

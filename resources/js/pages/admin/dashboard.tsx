@@ -731,7 +731,8 @@ export default function AdminDashboard({
                                     />
                                     <XAxis
                                         type="number"
-                                        unit=" g"
+                                        unit=" kg"
+                                        tickFormatter={(v) => (v / 1000).toFixed(0)}
                                         tick={{ fontSize: 11, fill: '#92400e' }}
                                         axisLine={false}
                                         tickLine={false}
@@ -755,7 +756,7 @@ export default function AdminDashboard({
                                         formatter={(value, _name, props) => {
                                             const count = (props as { payload?: { harvest_count?: number } }).payload?.harvest_count ?? 0;
                                             return [
-                                                `${value ?? 0} g · ${count} harvest${count !== 1 ? 's' : ''}`,
+                                                `${((value as number) / 1000).toFixed(2)} kg · ${count} harvest${count !== 1 ? 's' : ''}`,
                                                 'Total Yield',
                                             ];
                                         }}

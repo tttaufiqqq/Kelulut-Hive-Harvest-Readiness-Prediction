@@ -7,8 +7,10 @@ use App\Http\Requests\Admin\StoreBeekeeperRequest;
 use App\Http\Requests\Admin\UpdateBeekeeperRequest;
 use App\Models\User;
 use App\Services\Admin\BeekeeperInviteService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -77,6 +79,22 @@ class BeekeeperController extends Controller
 
         return redirect()->route('admin.beekeepers.index')
             ->with('success', 'Beekeeper deleted.');
+    }
+
+    public function harvestSummary(User $user): JsonResponse
+    {
+        abort_if(! $user->hasRole('beekeeper'), 403);
+
+        $rows = DB::select('CALL sp_beekeeper_harvest_summary(?)', [$user->id]);
+
+        return response()->json([
+            'hives' => array_map(fn ($r) => [
+                'hive_id'       => $r->hive_id,
+                'hive_name'     => $r->hive_name,
+                'total_weight'  => round((float) $r->total_weight, 1),
+                'harvest_count' => (int) $r->harvest_count,
+            ], $rows),
+        ]);
     }
 
     public function resendInvite(Request $request, User $user): RedirectResponse

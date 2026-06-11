@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Hive;
 use App\Models\HriSummary;
-use App\Models\Prediction;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -75,22 +74,19 @@ class ReportingController extends Controller
 
     private function hriGauges($hives): array
     {
-        return $hives->map(function ($hive) {
-            $latest = Prediction::join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
-                ->where('sensor_logs.hive_id', $hive->id)
-                ->orderByDesc('predictions.prediction_timestamp')
-                ->select('predictions.*')
-                ->first();
+        $predictions = DB::table('vw_hive_latest_prediction')
+            ->whereIn('hive_id', $hives->pluck('id'))
+            ->get()
+            ->keyBy('hive_id');
 
-            return [
-                'hive_id' => $hive->id,
-                'hive_name' => $hive->name,
-                'site_name' => $hive->site?->name,
-                'readiness_level' => $latest?->readiness_level,
-                'hri_value' => $latest ? (float) $latest->hri_value : null,
-                'confidence_pct' => $latest ? (int) round((float) $latest->confidence_score * 100) : null,
-            ];
-        })->values()->all();
+        return $hives->map(fn ($hive) => [
+            'hive_id' => $hive->id,
+            'hive_name' => $hive->name,
+            'site_name' => $hive->site?->name,
+            'readiness_level' => $predictions->get($hive->id)?->readiness_level,
+            'hri_value' => $predictions->has($hive->id) ? (float) $predictions->get($hive->id)->hri_value : null,
+            'confidence_pct' => $predictions->has($hive->id) ? (int) round((float) $predictions->get($hive->id)->confidence_score * 100) : null,
+        ])->values()->all();
     }
 
     private function readinessTrends($hiveIds): array

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\AppErrorCode;
 use App\Events\PredictionCreated;
 use App\Jobs\SendTelegramAlert;
-use App\Models\HriSummary;
 use App\Models\Prediction;
 use App\Models\SensorLog;
 use App\Support\AppErrorReporter;
@@ -201,32 +200,9 @@ class MlPredictionService
 
     private function updateHriSummaryFallback(SensorLog $log, Prediction $prediction): void
     {
-        $today = now()->toDateString();
-
-        $avgStats = DB::table('sensor_logs')
-            ->where('hive_id', $log->hive_id)
-            ->whereDate('record_timestamp', $today)
-            ->selectRaw('AVG(temp) as avg_temp, AVG(humidity) as avg_humidity, AVG(mq2_value) as avg_mq2, AVG(mq3_value) as avg_mq3, AVG(mq5_value) as avg_mq5, AVG(mq135_value) as avg_mq135')
-            ->first();
-
-        $avgHri = DB::table('predictions')
-            ->join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
-            ->where('sensor_logs.hive_id', $log->hive_id)
-            ->whereDate('sensor_logs.record_timestamp', $today)
-            ->avg('predictions.hri_value');
-
-        HriSummary::updateOrCreate(
-            ['hive_id' => $log->hive_id, 'summary_date' => $today],
-            [
-                'avg_temperature' => round((float) $avgStats->avg_temp, 2),
-                'avg_humidity' => round((float) $avgStats->avg_humidity, 2),
-                'avg_mq2' => round((float) $avgStats->avg_mq2, 2),
-                'avg_mq3' => round((float) ($avgStats->avg_mq3 ?? 0), 2),
-                'avg_mq5' => round((float) ($avgStats->avg_mq5 ?? 0), 2),
-                'avg_mq135' => round((float) ($avgStats->avg_mq135 ?? 0), 2),
-                'avg_hri_value' => round((float) ($avgHri ?? 0), 4),
-                'latest_readiness_level' => $prediction->readiness_level,
-            ],
-        );
+        DB::statement('CALL sp_refresh_hri_summary(?, ?)', [
+            $log->hive_id,
+            now()->toDateString(),
+        ]);
     }
 }

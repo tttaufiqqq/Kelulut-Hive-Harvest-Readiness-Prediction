@@ -24,8 +24,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/beekeepers/{user}/toggle-status', [BeekeeperController::class, 'toggleStatus'])->name('beekeepers.toggle-status');
     Route::post('/beekeepers/{user}/resend-invite', [BeekeeperController::class, 'resendInvite'])->name('beekeepers.resend-invite');
     Route::delete('/beekeepers/{user}', [BeekeeperController::class, 'destroy'])->name('beekeepers.destroy');
+    Route::get('/beekeepers/{user}/harvest-summary', [BeekeeperController::class, 'harvestSummary'])->name('beekeepers.harvest-summary');
 
     Route::get('/sensors', [SensorDashboardController::class, 'index'])->name('sensors.index');
+    Route::get('/sensors/{hive}/daily-history', [SensorDashboardController::class, 'dailyHistory'])->name('sensors.daily-history');
 
     Route::get('/devices', [IotNodeController::class, 'index'])->name('devices.index');
     Route::post('/devices', [IotNodeController::class, 'store'])->name('devices.store');
