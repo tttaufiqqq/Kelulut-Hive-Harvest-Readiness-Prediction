@@ -26,8 +26,8 @@ import { Card } from '@/components/core/card';
 import { DatePicker } from '@/components/core/date-picker';
 import { Modal } from '@/components/core/modal';
 import { SensorRadarChart } from '@/components/core/visualization-charts';
-import { fmtDate } from '@/lib/format';
 import { AdminLayout } from '@/layouts/admin-layout';
+import { fmtDate } from '@/lib/format';
 
 // ── Types ───────────────────────────────────────────────────────────────
 type Hive = { id: number; name: string };
@@ -727,28 +727,44 @@ export default function AdminSensors({
 }: Props) {
     const liveReloadInFlight = useRef(false);
     const [historyOpen, setHistoryOpen] = useState(false);
-    const [historyRows, setHistoryRows] = useState<DayRow[] | null>(null);
+    const [historyCache, setHistoryCache] = useState<{ hiveId: number; rows: DayRow[] } | null>(null);
     const [historyLoading, setHistoryLoading] = useState(false);
+
+    const historyRows = historyCache?.hiveId === selected ? historyCache.rows : null;
 
     const openDailyHistory = () => {
         setHistoryOpen(true);
-        if (historyRows !== null) return; // cached — don't refetch
+
+        if (historyRows !== null) {
+return;
+} // cached for this hive — don't refetch
+
         let cancelled = false;
         setHistoryLoading(true);
         fetch(`/admin/sensors/${selected}/daily-history`, {
             headers: { Accept: 'application/json' },
         })
             .then((res) => res.json() as Promise<{ days: DayRow[] }>)
-            .then((data) => { if (!cancelled) setHistoryRows(data.days ?? []); })
-            .catch(() => { if (!cancelled) setHistoryRows([]); })
-            .finally(() => { if (!cancelled) setHistoryLoading(false); });
-        return () => { cancelled = true; };
-    };
+            .then((data) => {
+ if (!cancelled) {
+setHistoryCache({ hiveId: selected, rows: data.days ?? [] });
+} 
+})
+            .catch(() => {
+ if (!cancelled) {
+setHistoryCache({ hiveId: selected, rows: [] });
+} 
+})
+            .finally(() => {
+ if (!cancelled) {
+setHistoryLoading(false);
+} 
+});
 
-    // Reset cache when selected hive changes
-    useEffect(() => {
-        setHistoryRows(null);
-    }, [selected]);
+        return () => {
+ cancelled = true; 
+};
+    };
     const normalizedLatest = latest
         ? {
               ...latest,

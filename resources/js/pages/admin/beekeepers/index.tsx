@@ -1,5 +1,4 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { fmtDate } from '@/lib/format';
 import {
     MoreVertical,
     Plus,
@@ -10,16 +9,17 @@ import {
     ChevronLeft,
     ChevronRight,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
+import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
 import { Input } from '@/components/core/input';
-import { ConfirmModal } from '@/components/core/confirm-modal';
 import { Modal } from '@/components/core/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
+import { fmtDate } from '@/lib/format';
 import type { PaginatedUsers, User } from '@/types';
 
 type Props = {
@@ -76,61 +76,72 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
     const [deleting, setDeleting] = useState(false);
     const [harvestRows, setHarvestRows] = useState<HarvestRow[] | null>(null);
     const [harvestLoading, setHarvestLoading] = useState(false);
-    const close = () => setActiveModal(null);
+    const cancelHarvestRef = useRef<() => void>(() => {});
 
     const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
-    const viewBeekeeper =
-        viewIndex !== null ? beekeepers.data[viewIndex] : null;
+    const viewBeekeeper = viewIndex !== null ? beekeepers.data[viewIndex] : null;
     const hasPrev = viewIndex !== null && viewIndex > 0;
-    const hasNext =
-        viewIndex !== null && viewIndex < beekeepers.data.length - 1;
+    const hasNext = viewIndex !== null && viewIndex < beekeepers.data.length - 1;
+
+    const fetchHarvestRows = (userId: number) => {
+        cancelHarvestRef.current();
+        setHarvestRows(null);
+        setHarvestLoading(true);
+        let cancelled = false;
+        cancelHarvestRef.current = () => {
+ cancelled = true; 
+};
+        fetch(`/admin/beekeepers/${userId}/harvest-summary`, { headers: { Accept: 'application/json' } })
+            .then((res) => res.json() as Promise<{ hives: HarvestRow[] }>)
+            .then((data) => {
+ if (!cancelled) {
+setHarvestRows(data.hives ?? []);
+} 
+})
+            .catch(() => {
+ if (!cancelled) {
+setHarvestRows([]);
+} 
+})
+            .finally(() => {
+ if (!cancelled) {
+setHarvestLoading(false);
+} 
+});
+    };
+
+    const openView = (index: number) => {
+        setActiveModal({ type: 'view', index });
+        fetchHarvestRows(beekeepers.data[index].id);
+    };
+
+    const close = () => {
+        cancelHarvestRef.current();
+        setActiveModal(null);
+        setHarvestRows(null);
+    };
 
     useEffect(() => {
         if (viewIndex === null) {
-            return;
-        }
+return;
+}
 
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && viewIndex > 0) {
                 e.preventDefault();
-                setActiveModal((prev) =>
-                    prev?.type === 'view' && prev.index > 0
-                        ? { type: 'view', index: prev.index - 1 }
-                        : prev,
-                );
+                openView(viewIndex - 1);
             }
 
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && viewIndex < beekeepers.data.length - 1) {
                 e.preventDefault();
-                setActiveModal((prev) =>
-                    prev?.type === 'view' &&
-                    prev.index < beekeepers.data.length - 1
-                        ? { type: 'view', index: prev.index + 1 }
-                        : prev,
-                );
+                openView(viewIndex + 1);
             }
         };
+
         window.addEventListener('keydown', handler);
 
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, beekeepers.data.length]);
-
-    useEffect(() => {
-        if (!viewBeekeeper) {
-            setHarvestRows(null);
-            return;
-        }
-        let cancelled = false;
-        setHarvestLoading(true);
-        fetch(`/admin/beekeepers/${viewBeekeeper.id}/harvest-summary`, {
-            headers: { Accept: 'application/json' },
-        })
-            .then((res) => res.json() as Promise<{ hives: HarvestRow[] }>)
-            .then((data) => { if (!cancelled) setHarvestRows(data.hives ?? []); })
-            .catch(() => { if (!cancelled) setHarvestRows([]); })
-            .finally(() => { if (!cancelled) setHarvestLoading(false); });
-        return () => { cancelled = true; };
-    }, [viewBeekeeper?.id]);
 
     // Create form
     const createForm = useForm({ name: '', email: '', phone: '' });
@@ -361,12 +372,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
                                     <tr
                                         key={user.id}
                                         className="cursor-pointer transition-colors hover:bg-yellow-50/30"
-                                        onClick={() =>
-                                            setActiveModal({
-                                                type: 'view',
-                                                index,
-                                            })
-                                        }
+                                        onClick={() => openView(index)}
                                     >
                                         <td className="px-6 py-4 font-medium text-amber-950">
                                             {user.name}
@@ -576,16 +582,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
                     <div className="space-y-4">
                         <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
                             <button
-                                onClick={() =>
-                                    setActiveModal((prev) =>
-                                        prev?.type === 'view' && prev.index > 0
-                                            ? {
-                                                  type: 'view',
-                                                  index: prev.index - 1,
-                                              }
-                                            : prev,
-                                    )
-                                }
+                                onClick={() => hasPrev && openView(viewIndex! - 1)}
                                 disabled={!hasPrev}
                                 className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
@@ -595,17 +592,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: Props) {
                                 {viewIndex! + 1} / {beekeepers.data.length}
                             </span>
                             <button
-                                onClick={() =>
-                                    setActiveModal((prev) =>
-                                        prev?.type === 'view' &&
-                                        prev.index < beekeepers.data.length - 1
-                                            ? {
-                                                  type: 'view',
-                                                  index: prev.index + 1,
-                                              }
-                                            : prev,
-                                    )
-                                }
+                                onClick={() => hasNext && openView(viewIndex! + 1)}
                                 disabled={!hasNext}
                                 className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
                             >
