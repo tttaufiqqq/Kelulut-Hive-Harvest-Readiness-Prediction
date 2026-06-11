@@ -74,10 +74,14 @@ class ReportingController extends Controller
 
     private function hriGauges($hives): array
     {
-        $predictions = DB::table('vw_hive_latest_prediction')
-            ->whereIn('hive_id', $hives->pluck('id'))
-            ->get()
-            ->keyBy('hive_id');
+        try {
+            $predictions = DB::table('vw_hive_latest_prediction')
+                ->whereIn('hive_id', $hives->pluck('id'))
+                ->get()
+                ->keyBy('hive_id');
+        } catch (\Throwable) {
+            $predictions = collect();
+        }
 
         return $hives->map(fn ($hive) => [
             'hive_id' => $hive->id,

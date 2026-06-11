@@ -70,9 +70,13 @@ class AnalyticsController extends Controller
             ]);
 
         // ── Q3: Latest prediction ─────────────────────────────────────────────
-        $latestPredictionRow = DB::table('vw_hive_latest_prediction')
-            ->where('hive_id', $hive->id)
-            ->first();
+        try {
+            $latestPredictionRow = DB::table('vw_hive_latest_prediction')
+                ->where('hive_id', $hive->id)
+                ->first();
+        } catch (\Throwable) {
+            $latestPredictionRow = null;
+        }
 
         $latestPrediction = $latestPredictionRow ? [
             'readiness_level' => $latestPredictionRow->readiness_level,
@@ -95,7 +99,11 @@ class AnalyticsController extends Controller
 
         // ── Q5: Hive summary ──────────────────────────────────────────────────
         $summary = $hive->summary;
-        $harvestSummary = DB::table('vw_harvest_summary_per_hive')->where('hive_id', $hive->id)->first();
+        try {
+            $harvestSummary = DB::table('vw_harvest_summary_per_hive')->where('hive_id', $hive->id)->first();
+        } catch (\Throwable) {
+            $harvestSummary = null;
+        }
         $totalHarvests = (int) ($harvestSummary?->total_harvests ?? 0);
         $lastHarvestDate = $harvestSummary?->last_harvest_date;
 
