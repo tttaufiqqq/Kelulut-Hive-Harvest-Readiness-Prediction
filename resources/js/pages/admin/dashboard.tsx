@@ -192,7 +192,7 @@ function FleetHriLineChart({ trend }: { trend: FleetTrendItem[] }) {
         >
             <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
                 {filtered.length === 0 || !mounted ? (
-                    <div className="flex h-[260px] items-center justify-center text-sm text-amber-900/40">
+                    <div className="flex h-[260px] items-center justify-center text-sm text-amber-900/60">
                         No fleet trend data yet.
                     </div>
                 ) : (
@@ -419,7 +419,7 @@ export default function AdminDashboard({
             <div className="space-y-6">
                 {/* ── V2 Hero: Beekeeper summary + Action Cards ── */}
                 <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 px-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                        <div className="flex items-center gap-2 px-1 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                             <Users className="h-3.5 w-3.5" />
                             <span>{stats.total} beekeepers</span>
                             <span className="opacity-30">·</span>
@@ -445,10 +445,10 @@ export default function AdminDashboard({
                                     <p className="text-2xl font-black text-amber-950">
                                         {alertCount}
                                     </p>
-                                    <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                    <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">
                                         Need Attention
                                     </p>
-                                    <p className="mt-0.5 text-xs text-amber-900/40">
+                                    <p className="mt-0.5 text-xs text-amber-900/60">
                                         Hives with sensor readings exceeding safe thresholds today
                                     </p>
                                 </div>
@@ -467,10 +467,10 @@ export default function AdminDashboard({
                                     <p className="text-2xl font-black text-amber-950">
                                         {readyCount}
                                     </p>
-                                    <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                    <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">
                                         Ready to Harvest
                                     </p>
-                                    <p className="mt-0.5 text-xs text-amber-900/40">
+                                    <p className="mt-0.5 text-xs text-amber-900/60">
                                         Hives predicted by ML model as ready for honey harvest today
                                     </p>
                                 </div>
@@ -489,10 +489,10 @@ export default function AdminDashboard({
                                     <p className="text-2xl font-black text-amber-950">
                                         {stats.pending}
                                     </p>
-                                    <p className="text-xs font-bold tracking-widest text-amber-900/50 uppercase">
+                                    <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">
                                         Pending Invites
                                     </p>
-                                    <p className="mt-0.5 text-xs text-amber-900/40">
+                                    <p className="mt-0.5 text-xs text-amber-900/60">
                                         Beekeeper accounts invited but not yet activated
                                     </p>
                                 </div>
@@ -524,7 +524,7 @@ export default function AdminDashboard({
                     </div>
 
                     {snapshotLoading ? (
-                        <div className="flex h-[300px] items-center justify-center text-sm text-amber-900/40">
+                        <div className="flex h-[300px] items-center justify-center text-sm text-amber-900/60">
                             Loading…
                         </div>
                     ) : (
@@ -569,11 +569,11 @@ export default function AdminDashboard({
                         />
                     </div>
                     {monitorLoading ? (
-                        <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/40">
+                        <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/60">
                             Loading...
                         </div>
                     ) : activeHives.length === 0 ? (
-                        <p className="px-4 py-6 text-center text-sm text-amber-900/40">
+                        <p className="px-4 py-6 text-center text-sm text-amber-900/60">
                             {isMonitorLive ? 'No hives registered yet.' : 'No data for this date.'}
                         </p>
                     ) : (
@@ -581,37 +581,37 @@ export default function AdminDashboard({
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-yellow-100">
-                                        <th className="px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        <th className="px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                             #
                                         </th>
-                                        <th className="px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        <th className="px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                             Hive
                                         </th>
-                                        <th className="hidden px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/40 uppercase sm:table-cell">
+                                        <th className="hidden px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase sm:table-cell">
                                             Beekeeper
                                         </th>
-                                        <th className="hidden px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/40 uppercase md:table-cell">
+                                        <th className="hidden px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
                                             Species
                                         </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/40 uppercase md:table-cell">
+                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
                                             <Thermometer className="mr-1 inline h-3 w-3" />
                                             Temp
                                         </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/40 uppercase md:table-cell">
+                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
                                             <Droplets className="mr-1 inline h-3 w-3" />
                                             Humid
                                         </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/40 uppercase md:table-cell">
+                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
                                             <Wind className="mr-1 inline h-3 w-3" />
                                             MQ135
                                         </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/40 uppercase md:table-cell">
+                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
                                             HRI
                                         </th>
-                                        <th className="px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        <th className="px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                             Status
                                         </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/40 uppercase md:table-cell">
+                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
                                             Last Reading
                                         </th>
                                     </tr>
@@ -625,7 +625,7 @@ export default function AdminDashboard({
                                             }
                                             className="cursor-pointer border-b border-yellow-50 transition-colors hover:bg-yellow-50/50"
                                         >
-                                            <td className="px-3 py-3 text-xs font-bold text-amber-900/40 tabular-nums">
+                                            <td className="px-3 py-3 text-xs font-bold text-amber-900/60 tabular-nums">
                                                 {index + 1}
                                             </td>
                                             <td className="px-3 py-3 font-bold text-amber-900">
@@ -683,7 +683,7 @@ export default function AdminDashboard({
                                                     {STATUS_LABEL[hive.status]}
                                                 </span>
                                             </td>
-                                            <td className="hidden px-3 py-3 text-center text-xs text-amber-900/50 md:table-cell">
+                                            <td className="hidden px-3 py-3 text-center text-xs text-amber-900/70 md:table-cell">
                                                 {formatLastReading(
                                                     hive.last_reading,
                                                 )}
@@ -886,7 +886,7 @@ export default function AdminDashboard({
                                         >
                                             {STATUS_LABEL[hive.status]}
                                         </span>
-                                        <span className="text-xs text-amber-900/50">
+                                        <span className="text-xs text-amber-900/70">
                                             {READINESS_LABEL[hive.status]}
                                         </span>
                                     </div>
@@ -903,7 +903,7 @@ export default function AdminDashboard({
                                         >
                                             <ChevronLeft className="h-4 w-4 text-amber-900" />
                                         </button>
-                                        <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
+                                        <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/60 tabular-nums">
                                             {selectedIndex! + 1} /{' '}
                                             {sortedHives.length}
                                         </span>
@@ -925,7 +925,7 @@ export default function AdminDashboard({
                                 {/* HRI score bar */}
                                 <div>
                                     <div className="mb-2 flex justify-between">
-                                        <p className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        <p className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                             HRI Confidence
                                         </p>
                                         <span className="text-sm font-black text-amber-950">
@@ -949,7 +949,7 @@ export default function AdminDashboard({
                                 {/* Beekeeper + species */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="rounded-2xl bg-yellow-50/50 p-4">
-                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                             Beekeeper
                                         </p>
                                         <p className="text-sm font-bold text-amber-950">
@@ -957,7 +957,7 @@ export default function AdminDashboard({
                                         </p>
                                     </div>
                                     <div className="rounded-2xl bg-yellow-50/50 p-4">
-                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                             Species
                                         </p>
                                         <p className="text-xs font-medium text-amber-800 italic">
@@ -969,7 +969,7 @@ export default function AdminDashboard({
                                 {/* Sensor readings */}
                                 <div>
                                     <div className="mb-3 flex items-baseline gap-2">
-                                        <p className="text-xs font-bold tracking-widest text-amber-900/40 uppercase">
+                                        <p className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
                                             Sensor Profile
                                         </p>
                                         <span className="text-[10px] text-amber-900/30">
@@ -979,38 +979,22 @@ export default function AdminDashboard({
                                         </span>
                                     </div>
                                     {hive.status === 'no_data' ? (
-                                        <div className="rounded-xl bg-yellow-50/50 py-4 text-center text-sm text-amber-900/40">
+                                        <div className="rounded-xl bg-yellow-50/50 py-4 text-center text-sm text-amber-900/60">
                                             No sensor data received today
                                         </div>
                                     ) : hasMqData ? (
-                                        <>
-                                            <SensorRadarChart
-                                                hiveName=""
-                                                profile={{
-                                                    avg_temperature: hive.temp,
-                                                    avg_humidity: hive.humidity,
-                                                    avg_mq2: hive.mq2,
-                                                    avg_mq3: hive.mq3,
-                                                    avg_mq5: hive.mq5,
-                                                    avg_mq135: hive.co2,
-                                                }}
-                                                height={240}
-                                            />
-                                            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-0.5 px-1">
-                                                {[
-                                                    { label: 'Temp', value: `${hive.temp}°C` },
-                                                    { label: 'Humid', value: `${hive.humidity}%` },
-                                                    { label: 'MQ2', value: String(hive.mq2) },
-                                                    { label: 'MQ3', value: String(hive.mq3) },
-                                                    { label: 'MQ5', value: String(hive.mq5) },
-                                                    { label: 'MQ135', value: String(hive.co2) },
-                                                ].map((s) => (
-                                                    <span key={s.label} className="text-[11px] text-amber-900/60">
-                                                        {s.label} {s.value}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </>
+                                        <SensorRadarChart
+                                            hiveName=""
+                                            profile={{
+                                                avg_temperature: hive.temp,
+                                                avg_humidity: hive.humidity,
+                                                avg_mq2: hive.mq2,
+                                                avg_mq3: hive.mq3,
+                                                avg_mq5: hive.mq5,
+                                                avg_mq135: hive.co2,
+                                            }}
+                                            height={240}
+                                        />
                                     ) : (
                                         <div className="grid grid-cols-1 gap-3">
                                             {[
@@ -1053,7 +1037,7 @@ export default function AdminDashboard({
                                                     className="flex items-center justify-between rounded-xl bg-yellow-50/50 px-4 py-3"
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <sensor.icon className="h-4 w-4 text-amber-900/40" />
+                                                        <sensor.icon className="h-4 w-4 text-amber-900/60" />
                                                         <span className="text-sm text-amber-900">
                                                             {sensor.label}
                                                         </span>

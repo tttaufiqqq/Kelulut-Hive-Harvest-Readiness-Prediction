@@ -15,7 +15,7 @@ type Props = {
     harvests: PaginatedHarvests;
     stats: { total: number; total_weight: number; avg_weight: number };
     hives: { id: number; name: string }[];
-    filters: { hive_id?: string };
+    filters: { hive_id?: string; productivity?: string };
 };
 
 function ProductivityBadge({
@@ -27,17 +27,19 @@ function ProductivityBadge({
         return <span className="text-amber-900/30">—</span>;
     }
 
+    const key = level.toLowerCase();
     const styles: Record<string, string> = {
-        Low: 'bg-rose-100 text-rose-700',
-        Medium: 'bg-amber-100 text-amber-700',
-        High: 'bg-emerald-100 text-emerald-700',
+        low: 'bg-rose-100 text-rose-700',
+        medium: 'bg-amber-100 text-amber-700',
+        high: 'bg-emerald-100 text-emerald-700',
     };
+    const label = key.charAt(0).toUpperCase() + key.slice(1);
 
     return (
         <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${styles[level] ?? 'bg-gray-100 text-gray-500'}`}
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${styles[key] ?? 'bg-gray-100 text-gray-500'}`}
         >
-            {level}
+            {label}
         </span>
     );
 }
@@ -86,13 +88,12 @@ export default function AdminHarvestsIndex({
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, harvests.data.length]);
 
-    const hiveOptions = (items: { id: number; name: string }[]) => [
-        { value: '', label: 'All Hives' },
-        ...items.map((h) => ({ value: String(h.id), label: h.name })),
-    ];
-
-    const onHiveFilter = (val: string) => {
-        router.get(route('admin.harvests.index'), val ? { hive_id: val } : {}, {
+    const applyFilters = (patch: Partial<typeof filters>) => {
+        const next = { ...filters, ...patch };
+        const params: Record<string, string> = {};
+        if (next.hive_id) params.hive_id = next.hive_id;
+        if (next.productivity) params.productivity = next.productivity;
+        router.get(route('admin.harvests.index'), params, {
             preserveState: true,
             replace: true,
         });
@@ -144,12 +145,26 @@ export default function AdminHarvestsIndex({
                             across all beekeepers
                         </p>
                     </div>
-                    <div className="w-48">
-                        <SelectField
-                            value={filters.hive_id ?? ''}
-                            onChange={onHiveFilter}
-                            options={hiveOptions(hives)}
-                        />
+                    <div className="flex gap-2">
+                        <div className="w-44">
+                            <SelectField
+                                value={filters.hive_id ?? ''}
+                                onChange={(val) => applyFilters({ hive_id: val })}
+                                options={[{ value: '', label: 'All Hives' }, ...hives.map((h) => ({ value: String(h.id), label: h.name }))]}
+                            />
+                        </div>
+                        <div className="w-36">
+                            <SelectField
+                                value={filters.productivity ?? ''}
+                                onChange={(val) => applyFilters({ productivity: val })}
+                                options={[
+                                    { value: '', label: 'All Productivity' },
+                                    { value: 'high', label: 'High' },
+                                    { value: 'medium', label: 'Medium' },
+                                    { value: 'low', label: 'Low' },
+                                ]}
+                            />
+                        </div>
                     </div>
                 </div>
 

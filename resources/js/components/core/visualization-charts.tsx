@@ -196,47 +196,47 @@ export function SensorRadarChart({ profile, hiveName, height = 200 }: SensorRada
             )}
 
             {mounted ? (
-                <ResponsiveContainer width="100%" height={height}>
-                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                        <PolarGrid stroke="#FEF3C7" />
-                        <PolarAngleAxis
-                            dataKey="axis"
-                            tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
-                        />
-                        <Radar
-                            dataKey="value"
-                            stroke="#F59E0B"
-                            fill="#F59E0B"
-                            fillOpacity={0.2}
-                        />
-                        <Tooltip
-                            contentStyle={TOOLTIP_STYLE}
-                            formatter={(value, _name, props) => {
-                                const axis = props.payload?.axis as string | undefined;
-                                if (!axis) return [value, ''];
-                                const raw = RAW_LABELS[axis];
-                                if (!raw) return [value, axis];
-                                return [`${raw.value(profile).toFixed(1)}${raw.unit}`, axis];
-                            }}
-                        />
-                    </RadarChart>
-                </ResponsiveContainer>
+                <>
+                    <ResponsiveContainer width="100%" height={height}>
+                        <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                            <PolarGrid stroke="#FCD34D" />
+                            <PolarAngleAxis
+                                dataKey="axis"
+                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
+                            />
+                            <Radar
+                                dataKey="value"
+                                stroke="#F59E0B"
+                                fill="#F59E0B"
+                                fillOpacity={0.2}
+                            />
+                            <Tooltip
+                                contentStyle={TOOLTIP_STYLE}
+                                formatter={(value, _name, props) => {
+                                    const axis = props.payload?.axis as string | undefined;
+                                    if (!axis) return [value, ''];
+                                    const raw = RAW_LABELS[axis];
+                                    if (!raw) return [value, axis];
+                                    return [`${raw.value(profile).toFixed(1)}${raw.unit}`, axis];
+                                }}
+                            />
+                        </RadarChart>
+                    </ResponsiveContainer>
+                    <div className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1">
+                        {RADAR_AXES.map((axis) => {
+                            const raw = RAW_LABELS[axis];
+                            return (
+                                <span key={axis} className="text-[11px] font-semibold text-amber-900/60">
+                                    <span className="text-amber-900/40">{axis} </span>
+                                    {raw.value(profile).toFixed(1)}{raw.unit}
+                                </span>
+                            );
+                        })}
+                    </div>
+                </>
             ) : (
                 <div style={{ height }} />
             )}
-
-            {/* Raw values footer */}
-            <div className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1">
-                {RADAR_AXES.map((axis) => {
-                    const raw = RAW_LABELS[axis];
-                    return (
-                        <span key={axis} className="text-[11px] font-semibold text-amber-900/60">
-                            <span className="text-amber-900/40">{axis} </span>
-                            {raw.value(profile).toFixed(1)}{raw.unit}
-                        </span>
-                    );
-                })}
-            </div>
         </div>
     );
 }

@@ -14,6 +14,7 @@ class HarvestController extends Controller
     {
         $harvests = Harvest::with(['hive', 'beekeeper', 'color', 'flavor'])
             ->when($request->hive_id, fn ($q) => $q->where('hive_id', $request->hive_id))
+            ->when($request->productivity, fn ($q) => $q->where('productivity_level', $request->productivity))
             ->latest('harvest_date')
             ->paginate(20);
 
@@ -29,7 +30,7 @@ class HarvestController extends Controller
             'harvests' => $harvests,
             'stats' => $stats,
             'hives' => $hives,
-            'filters' => ['hive_id' => $request->hive_id],
+            'filters' => ['hive_id' => $request->hive_id, 'productivity' => $request->productivity],
         ]);
     }
 }
