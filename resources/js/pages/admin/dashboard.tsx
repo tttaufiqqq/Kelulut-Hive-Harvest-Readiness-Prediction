@@ -1,295 +1,29 @@
 import { Head, router } from '@inertiajs/react';
-import { fmtDate } from '@/lib/format';
-import {
-    TrendingUp,
-    AlertTriangle,
-    Clock,
-    Users,
-    Thermometer,
-    Droplets,
-    Wind,
-    ChevronLeft,
-    ChevronRight,
-} from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
-import {
-    ResponsiveContainer,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    LineChart,
-    Line,
-} from 'recharts';
+import { AlertTriangle, Clock, TrendingUp, Users } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/core/card';
-import { Modal } from '@/components/core/modal';
-import { ChartCard } from '@/components/core/readiness-chart-cards';
-import { DatePicker } from '@/components/core/date-picker';
-import { SelectField } from '@/components/core/select-field';
-import { ReadinessDonutChart, SensorRadarChart } from '@/components/core/visualization-charts';
 import { AdminLayout } from '@/layouts/admin-layout';
+import { CrossSiteComparisonChart } from './dashboard/CrossSiteComparisonChart';
+import { FleetHriLineChart } from './dashboard/FleetHriLineChart';
+import { HiveMonitorGrid } from './dashboard/HiveMonitorGrid';
+import { HiveMonitorModal } from './dashboard/HiveMonitorModal';
+import { ProductivityRankingTable } from './dashboard/ProductivityRankingTable';
+import { ReadinessSnapshot } from './dashboard/ReadinessSnapshot';
+import { STATUS_TO_LEVEL, type CrossSiteItem, type FleetTrendItem, type HiveData, type ProductivityItem } from './dashboard/constants';
 
-// ── Types ──────────────────────────────────────────────────────────────
-export type HiveData = {
-    id: string;
-    hive_name: string;
-    beekeeper: string;
-    species: string;
-    weight: number;
-    temp: number;
-    humidity: number;
-    co2: number;
-    mq2: number;
-    mq3: number;
-    mq5: number;
-    readiness: number;
-    status: 'ready' | 'growing' | 'alert' | 'offline' | 'no_data';
-    last_reading: string | null;
-};
+export type { HiveData };
 
-type FleetTrendItem = {
-    summary_date: string;
-    avg_hri_pct: number;
-    total_harvests: number;
-};
+type ReadinessSnapshotResponse = { has_data: boolean; data: { level: string; count: number }[] };
 
-type ProductivityItem = {
-    hive_name: string;
-    beekeeper: string;
-    total_weight: number;
-    harvest_count: number;
-};
-
-type CrossSiteItem = {
-    site_name: string;
-    avg_hri_pct: number;
-    total_weight: number;
-    hive_count: number;
-};
-
-type ReadinessSnapshotResponse = {
-    has_data: boolean;
-    data: { level: string; count: number }[];
-};
-
-// ── Props ──────────────────────────────────────────────────────────────
 type Props = {
-    stats: {
-        total: number;
-        pending: number;
-        active: number;
-    };
+    stats: { total: number; pending: number; active: number };
     hives: HiveData[];
     productivityRanking: ProductivityItem[];
     crossSiteComparison: CrossSiteItem[];
     fleetHriTrend: FleetTrendItem[];
 };
 
-// ── Display constants ──────────────────────────────────────────────────
-const STATUS_BADGE: Record<HiveData['status'], string> = {
-    ready: 'bg-emerald-100 text-emerald-700',
-    growing: 'bg-yellow-100 text-yellow-700',
-    alert: 'bg-red-100 text-red-700',
-    offline: 'bg-gray-100 text-gray-500',
-    no_data: 'bg-slate-100 text-slate-400',
-};
-
-const READINESS_LABEL: Record<HiveData['status'], string> = {
-    ready: 'Ready to Harvest',
-    growing: 'Approaching Readiness',
-    alert: 'Needs Attention',
-    offline: 'Sensor Offline',
-    no_data: 'No Data Today',
-};
-
-const STATUS_LABEL: Record<HiveData['status'], string> = {
-    ready: 'Ready',
-    growing: 'Growing',
-    alert: 'Alert',
-    offline: 'Offline',
-    no_data: 'No Data',
-};
-
-const STATUS_TO_LEVEL: Record<HiveData['status'], string> = {
-    ready: 'ready',
-    growing: 'approaching',
-    alert: 'not_ready',
-    offline: 'not_ready',
-    no_data: 'no_data',
-};
-
-// ── Sensor warning thresholds ──────────────────────────────────────────
-const WARN_TEMP_ABOVE = 35; // °C
-const WARN_HUMID_ABOVE = 85; // %
-const WARN_CO2_ABOVE = 800; // ADC (MQ135)
-
-const TOOLTIP_STYLE = {
-    backgroundColor: '#FFFBEB',
-    border: '1px solid #FEF3C7',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    color: '#78350F',
-};
-
-// ── Helpers ────────────────────────────────────────────────────────────
-function formatLastReading(ts: string | null): string {
-    if (!ts) {
-        return '—';
-    }
-
-    const date = new Date(ts);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffDays === 0) {
-        return `Today ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    if (diffDays === 1) {
-        return 'Yesterday';
-    }
-
-    return `${diffDays} days ago`;
-}
-
-// ── FleetHriLineChart ──────────────────────────────────────────────────
-const DAY_OPTIONS = [
-    { value: '30', label: 'Last 30 days' },
-    { value: '90', label: 'Last 90 days' },
-    { value: '180', label: 'Last 180 days' },
-];
-
-function FleetHriLineChart({ trend }: { trend: FleetTrendItem[] }) {
-    const [mounted, setMounted] = useState(false);
-    const [selectedDays, setSelectedDays] = useState('90');
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMounted(true);
-    }, []);
-
-    const days = parseInt(selectedDays, 10);
-    const filtered = trend.slice(-days);
-
-    return (
-        <ChartCard
-            eyebrow="Fleet Trend"
-            title="System-wide readiness over time"
-            actions={
-                <div className="w-full sm:w-[160px]">
-                    <SelectField
-                        value={selectedDays}
-                        onChange={setSelectedDays}
-                        options={DAY_OPTIONS}
-                    />
-                </div>
-            }
-        >
-            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
-                {filtered.length === 0 || !mounted ? (
-                    <div className="flex h-[260px] items-center justify-center text-sm text-amber-900/60">
-                        No fleet trend data yet.
-                    </div>
-                ) : (
-                    <ResponsiveContainer width="100%" height={320}>
-                        <LineChart
-                            data={filtered}
-                            margin={{ top: 8, right: 24, left: 8, bottom: 18 }}
-                        >
-                            <CartesianGrid
-                                strokeDasharray="3 3"
-                                vertical={false}
-                                stroke="#FEF3C7"
-                            />
-                            <XAxis
-                                dataKey="summary_date"
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
-                                dy={8}
-                                tickMargin={8}
-                                interval={Math.floor(filtered.length / 8)}
-                                tickFormatter={(d: string, index: number) => {
-                                    const date = new Date(d);
-                                    const prev = filtered[index - Math.floor(filtered.length / 8)];
-                                    const isNewYear = !prev || new Date(prev.summary_date).getFullYear() !== date.getFullYear();
-                                    return isNewYear
-                                        ? date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-                                        : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                                }}
-                            />
-                            <YAxis
-                                yAxisId="hri"
-                                orientation="left"
-                                unit="%"
-                                domain={[0, 100]}
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
-                                width={40}
-                                tickMargin={8}
-                            />
-                            <YAxis
-                                yAxisId="harvests"
-                                orientation="right"
-                                unit=" harvests"
-                                allowDecimals={false}
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
-                                width={72}
-                                tickMargin={8}
-                            />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} />
-                            <Legend
-                                wrapperStyle={{
-                                    fontSize: 12,
-                                    paddingTop: 16,
-                                    lineHeight: '20px',
-                                }}
-                            />
-                            <Line
-                                yAxisId="hri"
-                                type="monotone"
-                                dataKey="avg_hri_pct"
-                                name="Avg HRI %"
-                                stroke="#F59E0B"
-                                strokeWidth={2.5}
-                                dot={false}
-                                activeDot={{ r: 4 }}
-                                connectNulls={true}
-                            />
-                            <Line
-                                yAxisId="harvests"
-                                type="monotone"
-                                dataKey="total_harvests"
-                                name="Total Harvests"
-                                stroke="#10b981"
-                                strokeWidth={2}
-                                dot={false}
-                                activeDot={{ r: 4 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                )}
-            </div>
-        </ChartCard>
-    );
-}
-
-// ── AdminDashboard ─────────────────────────────────────────────────────
-export default function AdminDashboard({
-    stats,
-    hives = [],
-    productivityRanking = [],
-    crossSiteComparison = [],
-    fleetHriTrend = [],
-}: Props) {
+export default function AdminDashboard({ stats, hives = [], productivityRanking = [], crossSiteComparison = [], fleetHriTrend = [] }: Props) {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
     const [snapshotDate, setSnapshotDate] = useState<string | null>(null);
@@ -299,769 +33,109 @@ export default function AdminDashboard({
     const [monitorData, setMonitorData] = useState<HiveData[] | null>(null);
     const [monitorLoading, setMonitorLoading] = useState(false);
 
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMounted(true);
-    }, []);
+    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
     useEffect(() => {
-        if (!snapshotDate) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setSnapshotData(null);
-            return;
-        }
-
+        if (!snapshotDate) { setSnapshotData(null); return; } // eslint-disable-line react-hooks/set-state-in-effect
         let cancelled = false;
         setSnapshotLoading(true);
-
-        fetch(`/admin/dashboard/readiness-snapshot?date=${snapshotDate}`, {
-            headers: { Accept: 'application/json' },
-        })
+        fetch(`/admin/dashboard/readiness-snapshot?date=${snapshotDate}`, { headers: { Accept: 'application/json' } })
             .then((res) => res.json() as Promise<ReadinessSnapshotResponse>)
-            .then((payload) => {
-                if (cancelled) return;
-                setSnapshotData(payload.has_data ? payload.data : []);
-            })
-            .catch(() => {
-                if (!cancelled) setSnapshotData([]);
-            })
-            .finally(() => {
-                if (!cancelled) setSnapshotLoading(false);
-            });
-
+            .then((payload) => { if (!cancelled) setSnapshotData(payload.has_data ? payload.data : []); }) // eslint-disable-line react-hooks/set-state-in-effect
+            .catch(() => { if (!cancelled) setSnapshotData([]); }) // eslint-disable-line react-hooks/set-state-in-effect
+            .finally(() => { if (!cancelled) setSnapshotLoading(false); }); // eslint-disable-line react-hooks/set-state-in-effect
         return () => { cancelled = true; };
     }, [snapshotDate]);
 
     useEffect(() => {
-        if (!monitorDate) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setMonitorData(null);
-            return;
-        }
-
+        if (!monitorDate) { setMonitorData(null); return; } // eslint-disable-line react-hooks/set-state-in-effect
         let cancelled = false;
         setMonitorLoading(true);
-
-        fetch(`/admin/dashboard/hive-monitor-snapshot?date=${monitorDate}`, {
-            headers: { Accept: 'application/json' },
-        })
+        fetch(`/admin/dashboard/hive-monitor-snapshot?date=${monitorDate}`, { headers: { Accept: 'application/json' } })
             .then((res) => res.json() as Promise<{ has_data: boolean; data: HiveData[] }>)
-            .then((payload) => {
-                if (cancelled) return;
-                setMonitorData(payload.data);
-            })
-            .catch(() => {
-                if (!cancelled) setMonitorData([]);
-            })
-            .finally(() => {
-                if (!cancelled) setMonitorLoading(false);
-            });
-
+            .then((payload) => { if (!cancelled) setMonitorData(payload.data); }) // eslint-disable-line react-hooks/set-state-in-effect
+            .catch(() => { if (!cancelled) setMonitorData([]); }) // eslint-disable-line react-hooks/set-state-in-effect
+            .finally(() => { if (!cancelled) setMonitorLoading(false); }); // eslint-disable-line react-hooks/set-state-in-effect
         return () => { cancelled = true; };
     }, [monitorDate]);
 
     const activeHives = monitorDate !== null ? (monitorData ?? []) : hives;
     const isMonitorLive = monitorDate === null;
     const sortedHives = [...activeHives].sort((a, b) => b.readiness - a.readiness);
-    const selectedHive =
-        selectedIndex !== null ? sortedHives[selectedIndex] : null;
-
+    const selectedHive = selectedIndex !== null ? sortedHives[selectedIndex] : null;
     const readyCount = hives.filter((h) => h.status === 'ready').length;
     const alertCount = hives.filter((h) => h.status === 'alert').length;
-
     const hasPrev = selectedIndex !== null && selectedIndex > 0;
-    const hasNext =
-        selectedIndex !== null && selectedIndex < sortedHives.length - 1;
-
+    const hasNext = selectedIndex !== null && selectedIndex < sortedHives.length - 1;
     const adminDonutData = useMemo(() => {
         const counts: Record<string, number> = {};
-        for (const hive of hives) {
-            const level = STATUS_TO_LEVEL[hive.status];
-            counts[level] = (counts[level] ?? 0) + 1;
-        }
+        for (const hive of hives) { const level = STATUS_TO_LEVEL[hive.status]; counts[level] = (counts[level] ?? 0) + 1; }
         return Object.entries(counts).map(([level, count]) => ({ level, count }));
     }, [hives]);
-
     const activeDonutData = snapshotDate !== null ? (snapshotData ?? []) : adminDonutData;
     const isLiveMode = snapshotDate === null;
 
     useEffect(() => {
-        if (selectedIndex === null) {
-            return;
-        }
-
+        if (selectedIndex === null) return;
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                setSelectedIndex((prev) =>
-                    prev !== null && prev > 0 ? prev - 1 : prev,
-                );
-            }
-
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                e.preventDefault();
-                setSelectedIndex((prev) =>
-                    prev !== null && prev < sortedHives.length - 1
-                        ? prev + 1
-                        : prev,
-                );
-            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex((prev) => prev !== null && prev > 0 ? prev - 1 : prev); }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex((prev) => prev !== null && prev < sortedHives.length - 1 ? prev + 1 : prev); }
         };
         window.addEventListener('keydown', handler);
-
         return () => window.removeEventListener('keydown', handler);
     }, [selectedIndex, sortedHives.length]);
 
     return (
         <AdminLayout>
             <Head title="Admin Dashboard" />
-
             <div className="space-y-6">
-                {/* ── V2 Hero: Beekeeper summary + Action Cards ── */}
                 <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 px-1 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                            <Users className="h-3.5 w-3.5" />
-                            <span>{stats.total} beekeepers</span>
-                            <span className="opacity-30">·</span>
-                            <span className="text-emerald-600">
-                                {stats.active} active
-                            </span>
-                            <span className="opacity-30">·</span>
-                            <span className="text-amber-600">
-                                {stats.pending} pending
-                            </span>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <Card
-                                className="flex cursor-pointer items-start gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50"
-                                onClick={() =>
-                                    router.visit(route('admin.sensors.index'))
-                                }
-                            >
-                                <div className="mt-1 shrink-0 rounded-2xl bg-red-100 p-3">
-                                    <AlertTriangle className="h-5 w-5 text-red-500" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-black text-amber-950">
-                                        {alertCount}
-                                    </p>
-                                    <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">
-                                        Need Attention
-                                    </p>
-                                    <p className="mt-0.5 text-xs text-amber-900/60">
-                                        Hives with sensor readings exceeding safe thresholds today
-                                    </p>
-                                </div>
-                            </Card>
-
-                            <Card
-                                className="flex cursor-pointer items-start gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50"
-                                onClick={() =>
-                                    router.visit(route('admin.sensors.index'))
-                                }
-                            >
-                                <div className="mt-1 shrink-0 rounded-2xl bg-emerald-100 p-3">
-                                    <TrendingUp className="h-5 w-5 text-emerald-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-black text-amber-950">
-                                        {readyCount}
-                                    </p>
-                                    <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">
-                                        Ready to Harvest
-                                    </p>
-                                    <p className="mt-0.5 text-xs text-amber-900/60">
-                                        Hives predicted by ML model as ready for honey harvest today
-                                    </p>
-                                </div>
-                            </Card>
-
-                            <Card
-                                className="flex cursor-pointer items-start gap-4 border-l-4 border-l-amber-400 transition-colors hover:bg-yellow-50/50"
-                                onClick={() =>
-                                    router.visit(route('admin.beekeepers.index'))
-                                }
-                            >
-                                <div className="mt-1 shrink-0 rounded-2xl bg-amber-100 p-3">
-                                    <Clock className="h-5 w-5 text-amber-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-black text-amber-950">
-                                        {stats.pending}
-                                    </p>
-                                    <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">
-                                        Pending Invites
-                                    </p>
-                                    <p className="mt-0.5 text-xs text-amber-900/60">
-                                        Beekeeper accounts invited but not yet activated
-                                    </p>
-                                </div>
-                            </Card>
-                        </div>
+                    <div className="flex items-center gap-2 px-1 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
+                        <Users className="h-3.5 w-3.5" />
+                        <span>{stats.total} beekeepers</span>
+                        <span className="opacity-30">·</span>
+                        <span className="text-emerald-600">{stats.active} active</span>
+                        <span className="opacity-30">·</span>
+                        <span className="text-amber-600">{stats.pending} pending</span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <Card className="flex cursor-pointer items-start gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50" onClick={() => router.visit(route('admin.sensors.index'))}>
+                            <div className="mt-1 shrink-0 rounded-2xl bg-red-100 p-3"><AlertTriangle className="h-5 w-5 text-red-500" /></div>
+                            <div>
+                                <p className="text-2xl font-black text-amber-950">{alertCount}</p>
+                                <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">Need Attention</p>
+                                <p className="mt-0.5 text-xs text-amber-900/60">Hives with sensor readings exceeding safe thresholds today</p>
+                            </div>
+                        </Card>
+                        <Card className="flex cursor-pointer items-start gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50" onClick={() => router.visit(route('admin.sensors.index'))}>
+                            <div className="mt-1 shrink-0 rounded-2xl bg-emerald-100 p-3"><TrendingUp className="h-5 w-5 text-emerald-600" /></div>
+                            <div>
+                                <p className="text-2xl font-black text-amber-950">{readyCount}</p>
+                                <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">Ready to Harvest</p>
+                                <p className="mt-0.5 text-xs text-amber-900/60">Hives predicted by ML model as ready for honey harvest today</p>
+                            </div>
+                        </Card>
+                        <Card className="flex cursor-pointer items-start gap-4 border-l-4 border-l-amber-400 transition-colors hover:bg-yellow-50/50" onClick={() => router.visit(route('admin.beekeepers.index'))}>
+                            <div className="mt-1 shrink-0 rounded-2xl bg-amber-100 p-3"><Clock className="h-5 w-5 text-amber-600" /></div>
+                            <div>
+                                <p className="text-2xl font-black text-amber-950">{stats.pending}</p>
+                                <p className="text-xs font-bold tracking-widest text-amber-900/70 uppercase">Pending Invites</p>
+                                <p className="mt-0.5 text-xs text-amber-900/60">Beekeeper accounts invited but not yet activated</p>
+                            </div>
+                        </Card>
+                    </div>
                 </div>
 
-                {/* ── Fleet Readiness Donut (separate group) ── */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-3 px-1">
-                        <div className="flex items-center gap-2">
-                            {isLiveMode ? (
-                                <>
-                                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                                    <span className="text-xs font-bold text-emerald-700">Live</span>
-                                </>
-                            ) : (
-                                <span className="text-xs font-bold text-amber-700">
-                                    Viewing:{' '}
-                                    {fmtDate(snapshotDate)}
-                                </span>
-                            )}
-                        </div>
-                        <DatePicker
-                            value={snapshotDate}
-                            onChange={setSnapshotDate}
-                            placeholder="Pick date…"
-                        />
-                    </div>
-
-                    {snapshotLoading ? (
-                        <div className="flex h-[300px] items-center justify-center text-sm text-amber-900/60">
-                            Loading…
-                        </div>
-                    ) : (
-                        <ReadinessDonutChart
-                            data={activeDonutData}
-                            title="Fleet Readiness"
-                            description={
-                                isLiveMode
-                                    ? `Today's readiness breakdown across all hives — ${fmtDate(new Date().toISOString())}`
-                                    : 'Historical readiness breakdown for selected date'
-                            }
-                        />
-                    )}
-                </div>
-
-                {/* ── Live Hive Monitor ──────────────────────────────────── */}
-                <Card className="overflow-hidden p-0">
-                    <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
-                        <div className="flex items-center gap-2">
-                            {isMonitorLive ? (
-                                <>
-                                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                                    <h3 className="text-sm font-black tracking-widest text-amber-900/60 uppercase">
-                                        Live Hive Monitor
-                                    </h3>
-                                </>
-                            ) : (
-                                <h3 className="text-sm font-black tracking-widest text-amber-700 uppercase">
-                                    Hive Monitor &mdash;{' '}
-                                    {new Date(`${monitorDate}T00:00:00`).toLocaleDateString('en-GB', {
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric',
-                                    })}
-                                </h3>
-                            )}
-                        </div>
-                        <DatePicker
-                            value={monitorDate}
-                            onChange={setMonitorDate}
-                            placeholder="Pick date..."
-                        />
-                    </div>
-                    {monitorLoading ? (
-                        <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/60">
-                            Loading...
-                        </div>
-                    ) : activeHives.length === 0 ? (
-                        <p className="px-4 py-6 text-center text-sm text-amber-900/60">
-                            {isMonitorLive ? 'No hives registered yet.' : 'No data for this date.'}
-                        </p>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-yellow-100">
-                                        <th className="px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                            #
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                            Hive
-                                        </th>
-                                        <th className="hidden px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase sm:table-cell">
-                                            Beekeeper
-                                        </th>
-                                        <th className="hidden px-3 py-2 text-left text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
-                                            Species
-                                        </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
-                                            <Thermometer className="mr-1 inline h-3 w-3" />
-                                            Temp
-                                        </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
-                                            <Droplets className="mr-1 inline h-3 w-3" />
-                                            Humid
-                                        </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
-                                            <Wind className="mr-1 inline h-3 w-3" />
-                                            MQ135
-                                        </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
-                                            HRI
-                                        </th>
-                                        <th className="px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                            Status
-                                        </th>
-                                        <th className="hidden px-3 py-2 text-center text-xs font-bold tracking-widest text-amber-900/60 uppercase md:table-cell">
-                                            Last Reading
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {sortedHives.map((hive, index) => (
-                                        <tr
-                                            key={hive.id}
-                                            onClick={() =>
-                                                setSelectedIndex(index)
-                                            }
-                                            className="cursor-pointer border-b border-yellow-50 transition-colors hover:bg-yellow-50/50"
-                                        >
-                                            <td className="px-3 py-3 text-xs font-bold text-amber-900/60 tabular-nums">
-                                                {index + 1}
-                                            </td>
-                                            <td className="px-3 py-3 font-bold text-amber-900">
-                                                {hive.hive_name}
-                                            </td>
-                                            <td className="hidden px-3 py-3 text-amber-800 sm:table-cell">
-                                                {hive.beekeeper}
-                                            </td>
-                                            <td className="hidden px-3 py-3 text-xs text-amber-700 italic md:table-cell">
-                                                {hive.species}
-                                            </td>
-                                            <td className="hidden px-3 py-3 text-center text-amber-800 md:table-cell">
-                                                {hive.temp > 0
-                                                    ? `${hive.temp}°C`
-                                                    : '—'}
-                                            </td>
-                                            <td className="hidden px-3 py-3 text-center text-amber-800 md:table-cell">
-                                                {hive.humidity > 0
-                                                    ? `${hive.humidity}%`
-                                                    : '—'}
-                                            </td>
-                                            <td className="hidden px-3 py-3 text-center md:table-cell">
-                                                <span
-                                                    className={
-                                                        hive.co2 >
-                                                        WARN_CO2_ABOVE
-                                                            ? 'font-bold text-red-600'
-                                                            : 'text-amber-800'
-                                                    }
-                                                >
-                                                    {hive.co2 > 0
-                                                        ? hive.co2
-                                                        : '—'}
-                                                </span>
-                                            </td>
-                                            <td className="hidden px-3 py-3 text-center md:table-cell">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-yellow-100">
-                                                        <div
-                                                            className="h-full rounded-full bg-yellow-400"
-                                                            style={{
-                                                                width: `${hive.readiness}%`,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs font-bold text-amber-900">
-                                                        {hive.readiness}%
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-3 py-3 text-center">
-                                                <span
-                                                    className={`rounded-lg px-2 py-1 text-xs font-bold ${STATUS_BADGE[hive.status]}`}
-                                                >
-                                                    {STATUS_LABEL[hive.status]}
-                                                </span>
-                                            </td>
-                                            <td className="hidden px-3 py-3 text-center text-xs text-amber-900/70 md:table-cell">
-                                                {formatLastReading(
-                                                    hive.last_reading,
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </Card>
-
-                {/* ── Fleet HRI Trend (full width, after monitor) ────────── */}
-                <FleetHriLineChart trend={fleetHriTrend} />
-
-                {/* ── Productivity Ranking + Cross-Site Comparison (2-col) ── */}
+                <ReadinessSnapshot isLiveMode={isLiveMode} snapshotDate={snapshotDate} snapshotLoading={snapshotLoading} donutData={activeDonutData} onDateChange={setSnapshotDate} />
+                <HiveMonitorGrid sortedHives={sortedHives} isMonitorLive={isMonitorLive} monitorDate={monitorDate} monitorLoading={monitorLoading} onSelect={setSelectedIndex} onDateChange={setMonitorDate} />
+                <FleetHriLineChart data={fleetHriTrend} />
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    {mounted && productivityRanking.length > 0 && (
-                        <Card>
-                            <h3 className="mb-1 text-sm font-black tracking-widest text-amber-900/60 uppercase">
-                                Productivity Ranking
-                            </h3>
-                            <p className="mb-4 text-xs text-amber-800/50">
-                                Ranked by total yield × harvest frequency — hives that produce more <em>and</em> harvest more often rank higher.
-                            </p>
-                            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
-                            <ResponsiveContainer
-                                width="100%"
-                                height={Math.max(320, productivityRanking.length * 44)}
-                            >
-                                <BarChart
-                                    layout="vertical"
-                                    data={productivityRanking}
-                                    margin={{
-                                        left: 20,
-                                        right: 32,
-                                        top: 8,
-                                        bottom: 18,
-                                    }}
-                                >
-                                    <CartesianGrid
-                                        strokeDasharray="3 3"
-                                        stroke="#fef3c7"
-                                        horizontal={false}
-                                    />
-                                    <XAxis
-                                        type="number"
-                                        unit=" kg"
-                                        tickFormatter={(v) => (v / 1000).toFixed(0)}
-                                        tick={{ fontSize: 11, fill: '#92400e' }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tickMargin={8}
-                                    />
-                                    <YAxis
-                                        dataKey="hive_name"
-                                        type="category"
-                                        width={110}
-                                        tick={{ fontSize: 11, fill: '#92400e' }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tickMargin={8}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{
-                                            borderRadius: 12,
-                                            border: '1px solid #fef3c7',
-                                            fontSize: 12,
-                                        }}
-                                        formatter={(value, _name, props) => {
-                                            const count = (props as { payload?: { harvest_count?: number } }).payload?.harvest_count ?? 0;
-                                            return [
-                                                `${((value as number) / 1000).toFixed(2)} kg · ${count} harvest${count !== 1 ? 's' : ''}`,
-                                                'Total Yield',
-                                            ];
-                                        }}
-                                    />
-                                    <Bar
-                                        dataKey="total_weight"
-                                        fill="#F59E0B"
-                                        radius={[0, 6, 6, 0]}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                            </div>
-                        </Card>
-                    )}
-
-                    {mounted && crossSiteComparison.length > 0 && (
-                        <Card>
-                            <h3 className="mb-1 text-sm font-black tracking-widest text-amber-900/60 uppercase">
-                                Cross-Site Comparison
-                            </h3>
-                            <p className="mb-4 text-xs text-amber-800/50">
-                                Compares average readiness (HRI %) and total harvest yield per site — reveals which sites are consistently ready versus high volume.
-                            </p>
-                            <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-3 sm:p-4">
-                            <ResponsiveContainer width="100%" height={Math.max(320, productivityRanking.length * 44)}>
-                                <BarChart
-                                    data={crossSiteComparison}
-                                    margin={{
-                                        left: 12,
-                                        right: 20,
-                                        top: 8,
-                                        bottom: 18,
-                                    }}
-                                >
-                                    <CartesianGrid
-                                        strokeDasharray="3 3"
-                                        stroke="#fef3c7"
-                                    />
-                                    <XAxis
-                                        dataKey="site_name"
-                                        tick={{ fontSize: 11, fill: '#92400e' }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tickMargin={8}
-                                        dy={8}
-                                    />
-                                    <YAxis
-                                        yAxisId="hri"
-                                        orientation="left"
-                                        unit="%"
-                                        tick={{ fontSize: 11, fill: '#92400e' }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        width={36}
-                                        tickMargin={8}
-                                    />
-                                    <YAxis
-                                        yAxisId="weight"
-                                        orientation="right"
-                                        unit=" kg"
-                                        tickFormatter={(v) => (v / 1000).toFixed(0)}
-                                        tick={{ fontSize: 11, fill: '#92400e' }}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        width={44}
-                                        tickMargin={8}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{
-                                            borderRadius: 12,
-                                            border: '1px solid #fef3c7',
-                                            fontSize: 12,
-                                        }}
-                                        formatter={(value, name) =>
-                                            name === 'Total Harvest (kg)'
-                                                ? [`${((value as number) / 1000).toFixed(2)} kg`, name]
-                                                : [`${value}%`, name]
-                                        }
-                                    />
-                                    <Legend
-                                        wrapperStyle={{
-                                            fontSize: 12,
-                                            paddingTop: 16,
-                                            lineHeight: '20px',
-                                        }}
-                                    />
-                                    <Bar
-                                        yAxisId="hri"
-                                        dataKey="avg_hri_pct"
-                                        name="Avg HRI (%)"
-                                        fill="#F59E0B"
-                                        radius={[4, 4, 0, 0]}
-                                    />
-                                    <Bar
-                                        yAxisId="weight"
-                                        dataKey="total_weight"
-                                        name="Total Harvest (kg)"
-                                        fill="#6EE7B7"
-                                        radius={[4, 4, 0, 0]}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                            </div>
-                        </Card>
-                    )}
+                    <ProductivityRankingTable items={productivityRanking} mounted={mounted} />
+                    <CrossSiteComparisonChart items={crossSiteComparison} productivityCount={productivityRanking.length} mounted={mounted} />
                 </div>
             </div>
 
-            {/* ── Hive Detail Modal ──────────────────────────────────────── */}
-            <Modal
-                isOpen={selectedHive !== null}
-                onClose={() => setSelectedIndex(null)}
-                title={selectedHive?.hive_name ?? ''}
-                maxWidth="lg"
-            >
-                {selectedHive &&
-                    (() => {
-                        const hive = selectedHive;
-                        const hasMqData = hive.mq2 > 0;
-
-                        return (
-                            <div className="space-y-6">
-                                {/* Navigation + status row */}
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <span
-                                            className={`rounded-lg px-3 py-1 text-xs font-bold ${STATUS_BADGE[hive.status]}`}
-                                        >
-                                            {STATUS_LABEL[hive.status]}
-                                        </span>
-                                        <span className="text-xs text-amber-900/70">
-                                            {READINESS_LABEL[hive.status]}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={() =>
-                                                hasPrev &&
-                                                setSelectedIndex(
-                                                    (prev) => prev! - 1,
-                                                )
-                                            }
-                                            disabled={!hasPrev}
-                                            className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
-                                        >
-                                            <ChevronLeft className="h-4 w-4 text-amber-900" />
-                                        </button>
-                                        <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/60 tabular-nums">
-                                            {selectedIndex! + 1} /{' '}
-                                            {sortedHives.length}
-                                        </span>
-                                        <button
-                                            onClick={() =>
-                                                hasNext &&
-                                                setSelectedIndex(
-                                                    (prev) => prev! + 1,
-                                                )
-                                            }
-                                            disabled={!hasNext}
-                                            className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
-                                        >
-                                            <ChevronRight className="h-4 w-4 text-amber-900" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* HRI score bar */}
-                                <div>
-                                    <div className="mb-2 flex justify-between">
-                                        <p className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                            HRI Confidence
-                                        </p>
-                                        <span className="text-sm font-black text-amber-950">
-                                            {hive.readiness}%
-                                        </span>
-                                    </div>
-                                    <div className="h-3 w-full overflow-hidden rounded-full bg-yellow-100">
-                                        <div
-                                            className="h-full rounded-full bg-yellow-400 transition-all duration-300"
-                                            style={{
-                                                width:
-                                                    hive.readiness > 0
-                                                        ? `${hive.readiness}%`
-                                                        : '0%',
-                                                minWidth: 0,
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Beekeeper + species */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="rounded-2xl bg-yellow-50/50 p-4">
-                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                            Beekeeper
-                                        </p>
-                                        <p className="text-sm font-bold text-amber-950">
-                                            {hive.beekeeper}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-2xl bg-yellow-50/50 p-4">
-                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                            Species
-                                        </p>
-                                        <p className="text-xs font-medium text-amber-800 italic">
-                                            {hive.species}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Sensor readings */}
-                                <div>
-                                    <div className="mb-3 flex items-baseline gap-2">
-                                        <p className="text-xs font-bold tracking-widest text-amber-900/60 uppercase">
-                                            Sensor Profile
-                                        </p>
-                                        <span className="text-[10px] text-amber-900/30">
-                                            {formatLastReading(
-                                                hive.last_reading,
-                                            )}
-                                        </span>
-                                    </div>
-                                    {hive.status === 'no_data' ? (
-                                        <div className="rounded-xl bg-yellow-50/50 py-4 text-center text-sm text-amber-900/60">
-                                            No sensor data received today
-                                        </div>
-                                    ) : hasMqData ? (
-                                        <SensorRadarChart
-                                            hiveName=""
-                                            profile={{
-                                                avg_temperature: hive.temp,
-                                                avg_humidity: hive.humidity,
-                                                avg_mq2: hive.mq2,
-                                                avg_mq3: hive.mq3,
-                                                avg_mq5: hive.mq5,
-                                                avg_mq135: hive.co2,
-                                            }}
-                                            height={240}
-                                        />
-                                    ) : (
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {[
-                                                {
-                                                    icon: Thermometer,
-                                                    label: 'Temperature',
-                                                    value:
-                                                        hive.temp > 0
-                                                            ? `${hive.temp}°C`
-                                                            : '—',
-                                                    warn:
-                                                        hive.temp >
-                                                        WARN_TEMP_ABOVE,
-                                                },
-                                                {
-                                                    icon: Droplets,
-                                                    label: 'Humidity',
-                                                    value:
-                                                        hive.humidity > 0
-                                                            ? `${hive.humidity}%`
-                                                            : '—',
-                                                    warn:
-                                                        hive.humidity >
-                                                        WARN_HUMID_ABOVE,
-                                                },
-                                                {
-                                                    icon: Wind,
-                                                    label: 'MQ135 (VOC)',
-                                                    value:
-                                                        hive.co2 > 0
-                                                            ? String(hive.co2)
-                                                            : '—',
-                                                    warn:
-                                                        hive.co2 >
-                                                        WARN_CO2_ABOVE,
-                                                },
-                                            ].map((sensor) => (
-                                                <div
-                                                    key={sensor.label}
-                                                    className="flex items-center justify-between rounded-xl bg-yellow-50/50 px-4 py-3"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <sensor.icon className="h-4 w-4 text-amber-900/60" />
-                                                        <span className="text-sm text-amber-900">
-                                                            {sensor.label}
-                                                        </span>
-                                                    </div>
-                                                    <span
-                                                        className={`text-sm font-bold ${sensor.warn ? 'text-red-600' : 'text-amber-950'}`}
-                                                    >
-                                                        {sensor.value}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Keyboard hint */}
-                                <p className="text-center text-[10px] tracking-widest text-amber-900/25 uppercase">
-                                    Use arrow keys to navigate hives
-                                </p>
-                            </div>
-                        );
-                    })()}
-            </Modal>
+            <HiveMonitorModal hive={selectedHive} isOpen={selectedHive !== null} hasPrev={hasPrev} hasNext={hasNext} selectedIndex={selectedIndex} totalHives={sortedHives.length} onPrev={() => setSelectedIndex((prev) => prev! - 1)} onNext={() => setSelectedIndex((prev) => prev! + 1)} onClose={() => setSelectedIndex(null)} />
         </AdminLayout>
     );
 }
