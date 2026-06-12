@@ -26,6 +26,7 @@ export const Dropdown = ({
 }: DropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+    const [openUpward, setOpenUpward] = useState(false);
     const triggerRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -51,17 +52,24 @@ export const Dropdown = ({
 
         if (!isOpen && triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
+            const ESTIMATED_MENU_HEIGHT = 256;
+            const spaceBelow = window.innerHeight - rect.bottom - 8;
+            const shouldOpenUpward = spaceBelow < ESTIMATED_MENU_HEIGHT;
+            setOpenUpward(shouldOpenUpward);
+            const topValue = shouldOpenUpward
+                ? rect.top - ESTIMATED_MENU_HEIGHT - 8
+                : rect.bottom + 8;
             setMenuStyle(
                 align === 'right'
                     ? {
                           position: 'fixed',
-                          top: rect.bottom + 8,
+                          top: topValue,
                           right: window.innerWidth - rect.right,
                           zIndex: 9999,
                       }
                     : {
                           position: 'fixed',
-                          top: rect.bottom + 8,
+                          top: topValue,
                           left: rect.left,
                           zIndex: 9999,
                       },
@@ -86,9 +94,9 @@ export const Dropdown = ({
                         {isOpen && (
                             <motion.div
                                 ref={menuRef}
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                initial={{ opacity: 0, scale: 0.95, y: openUpward ? -10 : 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                exit={{ opacity: 0, scale: 0.95, y: openUpward ? -10 : 10 }}
                                 transition={{ duration: 0.2, ease: 'easeOut' }}
                                 style={menuStyle}
                                 className="w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-yellow-100 focus:outline-none"

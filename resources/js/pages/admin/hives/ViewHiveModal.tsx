@@ -55,7 +55,7 @@ export function ViewHiveModal({ hive, hiveIndex, totalHives, hasPrev, hasNext, o
                     </div>
                     <div>
                         <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">Age</p>
-                        <p className="font-medium text-amber-950">{hive.age_months}m</p>
+                        <p className="font-medium text-amber-950">{hive.age_months}</p>
                     </div>
                 </div>
 

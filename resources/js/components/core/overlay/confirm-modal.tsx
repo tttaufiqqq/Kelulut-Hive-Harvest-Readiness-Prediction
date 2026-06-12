@@ -4,6 +4,7 @@ import { Modal } from '@/components/core/overlay/modal';
 
 interface ConfirmModalProps {
     isOpen: boolean;
+    instant?: boolean;
     onClose: () => void;
     onConfirm: () => void;
     title: string;
@@ -17,6 +18,7 @@ interface ConfirmModalProps {
 
 export function ConfirmModal({
     isOpen,
+    instant,
     onClose,
     onConfirm,
     title,
@@ -28,7 +30,7 @@ export function ConfirmModal({
     confirmDisabled = false,
 }: ConfirmModalProps) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="sm">
+        <Modal isOpen={isOpen} instant={instant} onClose={onClose} title={title} maxWidth="sm">
             <div className="space-y-4">
                 <div className="text-sm text-amber-900/70">{message}</div>
                 <div className="flex gap-3">

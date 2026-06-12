@@ -145,7 +145,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: { beekeepers: Pag
             {activeModal?.type === 'edit' && (
                 <EditBeekeeperModal isOpen instant={editInstant} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
-            <BeekeeperConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmToggle={confirmToggle} onConfirmResend={confirmResend} onConfirmDelete={confirmDelete} onClose={close} />
+            <BeekeeperConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmToggle={confirmToggle} onConfirmResend={confirmResend} onConfirmDelete={confirmDelete} onClose={close} />
         </AdminLayout>
     );
 }

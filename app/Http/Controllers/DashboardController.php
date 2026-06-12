@@ -22,7 +22,11 @@ class DashboardController extends Controller
                 'location' => $hive->site?->name,
                 'site_id' => $hive->site_id,
                 'status' => $hive->status,
-                'age_months' => (int) $hive->created_at->diffInMonths(now()),
+                'age_months' => (function () use ($hive) {
+                    $days = (int) $hive->created_at->diffInDays(now());
+                    $months = (int) floor($days / 30);
+                    return $months > 0 ? "{$months}m" : "{$days}d";
+                })(),
                 'harvest_count' => (int) ($hive->harvests_count ?? 0),
                 'last_harvest_date' => $hive->harvests_max_harvest_date,
                 'readiness_level' => $hive->summary?->latest_readiness_level,

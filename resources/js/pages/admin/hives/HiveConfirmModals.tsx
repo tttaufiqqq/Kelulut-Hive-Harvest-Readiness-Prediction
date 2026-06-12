@@ -11,13 +11,14 @@ interface Props {
     activeModal: ConfirmableModal;
     deleting: boolean;
     editProcessing: boolean;
+    instant?: boolean;
     onConfirmEdit: () => void;
     onConfirmToggle: () => void;
     onConfirmDelete: () => void;
     onClose: () => void;
 }
 
-export function HiveConfirmModals({ activeModal, deleting, editProcessing, onConfirmEdit, onConfirmToggle, onConfirmDelete, onClose }: Props) {
+export function HiveConfirmModals({ activeModal, deleting, editProcessing, instant, onConfirmEdit, onConfirmToggle, onConfirmDelete, onClose }: Props) {
     return (
         <>
             {activeModal?.type === 'toggle' && (
@@ -57,6 +58,7 @@ export function HiveConfirmModals({ activeModal, deleting, editProcessing, onCon
             {activeModal?.type === 'confirm-edit' && (
                 <ConfirmModal
                     isOpen
+                    instant={instant}
                     onClose={onClose}
                     onConfirm={onConfirmEdit}
                     title="Save Changes"

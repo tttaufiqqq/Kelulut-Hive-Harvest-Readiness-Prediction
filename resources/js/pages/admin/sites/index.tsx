@@ -139,6 +139,7 @@ export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
                 activeModal={confirmableModal}
                 deleting={deleting}
                 editProcessing={editForm.processing}
+                instant={editInstant}
                 onConfirmEdit={confirmEdit}
                 onConfirmDelete={confirmDelete}
                 onClose={close}

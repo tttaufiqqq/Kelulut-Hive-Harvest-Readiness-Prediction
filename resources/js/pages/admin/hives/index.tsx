@@ -165,7 +165,7 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
                 <EditHiveModal isOpen instant={editInstant} beekeeperOptions={beekeeperOptions} speciesOptions={speciesOptions} siteOptions={siteOptions} statusOptions={statusOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
 
-            <HiveConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmToggle={confirmToggle} onConfirmDelete={confirmDelete} onClose={close} />
+            <HiveConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmToggle={confirmToggle} onConfirmDelete={confirmDelete} onClose={close} />
         </AdminLayout>
     );
 }

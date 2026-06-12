@@ -117,7 +117,7 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors, filter
             {activeModal?.type === 'edit' && (
                 <EditHarvestModal isOpen instant={editInstant} hiveName={activeModal.harvest.hive?.name} colors={colors} flavors={flavors} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
-            <HarvestConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
+            <HarvestConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
         </AuthenticatedLayout>
     );
 }

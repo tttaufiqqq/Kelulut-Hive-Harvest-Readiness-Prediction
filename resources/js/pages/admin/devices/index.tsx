@@ -160,7 +160,7 @@ export default function DevicesIndex({
                 <EditDeviceModal isOpen instant={editInstant} deviceIdentifier={activeModal.device.node_identifier} hiveOptions={allHiveOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
 
-            <DeviceConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
+            <DeviceConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
         </AdminLayout>
     );
 }

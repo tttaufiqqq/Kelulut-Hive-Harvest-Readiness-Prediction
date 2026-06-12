@@ -12,6 +12,7 @@ interface Props {
     activeModal: ConfirmableModal;
     deleting: boolean;
     editProcessing: boolean;
+    instant?: boolean;
     onConfirmEdit: () => void;
     onConfirmToggle: () => void;
     onConfirmResend: () => void;
@@ -19,7 +20,7 @@ interface Props {
     onClose: () => void;
 }
 
-export function BeekeeperConfirmModals({ activeModal, deleting, editProcessing, onConfirmEdit, onConfirmToggle, onConfirmResend, onConfirmDelete, onClose }: Props) {
+export function BeekeeperConfirmModals({ activeModal, deleting, editProcessing, instant, onConfirmEdit, onConfirmToggle, onConfirmResend, onConfirmDelete, onClose }: Props) {
     return (
         <>
             {activeModal?.type === 'toggle' && (
@@ -45,7 +46,7 @@ export function BeekeeperConfirmModals({ activeModal, deleting, editProcessing, 
                     confirmLabel="Resend" variant="warning" />
             )}
             {activeModal?.type === 'confirm-edit' && (
-                <ConfirmModal isOpen onClose={onClose} onConfirm={onConfirmEdit}
+                <ConfirmModal isOpen instant={instant} onClose={onClose} onConfirm={onConfirmEdit}
                     title="Save Changes"
                     message={<>Save changes to <span className="font-semibold text-amber-950">{activeModal.user.name}</span>?</>}
                     confirmLabel={editProcessing ? 'Saving...' : 'Save Changes'}

@@ -31,7 +31,11 @@ class HiveController extends Controller
                 'site' => $hive->site?->name,
                 'site_id' => $hive->site_id,
                 'status' => $hive->status,
-                'age_months' => (int) $hive->created_at->diffInMonths(now()),
+                'age_months' => (function () use ($hive) {
+                    $days = (int) $hive->created_at->diffInDays(now());
+                    $months = (int) floor($days / 30);
+                    return $months > 0 ? "{$months}m" : "{$days}d";
+                })(),
                 'image_path' => $hive->image_path,
             ]);
 

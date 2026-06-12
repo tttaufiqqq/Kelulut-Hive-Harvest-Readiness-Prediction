@@ -10,12 +10,13 @@ interface Props {
     activeModal: ConfirmableModal;
     deleting: boolean;
     editProcessing: boolean;
+    instant?: boolean;
     onConfirmEdit: () => void;
     onConfirmDelete: () => void;
     onClose: () => void;
 }
 
-export function SiteConfirmModals({ activeModal, deleting, editProcessing, onConfirmEdit, onConfirmDelete, onClose }: Props) {
+export function SiteConfirmModals({ activeModal, deleting, editProcessing, instant, onConfirmEdit, onConfirmDelete, onClose }: Props) {
     return (
         <>
             {activeModal?.type === 'delete' && (
@@ -49,6 +50,7 @@ export function SiteConfirmModals({ activeModal, deleting, editProcessing, onCon
             {activeModal?.type === 'confirm-edit' && (
                 <ConfirmModal
                     isOpen
+                    instant={instant}
                     onClose={onClose}
                     onConfirm={onConfirmEdit}
                     title="Save Changes"

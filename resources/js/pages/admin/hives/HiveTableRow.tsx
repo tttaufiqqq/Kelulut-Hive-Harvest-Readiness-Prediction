@@ -12,7 +12,7 @@ export type HiveRow = {
     site: string | null;
     site_id: number | null;
     status: 'active' | 'inactive';
-    age_months: number;
+    age_months: string;
     image_path: string | null;
 };
 
@@ -36,7 +36,7 @@ export function HiveTableRow({ hive, index, onView, onEdit, onToggle, onDelete }
             <td className="hidden px-6 py-4 text-amber-900/70 md:table-cell">{hive.site ?? '—'}</td>
             <td className="hidden px-6 py-4 text-amber-900/70 md:table-cell">{hive.species ?? '—'}</td>
             <td className="px-6 py-4"><HiveStatusBadge status={hive.status} /></td>
-            <td className="hidden px-6 py-4 text-amber-900/50 lg:table-cell">{hive.age_months}m</td>
+            <td className="hidden px-6 py-4 text-amber-900/50 lg:table-cell">{hive.age_months}</td>
             <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                 <Dropdown
                     align="right"

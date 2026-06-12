@@ -132,7 +132,7 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
             {activeModal?.type === 'edit' && (
                 <EditInspectionModal isOpen instant={editInstant} hiveName={activeModal.inspection.hive?.name} weatherConditions={weatherConditions} floraTypes={floraTypes} form={editForm} editWeatherIds={editWeatherIds} editFloraIds={editFloraIds} onWeatherChange={setEditWeatherIds} onFloraChange={setEditFloraIds} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
-            <InspectionConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
+            <InspectionConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
         </AuthenticatedLayout>
     );
 }

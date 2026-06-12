@@ -86,7 +86,7 @@ export function HiveDetailPanel({ hive, predictionContent }: Props) {
                             <div className="border-l border-white/25 pl-4 sm:pl-6">
                                 <p className="mb-1 text-xs font-bold tracking-widest text-amber-950/45 uppercase">Hive Age</p>
                                 <p className="text-3xl font-black text-amber-950">
-                                    {hive.age_months} <span className="text-base font-medium">months</span>
+                                    {hive.age_months}
                                 </p>
                             </div>
                         </div>

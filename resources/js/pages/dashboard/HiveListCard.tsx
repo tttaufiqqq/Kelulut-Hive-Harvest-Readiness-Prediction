@@ -10,7 +10,7 @@ export type HiveCard = {
     species: string | null;
     location: string | null;
     status: 'active' | 'inactive';
-    age_months: number;
+    age_months: string;
     harvest_count: number;
     readiness_level: string | null;
     hri_value: number;
@@ -64,7 +64,7 @@ export function HiveListCard({ hive, isSelected, onClick }: Props) {
 
                 <div className="grid grid-cols-3 gap-4 text-sm">
                     {[
-                        { label: 'Age', value: `${hive.age_months}m` },
+                        { label: 'Age', value: hive.age_months },
                         { label: 'Harvests', value: hive.harvest_count },
                         {
                             label: 'Status',

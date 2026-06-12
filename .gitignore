@@ -29,3 +29,11 @@ yarn-error.log
 
 # Claude
 /.claude
+CLAUDE.md
+COVERAGE_GAPS.md
+PRIORITY_QUEUE.md
+SECURITY_AUDIT.md
+TELEGRAM_ALERT_TESTING_STRATEGY.md
+TEST_CASES.md
+TEST_INVENTORY.md
+scripts/test-prod-prediction-levels.ps1
