@@ -36,7 +36,7 @@ test('live predictions response supports empty prediction state', function () {
     $this->actingAs($beekeeper)
         ->get(route('predictions.live', $hive))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('predictions')
+            ->component('predictions/index')
             ->where('hive.id', $hive->id)
             ->where('latestPrediction', null)
             ->has('historyPredictions.data', 0)
@@ -69,7 +69,7 @@ test('live predictions flags legacy zero readings as missing sensor data', funct
     $this->actingAs($beekeeper)
         ->get(route('predictions.live', $hive))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('predictions')
+            ->component('predictions/index')
             ->where('latestPrediction', null)
             ->where('sensorWarnings', ['MQ-3', 'MQ-135'])
             ->has('historyPredictions.data', 0)
@@ -137,7 +137,7 @@ test('live predictions response includes enriched process payload', function () 
     $this->actingAs($beekeeper)
         ->get(route('predictions.live', $hive))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('predictions')
+            ->component('predictions/index')
             ->where('hive.id', $hive->id)
             ->where('latestPrediction.sensor_log_id', $sensorLog->id)
             ->where('latestPrediction.device_identifier', 'NODE-001')
@@ -190,7 +190,7 @@ test('live predictions normalizes zero sensor values in stored prediction payloa
     $this->actingAs($beekeeper)
         ->get(route('predictions.live', $hive))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('predictions')
+            ->component('predictions/index')
             ->where('latestPrediction.sensor_values.temp', 31.8)
             ->where('latestPrediction.sensor_values.humidity', 88)
             ->where('latestPrediction.sensor_values.mq2_value', 39)
@@ -253,7 +253,7 @@ test('live predictions response returns the newest results first', function () {
     $this->actingAs($beekeeper)
         ->get(route('predictions.live', $hive))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('predictions')
+            ->component('predictions/index')
             ->where('latestPrediction.id', $newerPrediction->id)
             ->has('historyPredictions.data', 1)
             ->where('historyPredictions.data.0.id', $olderPrediction->id)
@@ -299,7 +299,7 @@ test('live predictions defaults the chart filter to today even when latest data 
         $this->actingAs($beekeeper)
             ->get(route('predictions.live', $hive))
             ->assertInertia(fn (Assert $page) => $page
-                ->component('predictions')
+                ->component('predictions/index')
                 ->where('filters.chart_date', '2026-05-05')
                 ->where('filters.default_chart_date', '2026-05-05')
                 ->has('predictionTrends', 0)

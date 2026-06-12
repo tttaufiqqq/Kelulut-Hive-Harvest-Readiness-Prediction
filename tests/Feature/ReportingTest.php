@@ -45,7 +45,7 @@ test('reporting page returns correct Inertia props', function () {
     $this->actingAs($beekeeper)
         ->get(route('reporting.index'))
         ->assertInertia(fn ($page) => $page
-            ->component('reporting')
+            ->component('reporting/index')
             ->has('hriGauges')
             ->has('readinessTrends')
         );
@@ -64,7 +64,7 @@ test('reporting gauges are scoped to the authenticated beekeeper', function () {
     $this->actingAs($beekeeper)
         ->get(route('reporting.index'))
         ->assertInertia(fn ($page) => $page
-            ->component('reporting')
+            ->component('reporting/index')
             ->has('hriGauges', 1)   // only own hive
         );
 });

@@ -64,7 +64,7 @@ test('analytics response contains correct Inertia props', function () {
     $this->actingAs($beekeeper)
         ->get(route('analytics.show', $hive))
         ->assertInertia(fn ($page) => $page
-            ->component('analytics')
+            ->component('analytics/index')
             ->has('hive')
             ->has('hriTrend')
             ->has('sensorReadings')

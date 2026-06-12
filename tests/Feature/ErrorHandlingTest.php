@@ -64,7 +64,7 @@ test('inertia get errors render the shared error page with request ids', functio
     $response
         ->assertStatus($status)
         ->assertHeader('X-Request-Id')
-        ->assertJsonPath('component', 'error')
+        ->assertJsonPath('component', 'error/index')
         ->assertJsonPath('props.status', $status)
         ->assertJsonPath('props.requestId', $response->json('props.meta.request_id'));
 
