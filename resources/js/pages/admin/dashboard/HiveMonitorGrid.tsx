@@ -32,7 +32,7 @@ export function HiveMonitorGrid({ sortedHives, isMonitorLive, monitorDate, monit
                         </h3>
                     )}
                 </div>
-                <DatePicker value={monitorDate} onChange={onDateChange} placeholder="Pick date..." />
+                <DatePicker value={monitorDate} onChange={onDateChange} placeholder="Pick date..." maxDate="today" />
             </div>
             {monitorLoading ? (
                 <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/60">Loading...</div>

@@ -24,7 +24,7 @@ export function ReadinessSnapshot({ isLiveMode, snapshotDate, snapshotLoading, d
                         <span className="text-xs font-bold text-amber-700">Viewing: {fmtDate(snapshotDate)}</span>
                     )}
                 </div>
-                <DatePicker value={snapshotDate} onChange={onDateChange} placeholder="Pick date…" />
+                <DatePicker value={snapshotDate} onChange={onDateChange} placeholder="Pick date…" maxDate="today" />
             </div>
 
             {snapshotLoading ? (

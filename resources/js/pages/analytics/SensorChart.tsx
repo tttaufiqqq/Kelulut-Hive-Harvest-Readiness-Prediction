@@ -98,7 +98,7 @@ export function SensorChart({ data, selectedDate, onDateChange }: Props) {
             description="Filter the selected date into environment or gas sensor groups."
             actions={
                 <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-                    <DatePicker className="w-full shrink-0 sm:w-[152px]" value={selectedDate} onChange={onDateChange} defaultValue={todayYMD} />
+                    <DatePicker className="w-full shrink-0 sm:w-[152px]" value={selectedDate} onChange={onDateChange} defaultValue={todayYMD} maxDate="today" />
                     <div className="min-w-0 sm:w-[210px] sm:flex-none">
                         <SelectField value={group} onChange={setGroup} options={SENSOR_GROUP_OPTIONS} />
                     </div>
