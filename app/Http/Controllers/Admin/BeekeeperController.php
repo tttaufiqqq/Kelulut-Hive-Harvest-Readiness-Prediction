@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreBeekeeperRequest;
 use App\Http\Requests\Admin\UpdateBeekeeperRequest;
 use App\Models\User;
-use App\Services\Admin\BeekeeperInviteService;
+use App\Services\Admin\InviteBeekeeperService;
+use App\Services\Admin\ResendBeekeeperInviteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Inertia\Response;
 
 class BeekeeperController extends Controller
 {
-    public function __construct(private readonly BeekeeperInviteService $inviteService) {}
+    public function __construct(
+        private readonly InviteBeekeeperService $inviteService,
+        private readonly ResendBeekeeperInviteService $resendService,
+    ) {}
 
     public function index(): Response
     {
@@ -41,7 +45,7 @@ class BeekeeperController extends Controller
 
     public function store(StoreBeekeeperRequest $request): RedirectResponse
     {
-        $result = $this->inviteService->invite($request->user(), $request->validated());
+        $result = $this->inviteService->execute($request->user(), $request->validated());
 
         return redirect()->route('admin.beekeepers.index')
             ->with($result->flashLevel, $result->message);
@@ -106,7 +110,7 @@ class BeekeeperController extends Controller
                 ->with('warning', 'Invite can only be resent to pending users.');
         }
 
-        $result = $this->inviteService->resend($user, $request->user());
+        $result = $this->resendService->execute($user, $request->user());
 
         return redirect()->route('admin.beekeepers.index')
             ->with($result->flashLevel, $result->message);
