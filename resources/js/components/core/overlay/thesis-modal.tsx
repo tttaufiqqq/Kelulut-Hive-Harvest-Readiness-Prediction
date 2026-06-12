@@ -26,7 +26,7 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        exit={{ opacity: 0, transition: { duration: 0 } }}
                         className="absolute inset-0 bg-amber-950/60 backdrop-blur-sm"
                         onClick={onClose}
                     />
@@ -35,7 +35,7 @@ export function ThesisModal({ isOpen, onClose, thesisUrl }: ThesisModalProps) {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 24 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 24 }}
+                        exit={{ opacity: 0, transition: { duration: 0 } }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
                         className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-[#FFFBEB] shadow-2xl"
                         style={{ height: 'min(90vh, 860px)' }}
