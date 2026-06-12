@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { fmtDate } from '@/lib/format';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
@@ -7,6 +6,7 @@ import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
 import { SelectField } from '@/components/core/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
+import { fmtDate } from '@/lib/format';
 import type {
     Inspection,
     MasterWeatherCondition,
@@ -223,7 +223,9 @@ export default function AdminInspectionsIndex({
                                             {inspection.beekeeper?.name ?? '—'}
                                         </td>
                                         <td className="px-6 py-4 text-amber-900/70">
-                                            {fmtDate(inspection.inspection_date)}
+                                            {fmtDate(
+                                                inspection.inspection_date,
+                                            )}
                                         </td>
                                         <td className="hidden px-6 py-4 md:table-cell">
                                             <BloomingBadge

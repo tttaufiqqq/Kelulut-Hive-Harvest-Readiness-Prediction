@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { fmtDate } from '@/lib/format';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/button';
@@ -7,6 +6,7 @@ import { Card } from '@/components/core/card';
 import { Modal } from '@/components/core/modal';
 import { SelectField } from '@/components/core/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
+import { fmtDate } from '@/lib/format';
 import type { Harvest, PaginatedHarvests } from '@/types';
 
 type ActiveModal = { type: 'view'; index: number } | null;
@@ -91,8 +91,15 @@ export default function AdminHarvestsIndex({
     const applyFilters = (patch: Partial<typeof filters>) => {
         const next = { ...filters, ...patch };
         const params: Record<string, string> = {};
-        if (next.hive_id) params.hive_id = next.hive_id;
-        if (next.productivity) params.productivity = next.productivity;
+
+        if (next.hive_id) {
+            params.hive_id = next.hive_id;
+        }
+
+        if (next.productivity) {
+            params.productivity = next.productivity;
+        }
+
         router.get(route('admin.harvests.index'), params, {
             preserveState: true,
             replace: true,
@@ -149,14 +156,24 @@ export default function AdminHarvestsIndex({
                         <div className="w-44">
                             <SelectField
                                 value={filters.hive_id ?? ''}
-                                onChange={(val) => applyFilters({ hive_id: val })}
-                                options={[{ value: '', label: 'All Hives' }, ...hives.map((h) => ({ value: String(h.id), label: h.name }))]}
+                                onChange={(val) =>
+                                    applyFilters({ hive_id: val })
+                                }
+                                options={[
+                                    { value: '', label: 'All Hives' },
+                                    ...hives.map((h) => ({
+                                        value: String(h.id),
+                                        label: h.name,
+                                    })),
+                                ]}
                             />
                         </div>
                         <div className="w-36">
                             <SelectField
                                 value={filters.productivity ?? ''}
-                                onChange={(val) => applyFilters({ productivity: val })}
+                                onChange={(val) =>
+                                    applyFilters({ productivity: val })
+                                }
                                 options={[
                                     { value: '', label: 'All Productivity' },
                                     { value: 'high', label: 'High' },

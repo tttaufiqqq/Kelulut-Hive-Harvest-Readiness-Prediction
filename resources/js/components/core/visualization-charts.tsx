@@ -10,7 +10,11 @@ import {
     RadarChart,
     ResponsiveContainer,
 } from 'recharts';
-import { ChartCard, READINESS_LABELS, READINESS_SOLID_COLORS } from '@/components/core/readiness-chart-cards';
+import {
+    ChartCard,
+    READINESS_LABELS,
+    READINESS_SOLID_COLORS,
+} from '@/components/core/readiness-chart-cards';
 
 const TOOLTIP_STYLE = {
     backgroundColor: '#FFFBEB',
@@ -31,7 +35,11 @@ export interface ReadinessDonutChartProps {
     description?: string;
 }
 
-export function ReadinessDonutChart({ data, title, description }: ReadinessDonutChartProps) {
+export function ReadinessDonutChart({
+    data,
+    title,
+    description,
+}: ReadinessDonutChartProps) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -39,7 +47,8 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
         setMounted(true);
     }, []);
 
-    const isNoData = data.length === 0 || (data.length === 1 && data[0].level === 'no_data');
+    const isNoData =
+        data.length === 0 || (data.length === 1 && data[0].level === 'no_data');
     const chartData = isNoData ? [{ level: 'no_data', count: 1 }] : data;
     const total = isNoData ? 0 : data.reduce((sum, d) => sum + d.count, 0);
     const sortedData = [...chartData].sort(
@@ -70,18 +79,32 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
                                         {sortedData.map((entry) => (
                                             <Cell
                                                 key={entry.level}
-                                                fill={READINESS_SOLID_COLORS[entry.level] ?? '#78716c'}
+                                                fill={
+                                                    READINESS_SOLID_COLORS[
+                                                        entry.level
+                                                    ] ?? '#78716c'
+                                                }
                                             />
                                         ))}
                                     </Pie>
                                     {!isNoData && (
                                         <Tooltip
                                             contentStyle={TOOLTIP_STYLE}
-                                            formatter={(value, _name, props) => {
-                                                const level = props.payload?.level as string | undefined;
+                                            formatter={(
+                                                value,
+                                                _name,
+                                                props,
+                                            ) => {
+                                                const level = props.payload
+                                                    ?.level as
+                                                    | string
+                                                    | undefined;
                                                 const label = level
-                                                    ? (READINESS_LABELS[level] ?? level)
+                                                    ? (READINESS_LABELS[
+                                                          level
+                                                      ] ?? level)
                                                     : '';
+
                                                 return [
                                                     `${value} hive${Number(value) !== 1 ? 's' : ''}`,
                                                     label,
@@ -92,7 +115,9 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-black text-amber-950">{total}</span>
+                                <span className="text-3xl font-black text-amber-950">
+                                    {total}
+                                </span>
                                 <span className="text-[10px] font-bold tracking-widest text-amber-900/40 uppercase">
                                     hives
                                 </span>
@@ -107,20 +132,28 @@ export function ReadinessDonutChart({ data, title, description }: ReadinessDonut
                                     <span className="flex-1 text-xs font-semibold text-amber-900/40">
                                         No Data
                                     </span>
-                                    <span className="text-xs font-black text-amber-950">0</span>
+                                    <span className="text-xs font-black text-amber-950">
+                                        0
+                                    </span>
                                 </div>
                             ) : (
                                 sortedData.map((entry) => (
-                                    <div key={entry.level} className="flex items-center gap-2.5">
+                                    <div
+                                        key={entry.level}
+                                        className="flex items-center gap-2.5"
+                                    >
                                         <div
                                             className="h-3 w-3 flex-shrink-0 rounded-full"
                                             style={{
                                                 backgroundColor:
-                                                    READINESS_SOLID_COLORS[entry.level] ?? '#78716c',
+                                                    READINESS_SOLID_COLORS[
+                                                        entry.level
+                                                    ] ?? '#78716c',
                                             }}
                                         />
                                         <span className="flex-1 text-xs font-semibold text-amber-900/70">
-                                            {READINESS_LABELS[entry.level] ?? entry.level}
+                                            {READINESS_LABELS[entry.level] ??
+                                                entry.level}
                                         </span>
                                         <span className="text-xs font-black text-amber-950">
                                             {entry.count}
@@ -155,7 +188,10 @@ export interface SensorRadarChartProps {
 
 function normalizeSensorProfile(profile: SensorProfile) {
     return {
-        Temp: Math.min(100, Math.max(0, ((profile.avg_temperature - 28) / 15) * 100)),
+        Temp: Math.min(
+            100,
+            Math.max(0, ((profile.avg_temperature - 28) / 15) * 100),
+        ),
         Humidity: Math.min(100, Math.max(0, profile.avg_humidity)),
         MQ2: Math.min(100, Math.max(0, (profile.avg_mq2 / 400) * 100)),
         MQ3: Math.min(100, Math.max(0, (profile.avg_mq3 / 400) * 100)),
@@ -166,16 +202,23 @@ function normalizeSensorProfile(profile: SensorProfile) {
 
 const RADAR_AXES = ['Temp', 'Humidity', 'MQ2', 'MQ3', 'MQ5', 'MQ135'] as const;
 
-const RAW_LABELS: Record<string, { value: (p: SensorProfile) => number; unit: string }> = {
-    Temp:     { value: (p) => p.avg_temperature, unit: '°C' },
-    Humidity: { value: (p) => p.avg_humidity,    unit: '%' },
-    MQ2:      { value: (p) => p.avg_mq2,         unit: '' },
-    MQ3:      { value: (p) => p.avg_mq3,         unit: '' },
-    MQ5:      { value: (p) => p.avg_mq5,         unit: '' },
-    MQ135:    { value: (p) => p.avg_mq135,       unit: '' },
+const RAW_LABELS: Record<
+    string,
+    { value: (p: SensorProfile) => number; unit: string }
+> = {
+    Temp: { value: (p) => p.avg_temperature, unit: '°C' },
+    Humidity: { value: (p) => p.avg_humidity, unit: '%' },
+    MQ2: { value: (p) => p.avg_mq2, unit: '' },
+    MQ3: { value: (p) => p.avg_mq3, unit: '' },
+    MQ5: { value: (p) => p.avg_mq5, unit: '' },
+    MQ135: { value: (p) => p.avg_mq135, unit: '' },
 };
 
-export function SensorRadarChart({ profile, hiveName, height = 200 }: SensorRadarChartProps) {
+export function SensorRadarChart({
+    profile,
+    hiveName,
+    height = 200,
+}: SensorRadarChartProps) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -192,17 +235,28 @@ export function SensorRadarChart({ profile, hiveName, height = 200 }: SensorRada
     return (
         <div className="rounded-[1.75rem] border border-amber-100/70 bg-amber-50/35 p-4">
             {hiveName && (
-                <p className="mb-2 text-sm font-bold text-amber-900">{hiveName}</p>
+                <p className="mb-2 text-sm font-bold text-amber-900">
+                    {hiveName}
+                </p>
             )}
 
             {mounted ? (
                 <>
                     <ResponsiveContainer width="100%" height={height}>
-                        <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                        <RadarChart
+                            data={radarData}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius="70%"
+                        >
                             <PolarGrid stroke="#FCD34D" />
                             <PolarAngleAxis
                                 dataKey="axis"
-                                tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
+                                tick={{
+                                    fill: '#78350F',
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                }}
                             />
                             <Radar
                                 dataKey="value"
@@ -213,11 +267,24 @@ export function SensorRadarChart({ profile, hiveName, height = 200 }: SensorRada
                             <Tooltip
                                 contentStyle={TOOLTIP_STYLE}
                                 formatter={(value, _name, props) => {
-                                    const axis = props.payload?.axis as string | undefined;
-                                    if (!axis) return [value, ''];
+                                    const axis = props.payload?.axis as
+                                        | string
+                                        | undefined;
+
+                                    if (!axis) {
+                                        return [value, ''];
+                                    }
+
                                     const raw = RAW_LABELS[axis];
-                                    if (!raw) return [value, axis];
-                                    return [`${raw.value(profile).toFixed(1)}${raw.unit}`, axis];
+
+                                    if (!raw) {
+                                        return [value, axis];
+                                    }
+
+                                    return [
+                                        `${raw.value(profile).toFixed(1)}${raw.unit}`,
+                                        axis,
+                                    ];
                                 }}
                             />
                         </RadarChart>
@@ -225,10 +292,17 @@ export function SensorRadarChart({ profile, hiveName, height = 200 }: SensorRada
                     <div className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1">
                         {RADAR_AXES.map((axis) => {
                             const raw = RAW_LABELS[axis];
+
                             return (
-                                <span key={axis} className="text-[11px] font-semibold text-amber-900/60">
-                                    <span className="text-amber-900/40">{axis} </span>
-                                    {raw.value(profile).toFixed(1)}{raw.unit}
+                                <span
+                                    key={axis}
+                                    className="text-[11px] font-semibold text-amber-900/60"
+                                >
+                                    <span className="text-amber-900/40">
+                                        {axis}{' '}
+                                    </span>
+                                    {raw.value(profile).toFixed(1)}
+                                    {raw.unit}
                                 </span>
                             );
                         })}
