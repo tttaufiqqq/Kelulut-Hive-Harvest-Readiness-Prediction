@@ -37,6 +37,7 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
+    const [editInstant, setEditInstant] = useState(false);
     const close = () => setActiveModal(null);
 
     const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
@@ -70,7 +71,8 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
     const createForm = useForm<HiveFormData>(emptyForm);
     const editForm = useForm<HiveFormData>(emptyForm);
 
-    const openEdit = (hive: HiveRow) => {
+    const openEdit = (hive: HiveRow, instant = false) => {
+        setEditInstant(instant);
         editForm.setData({ name: hive.name, beekeeper_id: String(hive.beekeeper_id), species_id: hive.species_id ? String(hive.species_id) : '', site_id: hive.site_id ? String(hive.site_id) : '', status: hive.status, image: null });
         setActiveModal({ type: 'edit', hive });
     };
@@ -152,7 +154,7 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
                     hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < hives.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewHive); }}
+                    onEdit={() => { close(); openEdit(viewHive, true); }}
                     onClose={close}
                 />
             )}
@@ -160,7 +162,7 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
             <CreateHiveModal isOpen={activeModal?.type === 'create'} beekeeperOptions={beekeeperOptions} speciesOptions={speciesOptions} siteOptions={siteOptions} statusOptions={statusOptions} form={createForm} onSubmit={submitCreate} onClose={close} />
 
             {activeModal?.type === 'edit' && (
-                <EditHiveModal isOpen beekeeperOptions={beekeeperOptions} speciesOptions={speciesOptions} siteOptions={siteOptions} statusOptions={statusOptions} form={editForm} onSubmit={openEditConfirm} onClose={close} />
+                <EditHiveModal isOpen instant={editInstant} beekeeperOptions={beekeeperOptions} speciesOptions={speciesOptions} siteOptions={siteOptions} statusOptions={statusOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
 
             <HiveConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmToggle={confirmToggle} onConfirmDelete={confirmDelete} onClose={close} />

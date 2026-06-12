@@ -21,6 +21,7 @@ type FormInstance = ReturnType<typeof useForm<HarvestEditFormData>>;
 
 interface Props {
     isOpen: boolean;
+    instant?: boolean;
     hiveName: string | undefined;
     colors: MasterHoneyColor[];
     flavors: MasterHoneyFlavor[];
@@ -29,9 +30,9 @@ interface Props {
     onClose: () => void;
 }
 
-export function EditHarvestModal({ isOpen, hiveName, colors, flavors, form, onSubmit, onClose }: Props) {
+export function EditHarvestModal({ isOpen, instant, hiveName, colors, flavors, form, onSubmit, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Harvest Record" maxWidth="md">
+        <Modal isOpen={isOpen} instant={instant} onClose={onClose} title="Edit Harvest Record" maxWidth="md">
             <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
                 <div className="space-y-1.5">
                     <label className="ml-1 text-sm font-medium text-amber-900">Hive</label>

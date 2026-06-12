@@ -41,6 +41,7 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors, filter
     const flash = props.flash;
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
+    const [editInstant, setEditInstant] = useState(false);
     const close = () => setActiveModal(null);
     const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
     const viewHarvest = viewIndex !== null ? harvests.data[viewIndex] : null;
@@ -60,7 +61,8 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors, filter
     const onHiveFilter = (val: string) => router.get(route('harvests.index'), val ? { hive_id: val } : {}, { preserveState: true, replace: true });
     const createForm = useForm<HarvestCreateFormData>({ ...emptyCreate });
     const editForm = useForm<HarvestEditFormData>({ harvest_date: '', weight: '', productivity_level: '', color_id: '', flavor_id: '', notes: '' });
-    const openEdit = (harvest: Harvest) => {
+    const openEdit = (harvest: Harvest, instant = false) => {
+        setEditInstant(instant);
         editForm.setData({ harvest_date: harvest.harvest_date.slice(0, 10), weight: String(harvest.weight), productivity_level: harvest.productivity_level ?? '', color_id: harvest.color_id ? String(harvest.color_id) : '', flavor_id: harvest.flavor_id ? String(harvest.flavor_id) : '', notes: harvest.notes ?? '' });
         setActiveModal({ type: 'edit', harvest });
     };
@@ -110,10 +112,10 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors, filter
                 <ViewHarvestModal harvest={viewHarvest} harvestIndex={viewIndex!} totalHarvests={harvests.data.length} hasPrev={hasPrev} hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < harvests.data.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewHarvest); }} onClose={close} />
+                    onEdit={() => { close(); openEdit(viewHarvest, true); }} onClose={close} />
             )}
             {activeModal?.type === 'edit' && (
-                <EditHarvestModal isOpen hiveName={activeModal.harvest.hive?.name} colors={colors} flavors={flavors} form={editForm} onSubmit={openEditConfirm} onClose={close} />
+                <EditHarvestModal isOpen instant={editInstant} hiveName={activeModal.harvest.hive?.name} colors={colors} flavors={flavors} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
             <HarvestConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
         </AuthenticatedLayout>

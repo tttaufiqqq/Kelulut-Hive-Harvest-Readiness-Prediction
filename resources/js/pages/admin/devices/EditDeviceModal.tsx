@@ -10,6 +10,7 @@ type DeviceFormInstance = ReturnType<typeof useForm<DeviceFormData>>;
 
 interface Props {
     isOpen: boolean;
+    instant?: boolean;
     deviceIdentifier: string;
     hiveOptions: SelectOption[];
     form: DeviceFormInstance;
@@ -17,9 +18,9 @@ interface Props {
     onClose: () => void;
 }
 
-export function EditDeviceModal({ isOpen, deviceIdentifier, hiveOptions, form, onSubmit, onClose }: Props) {
+export function EditDeviceModal({ isOpen, instant, deviceIdentifier, hiveOptions, form, onSubmit, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Device" maxWidth="sm">
+        <Modal isOpen={isOpen} instant={instant} onClose={onClose} title="Edit Device" maxWidth="sm">
             <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
                 <div>
                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">Device ID</p>

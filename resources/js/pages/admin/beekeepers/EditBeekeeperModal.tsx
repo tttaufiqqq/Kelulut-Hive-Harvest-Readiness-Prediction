@@ -7,14 +7,15 @@ type FormInstance = ReturnType<typeof useForm<{ name: string; email: string; pho
 
 interface Props {
     isOpen: boolean;
+    instant?: boolean;
     form: FormInstance;
     onSubmit: () => void;
     onClose: () => void;
 }
 
-export function EditBeekeeperModal({ isOpen, form, onSubmit, onClose }: Props) {
+export function EditBeekeeperModal({ isOpen, instant, form, onSubmit, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Beekeeper" maxWidth="md">
+        <Modal isOpen={isOpen} instant={instant} onClose={onClose} title="Edit Beekeeper" maxWidth="md">
             <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
                 <Input label="Name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} autoFocus error={form.errors.name} />
                 <Input label="Email" type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} error={form.errors.email} />

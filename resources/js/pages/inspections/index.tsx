@@ -40,6 +40,7 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
     const flash = props.flash;
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
+    const [editInstant, setEditInstant] = useState(false);
     const close = () => setActiveModal(null);
     const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
     const viewInspection = viewIndex !== null ? inspections.data[viewIndex] : null;
@@ -64,7 +65,8 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
     const createForm = useForm<InspectionCreateFormData>({ ...emptyCreate, weather_ids: [], flora_ids: [] });
     const editForm = useForm<InspectionEditFormData>({ inspection_date: '', blooming_status: '', vegetation_density: '', nectar_source_availability: '', structural_damage: '', food_source_observation: '', notes: '', weather_ids: [], flora_ids: [] });
 
-    const openEdit = (inspection: Inspection) => {
+    const openEdit = (inspection: Inspection, instant = false) => {
+        setEditInstant(instant);
         editForm.setData({ inspection_date: inspection.inspection_date.slice(0, 10), blooming_status: inspection.blooming_status ?? '', vegetation_density: inspection.vegetation_density ?? '', nectar_source_availability: inspection.nectar_source_availability ?? '', structural_damage: inspection.structural_damage ?? '', food_source_observation: inspection.food_source_observation ?? '', notes: inspection.notes ?? '', weather_ids: toMultiIds(inspection.weather_conditions), flora_ids: toMultiIds(inspection.flora_types) });
         setEditWeatherIds(toMultiIds(inspection.weather_conditions));
         setEditFloraIds(toMultiIds(inspection.flora_types));
@@ -125,10 +127,10 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                 <ViewInspectionModal inspection={viewInspection} inspectionIndex={viewIndex!} totalInspections={inspections.data.length} hasPrev={hasPrev} hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < inspections.data.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewInspection); }} onClose={close} />
+                    onEdit={() => { close(); openEdit(viewInspection, true); }} onClose={close} />
             )}
             {activeModal?.type === 'edit' && (
-                <EditInspectionModal isOpen hiveName={activeModal.inspection.hive?.name} weatherConditions={weatherConditions} floraTypes={floraTypes} form={editForm} editWeatherIds={editWeatherIds} editFloraIds={editFloraIds} onWeatherChange={setEditWeatherIds} onFloraChange={setEditFloraIds} onSubmit={openEditConfirm} onClose={close} />
+                <EditInspectionModal isOpen instant={editInstant} hiveName={activeModal.inspection.hive?.name} weatherConditions={weatherConditions} floraTypes={floraTypes} form={editForm} editWeatherIds={editWeatherIds} editFloraIds={editFloraIds} onWeatherChange={setEditWeatherIds} onFloraChange={setEditFloraIds} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
             <InspectionConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
         </AuthenticatedLayout>

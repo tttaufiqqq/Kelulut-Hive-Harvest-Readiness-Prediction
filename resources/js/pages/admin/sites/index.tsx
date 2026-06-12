@@ -27,6 +27,7 @@ export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
+    const [editInstant, setEditInstant] = useState(false);
     const close = () => setActiveModal(null);
 
     const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
@@ -53,7 +54,8 @@ export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
     const createForm = useForm<SiteFormData>({ name: '', description: '' });
     const editForm = useForm<SiteFormData>({ name: '', description: '' });
 
-    const openEdit = (site: SiteRow) => {
+    const openEdit = (site: SiteRow, instant = false) => {
+        setEditInstant(instant);
         editForm.setData({ name: site.name, description: site.description ?? '' });
         setActiveModal({ type: 'edit', site });
     };
@@ -123,14 +125,14 @@ export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
                     hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < sites.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewSite); }}
+                    onEdit={() => { close(); openEdit(viewSite, true); }}
                     onClose={close}
                 />
             )}
 
             <SiteFormModal isOpen={activeModal?.type === 'create'} isCreate form={createForm} onSubmit={submitCreate} onClose={close} />
             {activeModal?.type === 'edit' && (
-                <SiteFormModal isOpen isCreate={false} form={editForm} onSubmit={openEditConfirm} onClose={close} />
+                <SiteFormModal isOpen isCreate={false} instant={editInstant} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
 
             <SiteConfirmModals

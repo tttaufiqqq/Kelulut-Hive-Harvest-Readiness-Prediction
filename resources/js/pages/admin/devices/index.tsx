@@ -45,6 +45,7 @@ export default function DevicesIndex({
 
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
+    const [editInstant, setEditInstant] = useState(false);
     const close = () => setActiveModal(null);
 
     const viewIndex = activeModal?.type === 'view' ? activeModal.index : null;
@@ -72,7 +73,8 @@ export default function DevicesIndex({
     const createForm = useForm<DeviceFormData>(emptyForm);
     const editForm = useForm<DeviceFormData>(emptyForm);
 
-    const openEdit = (device: DeviceRow) => {
+    const openEdit = (device: DeviceRow, instant = false) => {
+        setEditInstant(instant);
         editForm.setData({ hive_id: String(device.hive_id), device_status: device.device_status, installation_date: device.installation_date ?? '', last_maintenance_date: device.last_maintenance_date ?? '' });
         setActiveModal({ type: 'edit', device });
     };
@@ -147,7 +149,7 @@ export default function DevicesIndex({
                     hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < devices.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewDevice); }}
+                    onEdit={() => { close(); openEdit(viewDevice, true); }}
                     onClose={close}
                 />
             )}
@@ -155,7 +157,7 @@ export default function DevicesIndex({
             <CreateDeviceModal isOpen={activeModal?.type === 'create'} hiveOptions={availableOptions} form={createForm} onSubmit={submitCreate} onClose={close} />
 
             {activeModal?.type === 'edit' && (
-                <EditDeviceModal isOpen deviceIdentifier={activeModal.device.node_identifier} hiveOptions={allHiveOptions} form={editForm} onSubmit={openEditConfirm} onClose={close} />
+                <EditDeviceModal isOpen instant={editInstant} deviceIdentifier={activeModal.device.node_identifier} hiveOptions={allHiveOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
 
             <DeviceConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />

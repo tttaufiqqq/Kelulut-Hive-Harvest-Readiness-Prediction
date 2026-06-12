@@ -13,6 +13,7 @@ type FormInstance = ReturnType<typeof useForm<InspectionEditFormData>>;
 
 interface Props {
     isOpen: boolean;
+    instant?: boolean;
     hiveName: string | undefined;
     weatherConditions: MasterWeatherCondition[];
     floraTypes: MasterFloraType[];
@@ -25,9 +26,9 @@ interface Props {
     onClose: () => void;
 }
 
-export function EditInspectionModal({ isOpen, hiveName, weatherConditions, floraTypes, form, editWeatherIds, editFloraIds, onWeatherChange, onFloraChange, onSubmit, onClose }: Props) {
+export function EditInspectionModal({ isOpen, instant, hiveName, weatherConditions, floraTypes, form, editWeatherIds, editFloraIds, onWeatherChange, onFloraChange, onSubmit, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Inspection Record" maxWidth="2xl">
+        <Modal isOpen={isOpen} instant={instant} onClose={onClose} title="Edit Inspection Record" maxWidth="2xl">
             <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">

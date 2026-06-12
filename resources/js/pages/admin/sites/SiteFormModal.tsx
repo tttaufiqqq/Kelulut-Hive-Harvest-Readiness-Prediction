@@ -10,15 +10,17 @@ type SiteFormInstance = ReturnType<typeof useForm<SiteFormData>>;
 interface Props {
     isOpen: boolean;
     isCreate: boolean;
+    instant?: boolean;
     form: SiteFormInstance;
     onSubmit: () => void;
     onClose: () => void;
 }
 
-export function SiteFormModal({ isOpen, isCreate, form, onSubmit, onClose }: Props) {
+export function SiteFormModal({ isOpen, isCreate, instant, form, onSubmit, onClose }: Props) {
     return (
         <Modal
             isOpen={isOpen}
+            instant={instant}
             onClose={onClose}
             title={isCreate ? 'Add Site' : 'Edit Site'}
             maxWidth="sm"

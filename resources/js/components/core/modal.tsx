@@ -11,6 +11,7 @@ interface ModalProps {
     children: React.ReactNode;
     maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl';
     mobileLayout?: 'centered' | 'sheet';
+    instant?: boolean;
 }
 
 const maxWidthMap = {
@@ -29,6 +30,7 @@ export function Modal({
     children,
     maxWidth = 'md',
     mobileLayout = 'centered',
+    instant = false,
 }: ModalProps) {
     useEffect(() => {
         if (isOpen) {
@@ -61,7 +63,7 @@ export function Modal({
                 >
                     {/* Backdrop */}
                     <motion.div
-                        initial={{ opacity: 0 }}
+                        initial={instant ? false : { opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 bg-amber-950/40 backdrop-blur-sm"
@@ -70,7 +72,7 @@ export function Modal({
 
                     {/* Modal Box */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        initial={instant ? false : { opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         className={`relative flex w-full flex-col overflow-hidden bg-white shadow-2xl ${

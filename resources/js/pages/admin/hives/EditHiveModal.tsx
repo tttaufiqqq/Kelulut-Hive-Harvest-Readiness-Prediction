@@ -9,6 +9,7 @@ type HiveFormInstance = ReturnType<typeof useForm<HiveFormData>>;
 
 interface Props {
     isOpen: boolean;
+    instant?: boolean;
     beekeeperOptions: SelectOption[];
     speciesOptions: SelectOption[];
     siteOptions: SelectOption[];
@@ -18,9 +19,9 @@ interface Props {
     onClose: () => void;
 }
 
-export function EditHiveModal({ isOpen, beekeeperOptions, speciesOptions, siteOptions, statusOptions, form, onSubmit, onClose }: Props) {
+export function EditHiveModal({ isOpen, instant, beekeeperOptions, speciesOptions, siteOptions, statusOptions, form, onSubmit, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Hive" maxWidth="md">
+        <Modal isOpen={isOpen} instant={instant} onClose={onClose} title="Edit Hive" maxWidth="md">
             <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
                 <SelectField label="Beekeeper" value={form.data.beekeeper_id} onChange={(v) => form.setData('beekeeper_id', v)} options={beekeeperOptions} error={form.errors.beekeeper_id} />
                 <Input label="Hive Name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} autoFocus error={form.errors.name} />

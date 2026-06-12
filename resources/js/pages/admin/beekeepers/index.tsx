@@ -38,6 +38,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: { beekeepers: Pag
     const flash = props.flash;
     const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const [deleting, setDeleting] = useState(false);
+    const [editInstant, setEditInstant] = useState(false);
     const [harvestRows, setHarvestRows] = useState<HarvestRow[] | null>(null);
     const [harvestLoading, setHarvestLoading] = useState(false);
     const cancelHarvestRef = useRef<() => void>(() => {});
@@ -74,7 +75,7 @@ export default function BeekeepersIndex({ beekeepers, stats }: { beekeepers: Pag
 
     const createForm = useForm({ name: '', email: '', phone: '' });
     const editForm = useForm({ name: '', email: '', phone: '' });
-    const openEdit = (user: User) => { editForm.setData({ name: user.name, email: user.email, phone: user.phone ?? '' }); setActiveModal({ type: 'edit', user }); };
+    const openEdit = (user: User, instant = false) => { setEditInstant(instant); editForm.setData({ name: user.name, email: user.email, phone: user.phone ?? '' }); setActiveModal({ type: 'edit', user }); };
     const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
         const errors = validateBeekeeperForm(createForm.data);
@@ -139,10 +140,10 @@ export default function BeekeepersIndex({ beekeepers, stats }: { beekeepers: Pag
             <CreateBeekeeperModal isOpen={activeModal?.type === 'create'} form={createForm} onSubmit={submitCreate} onClose={close} />
             {activeModal?.type === 'view' && viewBeekeeper && (
                 <ViewBeekeeperModal beekeeper={viewBeekeeper} beekeeperIndex={viewIndex!} totalBeekeepers={beekeepers.data.length} hasPrev={hasPrev} hasNext={hasNext} harvestRows={harvestRows} harvestLoading={harvestLoading}
-                    onPrev={() => openView(viewIndex! - 1)} onNext={() => openView(viewIndex! + 1)} onEdit={() => openEdit(viewBeekeeper)} onClose={close} />
+                    onPrev={() => openView(viewIndex! - 1)} onNext={() => openView(viewIndex! + 1)} onEdit={() => openEdit(viewBeekeeper, true)} onClose={close} />
             )}
             {activeModal?.type === 'edit' && (
-                <EditBeekeeperModal isOpen form={editForm} onSubmit={openEditConfirm} onClose={close} />
+                <EditBeekeeperModal isOpen instant={editInstant} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
             )}
             <BeekeeperConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} onConfirmEdit={confirmEdit} onConfirmToggle={confirmToggle} onConfirmResend={confirmResend} onConfirmDelete={confirmDelete} onClose={close} />
         </AdminLayout>
