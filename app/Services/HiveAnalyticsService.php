@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Harvest;
+use App\Models\Hive;
+use App\Models\Prediction;
+use App\Models\SensorLog;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class HiveAnalyticsService
+{
+    public function execute(Hive $hive, Request $request): array
+    {
+        // ── Q1: HRI trend — last 30 days, grouped by date ─────────────────────
+        $avg7d = Prediction::join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
+            ->where('sensor_logs.hive_id', $hive->id)
+            ->where('predictions.prediction_timestamp', '>=', now()->subDays(7))
+            ->avg('predictions.hri_value');
+        $avg7dPct = round(($avg7d ?? 0) * 100);
+
+        $hriTrend = Prediction::join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
+            ->where('sensor_logs.hive_id', $hive->id)
+            ->where('predictions.prediction_timestamp', '>=', now()->subDays(30))
+            ->selectRaw('DATE(predictions.prediction_timestamp) as date, AVG(predictions.hri_value * 100) as hri_score')
+            ->groupByRaw('DATE(predictions.prediction_timestamp)')
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($row) => [
+                'date'      => Carbon::parse($row->date)->format('M d'),
+                'hri_score' => round($row->hri_score),
+                'avg_7d'    => $avg7dPct,
+            ]);
+
+        // ── Q2: Sensor readings — selected date (default today), grouped by hour
+        $sensorDate = $request->date('sensor_date') ?? today();
+
+        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+        $hourExpr = $isSqlite
+            ? "strftime('%H:00', record_timestamp)"
+            : 'DATE_FORMAT(record_timestamp, "%H:00")';
+
+        $sensorReadings = SensorLog::where('hive_id', $hive->id)
+            ->whereDate('record_timestamp', $sensorDate)
+            ->selectRaw("
+                {$hourExpr} as time,
+                AVG(temp)         as temp,
+                AVG(humidity)     as humidity,
+                AVG(mq2_value)    as mq2,
+                AVG(mq3_value)    as mq3,
+                AVG(mq5_value)    as mq5,
+                AVG(mq135_value)  as mq135
+            ")
+            ->groupByRaw($hourExpr)
+            ->orderBy('time')
+            ->get()
+            ->map(fn ($row) => [
+                'time'     => $row->time,
+                'temp'     => round($row->temp, 1),
+                'humidity' => round($row->humidity, 1),
+                'mq2'      => round($row->mq2),
+                'mq3'      => round($row->mq3),
+                'mq5'      => round($row->mq5),
+                'mq135'    => round($row->mq135),
+            ]);
+
+        // ── Q3: Latest prediction ─────────────────────────────────────────────
+        try {
+            $latestPredictionRow = DB::table('vw_hive_latest_prediction')
+                ->where('hive_id', $hive->id)
+                ->first();
+        } catch (\Throwable) {
+            $latestPredictionRow = null;
+        }
+
+        $latestPrediction = $latestPredictionRow ? [
+            'readiness_level'      => $latestPredictionRow->readiness_level,
+            'hri_value'            => (float) $latestPredictionRow->hri_value,
+            'confidence_score'     => (float) $latestPredictionRow->confidence_score,
+            'prediction_timestamp' => Carbon::parse($latestPredictionRow->prediction_timestamp)->toIso8601String(),
+        ] : null;
+
+        // ── Q4: Harvest history ───────────────────────────────────────────────
+        $harvestHistory = Harvest::where('hive_id', $hive->id)
+            ->with(['color', 'flavor'])
+            ->orderBy('harvest_date')
+            ->get()
+            ->map(fn ($harvest) => [
+                'date'   => Carbon::parse($harvest->harvest_date)->format('M d'),
+                'weight' => (float) $harvest->weight,
+                'color'  => $harvest->color?->name,
+                'flavor' => $harvest->flavor?->name,
+            ]);
+
+        // ── Q5: Hive summary ──────────────────────────────────────────────────
+        $summary = $hive->summary;
+        try {
+            $harvestSummary = DB::table('vw_harvest_summary_per_hive')->where('hive_id', $hive->id)->first();
+        } catch (\Throwable) {
+            $harvestSummary = null;
+        }
+        $totalHarvests = (int) ($harvestSummary?->total_harvests ?? 0);
+        $lastHarvestDate = $harvestSummary?->last_harvest_date;
+
+        return [
+            'hive' => [
+                'id'                     => $hive->id,
+                'name'                   => $hive->name,
+                'latest_readiness_level' => $summary?->latest_readiness_level,
+                'avg_hri_pct'            => round(($summary?->avg_hri_value ?? 0) * 100),
+                'avg_hri_7d_pct'         => $avg7dPct,
+                'total_harvests'         => $totalHarvests,
+                'last_harvest_date'      => $lastHarvestDate,
+            ],
+            'hriTrend'         => $hriTrend,
+            'sensorReadings'   => $sensorReadings,
+            'latestPrediction' => $latestPrediction,
+            'harvestHistory'   => $harvestHistory,
+        ];
+    }
+}
