@@ -201,7 +201,7 @@ export default function AdminHarvestsIndex({
                                         Date
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Weight (g)
+                                        Weight (kg)
                                     </th>
                                     <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase md:table-cell">
                                         Productivity
@@ -246,7 +246,7 @@ export default function AdminHarvestsIndex({
                                             {fmtDate(harvest.harvest_date)}
                                         </td>
                                         <td className="px-6 py-4 text-amber-900/70">
-                                            {Math.round(harvest.weight * 1000)} g
+                                            {harvest.weight} kg
                                         </td>
                                         <td className="hidden px-6 py-4 md:table-cell">
                                             <ProductivityBadge

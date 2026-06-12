@@ -65,7 +65,7 @@ export function Modal({
                     <motion.div
                         initial={instant ? false : { opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        exit={{ opacity: 0, transition: { duration: 0 } }}
                         className="absolute inset-0 bg-amber-950/40 backdrop-blur-sm"
                         onClick={onClose}
                     />
@@ -74,7 +74,7 @@ export function Modal({
                     <motion.div
                         initial={instant ? false : { opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        exit={{ opacity: 0, transition: { duration: 0 } }}
                         className={`relative flex w-full flex-col overflow-hidden bg-white shadow-2xl ${
                             mobileLayout === 'sheet'
                                 ? `max-h-[85dvh] rounded-t-[2rem] rounded-b-none sm:max-h-[90vh] sm:rounded-[2.5rem] ${maxWidthMap[maxWidth]}`

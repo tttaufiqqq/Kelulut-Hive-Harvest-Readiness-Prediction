@@ -26,9 +26,9 @@ export function harvestColumns({ onEdit, onDelete }: Handlers) {
         },
         {
             key: 'weight',
-            header: 'Weight (g)',
+            header: 'Weight (kg)',
             cellClassName: 'px-6 py-4 text-amber-900/70',
-            render: (harvest: Harvest) => `${Math.round(harvest.weight * 1000)} g`,
+            render: (harvest: Harvest) => `${harvest.weight} kg`,
         },
         {
             key: 'productivity',
