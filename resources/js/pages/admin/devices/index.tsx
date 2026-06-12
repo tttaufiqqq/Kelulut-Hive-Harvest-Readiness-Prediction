@@ -14,7 +14,14 @@ import type { DeviceRow } from './DeviceTableRow';
 import { EditDeviceModal } from './EditDeviceModal';
 import { ViewDeviceModal } from './ViewDeviceModal';
 
-type HiveOption = { id: number; name: string };
+type HiveOption = {
+    id: number;
+    name: string;
+    status: string | null;
+    species_name: string | null;
+    site_name: string | null;
+    beekeeper_name: string | null;
+};
 
 type ActiveModal =
     | { type: 'create' }
@@ -133,6 +140,7 @@ export default function DevicesIndex({
             {activeModal?.type === 'view' && viewDevice && (
                 <ViewDeviceModal
                     device={viewDevice}
+                    hive={all_hives.find((h) => h.id === viewDevice.hive_id) ?? null}
                     deviceIndex={viewIndex!}
                     totalDevices={devices.length}
                     hasPrev={hasPrev}

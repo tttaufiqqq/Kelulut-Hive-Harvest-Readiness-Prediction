@@ -19,7 +19,7 @@ import { formatPredictionTime } from './utils';
 
 interface Props {
     hive: { id: number; name: string };
-    latestPrediction: import('./predictions/types').PredictionEntry | null;
+    latestPrediction: import('./types').PredictionEntry | null;
     sensorWarnings: string[];
     predictionTrends: PredictionTrendItem[];
     historyPredictions: PaginatedPredictions;
