@@ -9,7 +9,7 @@ use Throwable;
 
 class TelegramService
 {
-    public function sendMessage(string $chatId, string $text): void
+    public function execute(string $chatId, string $text): void
     {
         $token = config('services.telegram.token');
 

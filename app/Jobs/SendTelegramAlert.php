@@ -37,7 +37,7 @@ class SendTelegramAlert implements ShouldQueue
             return;
         }
 
-        $telegram->sendMessage($user->telegram_id, $this->buildMessage($prediction));
+        $telegram->execute($user->telegram_id, $this->buildMessage($prediction));
     }
 
     public function failed(Throwable $exception): void
