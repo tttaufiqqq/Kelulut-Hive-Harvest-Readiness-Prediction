@@ -95,7 +95,7 @@ export function HarvestBarChart({ data }: Props) {
                             <CartesianGrid strokeDasharray="3 3" stroke="#FEF3C7" horizontal={false} />
                             <XAxis
                                 type="number"
-                                unit=" g"
+                                unit=" kg"
                                 axisLine={false}
                                 tickLine={false}
                                 tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
@@ -110,7 +110,7 @@ export function HarvestBarChart({ data }: Props) {
                                 tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
                                 tickMargin={8}
                             />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [v + ' g', 'Total Harvest']} />
+                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [v + ' kg', 'Total Harvest']} />
                             <Bar dataKey="total_weight" fill="#F59E0B" radius={[0, 6, 6, 0]} />
                         </BarChart>
                     </ResponsiveContainer>

@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { route } from 'ziggy-js';
 import '../css/app.css';
 import { AppErrorBoundary } from '@/components/core/feedback/app-error-boundary';
+import { NavigationSpinner } from '@/components/core/feedback/navigation-spinner';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
@@ -56,15 +57,13 @@ createInertiaApp({
         root.render(
             <StrictMode>
                 <AppErrorBoundary requestId={requestId}>
+                    <NavigationSpinner />
                     <App {...props} />
                 </AppErrorBoundary>
             </StrictMode>,
         );
     },
-    progress: {
-        color: '#F59E0B',
-        delay: 250,
-    },
+    progress: false,
 });
 
 // This will set light / dark mode on load...

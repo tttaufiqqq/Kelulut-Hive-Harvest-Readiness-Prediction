@@ -36,7 +36,7 @@ export function CreateHarvestModal({ isOpen, hives, colors, flavors, form, onSub
             <form onSubmit={onSubmit} className="space-y-4">
                 <SelectField label="Hive" value={form.data.hive_id} onChange={(v) => form.setData('hive_id', v)} options={hiveOptions(hives)} error={form.errors.hive_id} />
                 <DatePickerField label="Harvest Date" value={form.data.harvest_date || null} onChange={(v) => form.setData('harvest_date', v ?? '')} maxDate="today" error={form.errors.harvest_date} />
-                <NumberInput label="Weight (kg)" value={form.data.weight} onChange={(v) => form.setData('weight', v)} min={0.01} max={9999.99} step={0.01} placeholder="e.g. 1.50" unit="kg" error={form.errors.weight} />
+                <NumberInput label="Weight (g)" value={form.data.weight ? String(Math.round(parseFloat(form.data.weight) * 1000)) : ''} onChange={(v) => form.setData('weight', v ? String(parseFloat(v) / 1000) : '')} min={10} max={9999990} step={1} placeholder="e.g. 1500" unit="g" error={form.errors.weight} />
                 <SelectField label="Productivity Level (optional)" value={form.data.productivity_level} onChange={(v) => form.setData('productivity_level', v)} options={PRODUCTIVITY_OPTIONS} error={form.errors.productivity_level} />
                 <div className="grid grid-cols-2 gap-4">
                     <SelectField label="Honey Color (optional)" value={form.data.color_id} onChange={(v) => form.setData('color_id', v)} options={colorOptions(colors)} error={form.errors.color_id} />

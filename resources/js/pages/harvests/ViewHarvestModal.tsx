@@ -45,7 +45,7 @@ export function ViewHarvestModal({ harvest, harvestIndex, totalHarvests, hasPrev
                     </div>
                     <div>
                         <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">Weight</p>
-                        <p className="font-medium text-amber-950">{harvest.weight} kg</p>
+                        <p className="font-medium text-amber-950">{Math.round(harvest.weight * 1000)} g</p>
                     </div>
                     <div>
                         <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">Productivity</p>

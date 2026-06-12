@@ -41,7 +41,7 @@ export function EditHarvestModal({ isOpen, instant, hiveName, colors, flavors, f
                     <p className="rounded-2xl border border-yellow-100 bg-yellow-50/30 px-4 py-2.5 text-sm text-amber-950/60">{hiveName}</p>
                 </div>
                 <DatePickerField label="Harvest Date" value={form.data.harvest_date || null} onChange={(v) => form.setData('harvest_date', v ?? '')} maxDate="today" error={form.errors.harvest_date} />
-                <NumberInput label="Weight (kg)" value={form.data.weight} onChange={(v) => form.setData('weight', v)} min={0.01} max={9999.99} step={0.01} unit="kg" error={form.errors.weight} />
+                <NumberInput label="Weight (g)" value={form.data.weight ? String(Math.round(parseFloat(form.data.weight) * 1000)) : ''} onChange={(v) => form.setData('weight', v ? String(parseFloat(v) / 1000) : '')} min={10} max={9999990} step={1} unit="g" error={form.errors.weight} />
                 <SelectField label="Productivity Level (optional)" value={form.data.productivity_level} onChange={(v) => form.setData('productivity_level', v)} options={PRODUCTIVITY_OPTIONS} error={form.errors.productivity_level} />
                 <div className="grid grid-cols-2 gap-4">
                     <SelectField label="Honey Color (optional)" value={form.data.color_id} onChange={(v) => form.setData('color_id', v)} options={colorOptions(colors)} error={form.errors.color_id} />
