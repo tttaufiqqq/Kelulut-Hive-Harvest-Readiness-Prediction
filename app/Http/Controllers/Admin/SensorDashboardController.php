@@ -97,16 +97,16 @@ class SensorDashboardController extends Controller
 
         return response()->json([
             'hive_name' => $hive->name,
-            'days' => $rows->map(fn ($r) => [
-                'date'          => $r->reading_date,
-                'avg_temp'      => round((float) $r->avg_temp, 1),
-                'avg_humidity'  => round((float) $r->avg_humidity, 1),
-                'avg_mq2'       => round((float) $r->avg_mq2, 1),
-                'avg_mq3'       => round((float) $r->avg_mq3, 1),
-                'avg_mq5'       => round((float) $r->avg_mq5, 1),
-                'avg_mq135'     => round((float) $r->avg_mq135, 1),
-                'avg_hri_pct'   => round((float) $r->avg_hri_value * 100, 1),
-                'reading_count' => (int) $r->reading_count,
+            'days' => $rows->map(fn ($row) => [
+                'date'          => $row->reading_date,
+                'avg_temp'      => round((float) $row->avg_temp, 1),
+                'avg_humidity'  => round((float) $row->avg_humidity, 1),
+                'avg_mq2'       => round((float) $row->avg_mq2, 1),
+                'avg_mq3'       => round((float) $row->avg_mq3, 1),
+                'avg_mq5'       => round((float) $row->avg_mq5, 1),
+                'avg_mq135'     => round((float) $row->avg_mq135, 1),
+                'avg_hri_pct'   => round((float) $row->avg_hri_value * 100, 1),
+                'reading_count' => (int) $row->reading_count,
             ])->all(),
         ]);
     }

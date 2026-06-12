@@ -92,11 +92,11 @@ class BeekeeperController extends Controller
         $rows = DB::select('CALL sp_beekeeper_harvest_summary(?)', [$user->id]);
 
         return response()->json([
-            'hives' => array_map(fn ($r) => [
-                'hive_id'       => $r->hive_id,
-                'hive_name'     => $r->hive_name,
-                'total_weight'  => round((float) $r->total_weight, 1),
-                'harvest_count' => (int) $r->harvest_count,
+            'hives' => array_map(fn ($row) => [
+                'hive_id'       => $row->hive_id,
+                'hive_name'     => $row->hive_name,
+                'total_weight'  => round((float) $row->total_weight, 1),
+                'harvest_count' => (int) $row->harvest_count,
             ], $rows),
         ]);
     }
