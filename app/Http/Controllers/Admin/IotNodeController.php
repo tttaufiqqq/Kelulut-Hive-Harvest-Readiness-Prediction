@@ -38,7 +38,7 @@ class IotNodeController extends Controller
 
         $assignedHiveIds = IotNode::pluck('hive_id')->all();
 
-        $allHives = Hive::with(['species', 'site', 'beekeeper'])
+        $allHives = Hive::with(['species', 'site', 'user'])
             ->orderBy('name')
             ->get()
             ->map(fn ($h) => [
@@ -47,7 +47,7 @@ class IotNodeController extends Controller
                 'status'         => $h->status,
                 'species_name'   => $h->species?->name,
                 'site_name'      => $h->site?->name,
-                'beekeeper_name' => $h->beekeeper?->name,
+                'beekeeper_name' => $h->user?->name,
             ]);
 
         $availableHives = $allHives->filter(fn ($h) => ! in_array($h['id'], $assignedHiveIds))->values();
