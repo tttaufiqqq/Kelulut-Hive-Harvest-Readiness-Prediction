@@ -1,20 +1,10 @@
-import { Form, Head } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { Head } from '@inertiajs/react';
 import { useRef, useState } from 'react';
-import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import { Button } from '@/components/core/button';
-import { Card } from '@/components/core/card';
-import { InputError } from '@/components/core/input-error';
-import { Heading } from '@/components/settings/heading';
-import { PasswordInput } from '@/components/settings/password-input';
-import { TwoFactorRecoveryCodes } from '@/components/settings/two-factor-recovery-codes';
-import { TwoFactorSetupModal } from '@/components/settings/two-factor-setup-modal';
-import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { SettingsLayout } from '@/layouts/settings/layout';
-import { disable, enable } from '@/routes/two-factor';
+import { PasswordSection } from './security/PasswordSection';
+import { TwoFactorSection } from './security/TwoFactorSection';
 
 type Props = {
     canManageTwoFactor?: boolean;
@@ -27,246 +17,30 @@ export default function Security({
     requiresConfirmation = false,
     twoFactorEnabled = false,
 }: Props) {
-    const passwordInput = useRef<HTMLInputElement>(null);
-    const currentPasswordInput = useRef<HTMLInputElement>(null);
-
-    const {
-        qrCodeSvg,
-        hasSetupData,
-        manualSetupKey,
-        clearSetupData,
-        fetchSetupData,
-        recoveryCodesList,
-        fetchRecoveryCodes,
-        errors,
-    } = useTwoFactorAuth();
-    const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
+    const passwordInputRef = useRef<HTMLInputElement>(null);
+    const currentPasswordInputRef = useRef<HTMLInputElement>(null);
+    const twoFactor = useTwoFactorAuth();
+    const [showSetupModal, setShowSetupModal] = useState(false);
 
     return (
         <AuthenticatedLayout>
             <Head title="Security settings" />
-
             <h1 className="sr-only">Security settings</h1>
 
             <SettingsLayout>
-                <Card>
-                    <div className="space-y-6">
-                        <Heading
-                            variant="small"
-                            title="Update password"
-                            description="Ensure your account is using a long, random password to stay secure"
-                        />
+                <PasswordSection
+                    passwordInputRef={passwordInputRef}
+                    currentPasswordInputRef={currentPasswordInputRef}
+                />
 
-                        <Form
-                            action={SecurityController.update()}
-                            options={{
-                                preserveScroll: true,
-                            }}
-                            resetOnError={[
-                                'password',
-                                'password_confirmation',
-                                'current_password',
-                            ]}
-                            resetOnSuccess
-                            onError={(errors) => {
-                                if (errors.password) {
-                                    passwordInput.current?.focus();
-                                }
-
-                                if (errors.current_password) {
-                                    currentPasswordInput.current?.focus();
-                                }
-                            }}
-                            className="space-y-6"
-                        >
-                            {({ errors, processing, recentlySuccessful }) => (
-                                <>
-                                    <div className="space-y-1.5">
-                                        <Label
-                                            htmlFor="current_password"
-                                            className="ml-1 text-amber-900"
-                                        >
-                                            Current password
-                                        </Label>
-                                        <PasswordInput
-                                            id="current_password"
-                                            ref={currentPasswordInput}
-                                            name="current_password"
-                                            autoComplete="current-password"
-                                            placeholder="Current password"
-                                        />
-                                        <InputError
-                                            message={errors.current_password}
-                                            className="ml-1 text-xs text-red-500"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label
-                                            htmlFor="password"
-                                            className="ml-1 text-amber-900"
-                                        >
-                                            New password
-                                        </Label>
-                                        <PasswordInput
-                                            id="password"
-                                            ref={passwordInput}
-                                            name="password"
-                                            autoComplete="new-password"
-                                            placeholder="New password"
-                                        />
-                                        <InputError
-                                            message={errors.password}
-                                            className="ml-1 text-xs text-red-500"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label
-                                            htmlFor="password_confirmation"
-                                            className="ml-1 text-amber-900"
-                                        >
-                                            Confirm password
-                                        </Label>
-                                        <PasswordInput
-                                            id="password_confirmation"
-                                            name="password_confirmation"
-                                            autoComplete="new-password"
-                                            placeholder="Confirm password"
-                                        />
-                                        <InputError
-                                            message={
-                                                errors.password_confirmation
-                                            }
-                                            className="ml-1 text-xs text-red-500"
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center gap-4">
-                                        <Button
-                                            variant="primary"
-                                            disabled={processing}
-                                            data-test="update-password-button"
-                                        >
-                                            Save password
-                                        </Button>
-
-                                        <AnimatePresence>
-                                            {recentlySuccessful && (
-                                                <motion.p
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                    transition={{
-                                                        duration: 0.3,
-                                                    }}
-                                                    className="text-sm text-amber-600/60"
-                                                >
-                                                    Saved
-                                                </motion.p>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                </>
-                            )}
-                        </Form>
-                    </div>
-                </Card>
-
-                {canManageTwoFactor && (
-                    <Card>
-                        <div className="space-y-6">
-                            <Heading
-                                variant="small"
-                                title="Two-factor authentication"
-                                description="Manage your two-factor authentication settings"
-                            />
-                            {twoFactorEnabled ? (
-                                <div className="flex flex-col items-start justify-start space-y-4">
-                                    <p className="text-sm text-amber-900/50">
-                                        You will be prompted for a secure,
-                                        random pin during login, which you can
-                                        retrieve from the TOTP-supported
-                                        application on your phone.
-                                    </p>
-
-                                    <div className="relative inline">
-                                        <Form action={disable()}>
-                                            {({ processing }) => (
-                                                <Button
-                                                    variant="destructive"
-                                                    type="submit"
-                                                    disabled={processing}
-                                                >
-                                                    Disable 2FA
-                                                </Button>
-                                            )}
-                                        </Form>
-                                    </div>
-
-                                    <TwoFactorRecoveryCodes
-                                        recoveryCodesList={recoveryCodesList}
-                                        fetchRecoveryCodes={fetchRecoveryCodes}
-                                        errors={errors}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-start justify-start space-y-4">
-                                    <p className="text-sm text-amber-900/50">
-                                        When you enable two-factor
-                                        authentication, you will be prompted for
-                                        a secure pin during login. This pin can
-                                        be retrieved from a TOTP-supported
-                                        application on your phone.
-                                    </p>
-
-                                    <div>
-                                        {hasSetupData ? (
-                                            <Button
-                                                variant="primary"
-                                                onClick={() =>
-                                                    setShowSetupModal(true)
-                                                }
-                                            >
-                                                <ShieldCheck />
-                                                Continue setup
-                                            </Button>
-                                        ) : (
-                                            <Form
-                                                action={enable()}
-                                                onSuccess={() =>
-                                                    setShowSetupModal(true)
-                                                }
-                                            >
-                                                {({ processing }) => (
-                                                    <Button
-                                                        variant="primary"
-                                                        type="submit"
-                                                        disabled={processing}
-                                                    >
-                                                        Enable 2FA
-                                                    </Button>
-                                                )}
-                                            </Form>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <TwoFactorSetupModal
-                            isOpen={showSetupModal}
-                            onClose={() => setShowSetupModal(false)}
-                            requiresConfirmation={requiresConfirmation}
-                            twoFactorEnabled={twoFactorEnabled}
-                            qrCodeSvg={qrCodeSvg}
-                            manualSetupKey={manualSetupKey}
-                            clearSetupData={clearSetupData}
-                            fetchSetupData={fetchSetupData}
-                            errors={errors}
-                        />
-                    </Card>
-                )}
+                <TwoFactorSection
+                    canManageTwoFactor={canManageTwoFactor}
+                    twoFactorEnabled={twoFactorEnabled}
+                    requiresConfirmation={requiresConfirmation}
+                    showSetupModal={showSetupModal}
+                    onToggleSetup={() => setShowSetupModal((prev) => !prev)}
+                    twoFactor={twoFactor}
+                />
             </SettingsLayout>
         </AuthenticatedLayout>
     );
