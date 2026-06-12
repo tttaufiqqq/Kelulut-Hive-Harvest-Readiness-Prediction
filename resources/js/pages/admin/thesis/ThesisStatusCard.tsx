@@ -1,6 +1,7 @@
 import { CheckCircle, ExternalLink, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/core/display/button';
 import { Card } from '@/components/core/display/card';
+import { fmtDateTime } from '@/lib/format';
 
 interface Props {
     thesisUrl: string | null;
@@ -28,7 +29,7 @@ export function ThesisStatusCard({ thesisUrl, uploadedAt, onRemoveClick }: Props
                 </div>
                 <div className="min-w-0 flex-1">
                     <p className="font-black text-amber-950">Thesis is live</p>
-                    <p className="mt-0.5 text-xs text-amber-900/50">Uploaded {uploadedAt}</p>
+                    <p className="mt-0.5 text-xs text-amber-900/50">Uploaded {fmtDateTime(uploadedAt)}</p>
                     <div className="mt-4 flex flex-wrap gap-3">
                         <a
                             href={thesisUrl}

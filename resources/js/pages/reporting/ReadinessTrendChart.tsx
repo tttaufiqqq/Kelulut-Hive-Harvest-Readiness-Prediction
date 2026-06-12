@@ -12,6 +12,7 @@ import {
 import { DatePickerField } from '@/components/core/date-picker';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/form/select-field';
+import { fmtDayMonth } from '@/lib/format';
 
 export interface ReadinessTrend {
     hive_id: number;
@@ -118,6 +119,7 @@ export function ReadinessTrendChart({ trends }: Props) {
                                 tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }}
                                 dy={8}
                                 tickMargin={8}
+                                tickFormatter={(d: string) => fmtDayMonth(d)}
                             />
                             <YAxis
                                 domain={[0, 100]}

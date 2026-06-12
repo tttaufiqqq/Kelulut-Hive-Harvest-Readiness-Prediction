@@ -23,8 +23,8 @@ export function formatDisplayValue(value: string | null, mode: PickerMode) {
     const parsed = parsePickerValue(value, mode);
     return parsed.toLocaleDateString('en-GB', {
         ...(mode === 'day'
-            ? { day: 'numeric', month: 'short', year: 'numeric' }
-            : { month: 'short', year: 'numeric' }),
+            ? { day: '2-digit', month: '2-digit', year: 'numeric' }
+            : { month: '2-digit', year: 'numeric' }),
     });
 }
 

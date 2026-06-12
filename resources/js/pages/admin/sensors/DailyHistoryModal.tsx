@@ -3,7 +3,7 @@ import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Info } from '
 import { Dropdown } from '@/components/core/overlay/dropdown';
 import { Modal } from '@/components/core/overlay/modal';
 import { SensorRadarChart } from '@/components/core/data/visualization-charts';
-import { fmtDate } from '@/lib/format';
+import { fmtDate, fmtMonth } from '@/lib/format';
 import type { Hive } from './types';
 
 const ROWS_PER_PAGE = 7;
@@ -27,10 +27,6 @@ export interface DailyHistoryModalProps {
     onClose: () => void;
 }
 
-function fmtMonth(ym: string): string {
-    const [year, month] = ym.split('-');
-    return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(Number(year), Number(month) - 1));
-}
 
 export function DailyHistoryModal({ isOpen, hives, initialHiveIndex, onClose }: DailyHistoryModalProps) {
     const [activeIndex, setActiveIndex] = useState(initialHiveIndex);

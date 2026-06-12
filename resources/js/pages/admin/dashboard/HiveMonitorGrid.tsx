@@ -1,6 +1,7 @@
 import { Droplets, Thermometer, Wind } from 'lucide-react';
 import { Card } from '@/components/core/display/card';
 import { DatePicker } from '@/components/core/date-picker';
+import { fmtDate } from '@/lib/format';
 import { STATUS_BADGE, STATUS_LABEL, WARN_CO2_ABOVE, type HiveData } from './constants';
 import { formatLastReading } from './utils';
 
@@ -26,7 +27,7 @@ export function HiveMonitorGrid({ sortedHives, isMonitorLive, monitorDate, monit
                     ) : (
                         <h3 className="text-sm font-black tracking-widest text-amber-700 uppercase">
                             Hive Monitor &mdash;{' '}
-                            {new Date(`${monitorDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {fmtDate(monitorDate)}
                         </h3>
                     )}
                 </div>

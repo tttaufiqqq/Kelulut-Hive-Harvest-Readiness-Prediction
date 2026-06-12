@@ -42,8 +42,8 @@ export function FleetHriLineChart({ data }: { data: FleetTrendItem[] }) {
                                     const prev = filtered[index - Math.floor(filtered.length / 8)];
                                     const isNewYear = !prev || new Date(prev.summary_date).getFullYear() !== date.getFullYear();
                                     return isNewYear
-                                        ? date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-                                        : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                                        ? date.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' })
+                                        : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
                                 }}
                             />
                             <YAxis yAxisId="hri" orientation="left" unit="%" domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: '#78350F', fontSize: 11, fontWeight: 600 }} width={40} tickMargin={8} />

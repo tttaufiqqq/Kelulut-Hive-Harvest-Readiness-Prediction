@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/form/select-field';
+import { fmtMonth } from '@/lib/format';
 
 export interface HarvestSummaryItem {
     hive_id: number;
@@ -45,7 +46,7 @@ export function HarvestBarChart({ data }: Props) {
 
     const monthOptions = [
         { value: 'all_time', label: 'All Time' },
-        ...availableMonths.map((m) => ({ value: m, label: m })),
+        ...availableMonths.map((m) => ({ value: m, label: fmtMonth(m) })),
     ];
 
     const filtered =

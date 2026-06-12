@@ -1,3 +1,4 @@
+import { fmtDate } from '@/lib/format';
 import { getReadinessColor, ReadinessScoreCard } from '@/components/core/readiness-chart-cards';
 
 export interface HiveData {
@@ -8,11 +9,6 @@ export interface HiveData {
     avg_hri_7d_pct: number;
     total_harvests: number;
     last_harvest_date: string | null;
-}
-
-function formatDate(ymd: string): string {
-    const [year, month, day] = ymd.split('-').map(Number);
-    return new Date(year, month - 1, day).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 }
 
 interface Props {
@@ -31,7 +27,7 @@ export function HriScoreCard({ hive }: Props) {
             secondaryLabel="7-day avg"
             secondaryValue={`${hive.avg_hri_7d_pct}%`}
             tertiaryLabel="Last harvest"
-            tertiaryValue={hive.last_harvest_date ? formatDate(hive.last_harvest_date) : '—'}
+            tertiaryValue={fmtDate(hive.last_harvest_date)}
             description="Current harvest readiness score based on the latest analytics window."
         />
     );
