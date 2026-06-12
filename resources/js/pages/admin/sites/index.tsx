@@ -1,33 +1,17 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import {
-    MoreVertical,
-    Plus,
-    Edit2,
-    Trash2,
-    ChevronLeft,
-    ChevronRight,
-} from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/core/button';
 import { Card } from '@/components/core/card';
-import { Dropdown } from '@/components/core/dropdown';
 import { FlashAlerts } from '@/components/core/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/flash-alerts';
-import { Input } from '@/components/core/input';
-import { ConfirmModal } from '@/components/core/confirm-modal';
-import { Modal } from '@/components/core/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
-
-type SiteRow = {
-    id: number;
-    name: string;
-    description: string | null;
-    hive_count: number;
-};
-
-type PageProps = {
-    sites: SiteRow[];
-};
+import { SiteConfirmModals } from './SiteConfirmModals';
+import { SiteFormModal } from './SiteFormModal';
+import type { SiteFormData } from './SiteFormModal';
+import { SiteTableRow } from './SiteTableRow';
+import type { SiteRow } from './SiteTableRow';
+import { ViewSiteModal } from './ViewSiteModal';
 
 type ActiveModal =
     | { type: 'create' }
@@ -37,9 +21,7 @@ type ActiveModal =
     | { type: 'delete'; site: SiteRow }
     | null;
 
-type SiteFormData = { name: string; description: string };
-
-export default function SitesIndex({ sites }: PageProps) {
+export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
     const { props } = usePage<{ flash?: FlashMessageBag }>();
     const flash = props.flash;
 
@@ -53,31 +35,18 @@ export default function SitesIndex({ sites }: PageProps) {
     const hasNext = viewIndex !== null && viewIndex < sites.length - 1;
 
     useEffect(() => {
-        if (viewIndex === null) {
-            return;
-        }
-
+        if (viewIndex === null) return;
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                setActiveModal((prev) =>
-                    prev?.type === 'view' && prev.index > 0
-                        ? { type: 'view', index: prev.index - 1 }
-                        : prev,
-                );
+                setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p);
             }
-
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                setActiveModal((prev) =>
-                    prev?.type === 'view' && prev.index < sites.length - 1
-                        ? { type: 'view', index: prev.index + 1 }
-                        : prev,
-                );
+                setActiveModal((p) => p?.type === 'view' && p.index < sites.length - 1 ? { type: 'view', index: p.index + 1 } : p);
             }
         };
         window.addEventListener('keydown', handler);
-
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, sites.length]);
 
@@ -85,184 +54,59 @@ export default function SitesIndex({ sites }: PageProps) {
     const editForm = useForm<SiteFormData>({ name: '', description: '' });
 
     const openEdit = (site: SiteRow) => {
-        editForm.setData({
-            name: site.name,
-            description: site.description ?? '',
-        });
+        editForm.setData({ name: site.name, description: site.description ?? '' });
         setActiveModal({ type: 'edit', site });
     };
-
-    const submitCreate = (e: React.FormEvent) => {
-        e.preventDefault();
-        createForm.post(route('admin.sites.store'), {
-            onSuccess: () => {
-                createForm.reset();
-                close();
-            },
-        });
-    };
-
-    const openEditConfirm = () => {
-        if (activeModal?.type !== 'edit') {
-            return;
-        }
-
-        setActiveModal({ type: 'confirm-edit', site: activeModal.site });
-    };
-
-    const submitEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-        openEditConfirm();
-    };
-
-    const confirmEdit = () => {
-        if (activeModal?.type !== 'confirm-edit') {
-            return;
-        }
-
-        editForm.patch(
-            route('admin.sites.update', { site: activeModal.site.id }),
-            {
-                onSuccess: () => close(),
-            },
-        );
-    };
-
+    const submitCreate = () => createForm.post(route('admin.sites.store'), { onSuccess: () => { createForm.reset(); close(); } });
+    const openEditConfirm = () => { if (activeModal?.type === 'edit') setActiveModal({ type: 'confirm-edit', site: activeModal.site }); };
+    const confirmEdit = () => { if (activeModal?.type === 'confirm-edit') editForm.patch(route('admin.sites.update', { site: activeModal.site.id }), { onSuccess: close }); };
     const confirmDelete = () => {
-        if (activeModal?.type !== 'delete') {
-            return;
-        }
-
+        if (activeModal?.type !== 'delete') return;
         setDeleting(true);
-        router.delete(
-            route('admin.sites.destroy', { site: activeModal.site.id }),
-            {
-                onFinish: () => {
-                    setDeleting(false);
-                    close();
-                },
-            },
-        );
+        router.delete(route('admin.sites.destroy', { site: activeModal.site.id }), { onFinish: () => { setDeleting(false); close(); } });
     };
+
+    const confirmableModal =
+        activeModal?.type === 'confirm-edit' || activeModal?.type === 'delete' ? activeModal : null;
 
     return (
         <AdminLayout>
             <Head title="Sites — Admin" />
-
             <div className="space-y-6">
                 <FlashAlerts key={flash?.id ?? 'site-flash'} flash={flash} />
-
-                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-bold text-amber-900">
-                            Sites
-                        </h3>
-                        <p className="text-sm text-amber-900/50">
-                            {sites.length} site{sites.length !== 1 ? 's' : ''}{' '}
-                            configured
-                        </p>
+                        <h3 className="text-lg font-bold text-amber-900">Sites</h3>
+                        <p className="text-sm text-amber-900/50">{sites.length} site{sites.length !== 1 ? 's' : ''} configured</p>
                     </div>
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => setActiveModal({ type: 'create' })}
-                    >
-                        <Plus className="mr-1 h-4 w-4" />
-                        Add Site
+                    <Button variant="primary" size="sm" onClick={() => setActiveModal({ type: 'create' })}>
+                        <Plus className="mr-1 h-4 w-4" /> Add Site
                     </Button>
                 </div>
-
-                {/* Table */}
                 <Card className="overflow-hidden p-0">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-yellow-100 bg-yellow-50/50">
-                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Name
-                                    </th>
-                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase md:table-cell">
-                                        Description
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">
-                                        Hives
-                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">Name</th>
+                                    <th className="hidden px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase md:table-cell">Description</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold tracking-widest text-amber-900/50 uppercase">Hives</th>
                                     <th className="px-6 py-3" />
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-yellow-50">
                                 {sites.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={4}
-                                            className="px-6 py-10 text-center text-sm text-amber-900/40"
-                                        >
-                                            No sites configured yet.
-                                        </td>
-                                    </tr>
+                                    <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-amber-900/40">No sites configured yet.</td></tr>
                                 )}
                                 {sites.map((site, index) => (
-                                    <tr
+                                    <SiteTableRow
                                         key={site.id}
-                                        className="cursor-pointer transition-colors hover:bg-yellow-50/30"
-                                        onClick={() =>
-                                            setActiveModal({
-                                                type: 'view',
-                                                index,
-                                            })
-                                        }
-                                    >
-                                        <td className="px-6 py-4 font-medium text-amber-950">
-                                            {site.name}
-                                        </td>
-                                        <td className="hidden px-6 py-4 text-amber-900/60 md:table-cell">
-                                            {site.description ?? '—'}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">
-                                                {site.hive_count}
-                                            </span>
-                                        </td>
-                                        <td
-                                            className="px-6 py-4 text-right"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <Dropdown
-                                                align="right"
-                                                trigger={
-                                                    <button className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100">
-                                                        <MoreVertical className="h-4 w-4 text-amber-900/50" />
-                                                    </button>
-                                                }
-                                                items={[
-                                                    {
-                                                        id: 'edit',
-                                                        label: 'Edit',
-                                                        icon: (
-                                                            <Edit2 className="h-4 w-4" />
-                                                        ),
-                                                        onClick: () =>
-                                                            openEdit(site),
-                                                    },
-                                                    {
-                                                        id: 'delete',
-                                                        label: 'Delete',
-                                                        icon: (
-                                                            <Trash2 className="h-4 w-4" />
-                                                        ),
-                                                        variant:
-                                                            'danger' as const,
-                                                        onClick: () =>
-                                                            setActiveModal({
-                                                                type: 'delete',
-                                                                site,
-                                                            }),
-                                                    },
-                                                ]}
-                                            />
-                                        </td>
-                                    </tr>
+                                        site={site}
+                                        index={index}
+                                        onView={(idx) => setActiveModal({ type: 'view', index: idx })}
+                                        onEdit={openEdit}
+                                        onDelete={(s) => setActiveModal({ type: 'delete', site: s })}
+                                    />
                                 ))}
                             </tbody>
                         </table>
@@ -270,243 +114,33 @@ export default function SitesIndex({ sites }: PageProps) {
                 </Card>
             </div>
 
-            {/* ── View Modal ── */}
             {activeModal?.type === 'view' && viewSite && (
-                <Modal
-                    isOpen
+                <ViewSiteModal
+                    site={viewSite}
+                    siteIndex={viewIndex!}
+                    totalSites={sites.length}
+                    hasPrev={hasPrev}
+                    hasNext={hasNext}
+                    onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
+                    onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < sites.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
+                    onEdit={() => { close(); openEdit(viewSite); }}
                     onClose={close}
-                    title="Site Details"
-                    maxWidth="sm"
-                >
-                    <div className="space-y-4">
-                        <div className="-mt-1 mb-1 flex items-center justify-end gap-1">
-                            <button
-                                onClick={() =>
-                                    setActiveModal((prev) =>
-                                        prev?.type === 'view' && prev.index > 0
-                                            ? {
-                                                  type: 'view',
-                                                  index: prev.index - 1,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                disabled={!hasPrev}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
-                            >
-                                <ChevronLeft className="h-4 w-4 text-amber-900" />
-                            </button>
-                            <span className="min-w-[3rem] text-center text-xs font-bold text-amber-900/40 tabular-nums">
-                                {viewIndex! + 1} / {sites.length}
-                            </span>
-                            <button
-                                onClick={() =>
-                                    setActiveModal((prev) =>
-                                        prev?.type === 'view' &&
-                                        prev.index < sites.length - 1
-                                            ? {
-                                                  type: 'view',
-                                                  index: prev.index + 1,
-                                              }
-                                            : prev,
-                                    )
-                                }
-                                disabled={!hasNext}
-                                className="rounded-xl p-1.5 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-20"
-                            >
-                                <ChevronRight className="h-4 w-4 text-amber-900" />
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Name
-                                </p>
-                                <p className="font-medium text-amber-950">
-                                    {viewSite.name}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Hives
-                                </p>
-                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">
-                                    {viewSite.hive_count}
-                                </span>
-                            </div>
-                        </div>
-                        {viewSite.description && (
-                            <div>
-                                <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">
-                                    Description
-                                </p>
-                                <p className="text-sm text-amber-900/70">
-                                    {viewSite.description}
-                                </p>
-                            </div>
-                        )}
-                        <p className="text-center text-[10px] tracking-widest text-amber-900/25 uppercase">
-                            Use arrow keys to navigate
-                        </p>
-                        <div className="flex gap-3 pt-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                className="flex-1"
-                            >
-                                Close
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                    close();
-                                    openEdit(viewSite!);
-                                }}
-                                className="flex-1"
-                            >
-                                Edit
-                            </Button>
-                        </div>
-                    </div>
-                </Modal>
+                />
             )}
 
-            {/* ── Create Modal ── */}
-            <Modal
-                isOpen={activeModal?.type === 'create'}
-                onClose={close}
-                title="Add Site"
-                maxWidth="sm"
-            >
-                <form onSubmit={submitCreate} className="space-y-4">
-                    <Input
-                        label="Site Name"
-                        value={createForm.data.name}
-                        onChange={(e) =>
-                            createForm.setData('name', e.target.value)
-                        }
-                        placeholder="e.g. Field C"
-                        autoFocus
-                        error={createForm.errors.name}
-                    />
-                    <Input
-                        label="Description (optional)"
-                        value={createForm.data.description}
-                        onChange={(e) =>
-                            createForm.setData('description', e.target.value)
-                        }
-                        placeholder="e.g. Outdoor field near durian farm"
-                        error={createForm.errors.description}
-                    />
-                    <div className="flex gap-3 pt-2">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={close}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            disabled={createForm.processing}
-                            className="flex-1"
-                        >
-                            {createForm.processing ? 'Adding...' : 'Add Site'}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* ── Edit Modal ── */}
+            <SiteFormModal isOpen={activeModal?.type === 'create'} isCreate form={createForm} onSubmit={submitCreate} onClose={close} />
             {activeModal?.type === 'edit' && (
-                <Modal isOpen onClose={close} title="Edit Site" maxWidth="sm">
-                    <form onSubmit={submitEdit} className="space-y-4">
-                        <Input
-                            label="Site Name"
-                            value={editForm.data.name}
-                            onChange={(e) =>
-                                editForm.setData('name', e.target.value)
-                            }
-                            autoFocus
-                            error={editForm.errors.name}
-                        />
-                        <Input
-                            label="Description (optional)"
-                            value={editForm.data.description}
-                            onChange={(e) =>
-                                editForm.setData('description', e.target.value)
-                            }
-                            error={editForm.errors.description}
-                        />
-                        <div className="flex gap-3 pt-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={close}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="primary"
-                                disabled={editForm.processing}
-                                onClick={openEditConfirm}
-                                className="flex-1"
-                            >
-                                {editForm.processing
-                                    ? 'Saving...'
-                                    : 'Save Changes'}
-                            </Button>
-                        </div>
-                    </form>
-                </Modal>
+                <SiteFormModal isOpen isCreate={false} form={editForm} onSubmit={openEditConfirm} onClose={close} />
             )}
 
-            {/* ── Delete Confirmation ── */}
-            {activeModal?.type === 'delete' && (
-                <ConfirmModal
-                    isOpen
-                    onClose={close}
-                    onConfirm={confirmDelete}
-                    title="Delete Site"
-                    message={
-                        <>
-                            Delete <span className="font-semibold text-amber-950">"{activeModal.site.name}"</span>?
-                            {activeModal.site.hive_count > 0 && (
-                                <span className="mt-2 block font-medium text-rose-600">
-                                    This site has {activeModal.site.hive_count} hive(s) assigned. Reassign them first.
-                                </span>
-                            )}
-                            {activeModal.site.hive_count === 0 && (
-                                <span> This cannot be undone.</span>
-                            )}
-                        </>
-                    }
-                    confirmLabel={deleting ? 'Deleting...' : 'Delete Site'}
-                    variant="destructive"
-                    loading={deleting}
-                    confirmDisabled={activeModal.site.hive_count > 0}
-                />
-            )}
-
-            {/* ── Confirm Edit Modal ── */}
-            {activeModal?.type === 'confirm-edit' && (
-                <ConfirmModal
-                    isOpen
-                    onClose={close}
-                    onConfirm={confirmEdit}
-                    title="Save Changes"
-                    message={<>Save changes to site <span className="font-semibold text-amber-950">{activeModal.site.name}</span>?</>}
-                    confirmLabel={editForm.processing ? 'Saving...' : 'Save Changes'}
-                    loading={editForm.processing}
-                    variant="warning"
-                />
-            )}
+            <SiteConfirmModals
+                activeModal={confirmableModal}
+                deleting={deleting}
+                editProcessing={editForm.processing}
+                onConfirmEdit={confirmEdit}
+                onConfirmDelete={confirmDelete}
+                onClose={close}
+            />
         </AdminLayout>
     );
 }
