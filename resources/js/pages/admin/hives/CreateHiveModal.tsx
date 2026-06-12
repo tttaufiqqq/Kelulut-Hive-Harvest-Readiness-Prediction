@@ -51,7 +51,7 @@ export function CreateHiveModal({ isOpen, beekeeperOptions, speciesOptions, site
                 </div>
                 <div className="flex gap-3 pt-2">
                     <Button type="button" variant="ghost" onClick={onClose} className="flex-1">Cancel</Button>
-                    <Button type="submit" variant="primary" disabled={form.processing} className="flex-1">
+                    <Button type="submit" variant="primary" loading={form.processing} disabled={form.processing} className="flex-1">
                         {form.processing ? 'Registering...' : 'Register Hive'}
                     </Button>
                 </div>

@@ -36,7 +36,7 @@ export function EditDeviceModal({ isOpen, instant, deviceIdentifier, hiveOptions
                 <DatePickerField label="Last Maintenance Date (optional)" value={form.data.last_maintenance_date || null} onChange={(v) => form.setData('last_maintenance_date', v ?? '')} maxDate="today" error={form.errors.last_maintenance_date} />
                 <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
                     <Button type="button" variant="ghost" onClick={onClose} className="w-full">Cancel</Button>
-                    <Button type="button" variant="primary" disabled={form.processing} onClick={onSubmit} className="w-full">
+                    <Button type="button" variant="primary" loading={form.processing} disabled={form.processing} onClick={onSubmit} className="w-full">
                         {form.processing ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>

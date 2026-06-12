@@ -24,7 +24,7 @@ export function EditBeekeeperModal({ isOpen, instant, form, onSubmit, onClose }:
                 <Input label="Phone (optional)" type="tel" value={form.data.phone} onChange={(e) => form.setData('phone', e.target.value.replace(/[^\d+\-\s]/g, ''))} error={form.errors.phone} />
                 <div className="flex gap-3 pt-2">
                     <Button type="button" variant="ghost" onClick={onClose} className="flex-1">Cancel</Button>
-                    <Button type="button" variant="primary" disabled={form.processing} onClick={onSubmit} className="flex-1">
+                    <Button type="button" variant="primary" loading={form.processing} disabled={form.processing} onClick={onSubmit} className="flex-1">
                         {form.processing ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>

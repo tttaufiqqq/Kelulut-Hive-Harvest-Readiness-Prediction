@@ -47,6 +47,7 @@ export function ConfirmModal({
                         type="button"
                         variant={variant === 'destructive' ? 'destructive' : 'primary'}
                         onClick={onConfirm}
+                        loading={loading}
                         disabled={loading || confirmDisabled}
                         className="flex-1"
                     >

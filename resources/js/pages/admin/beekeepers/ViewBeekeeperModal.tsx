@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/core/display/button';
+import { PanelSpinner } from '@/components/core/feedback/panel-spinner';
 import { Modal } from '@/components/core/overlay/modal';
 import { fmtDate } from '@/lib/format';
 import type { User } from '@/types';
@@ -64,7 +65,7 @@ export function ViewBeekeeperModal({ beekeeper, beekeeperIndex, totalBeekeepers,
                 <div>
                     <p className="mb-2 text-xs font-bold tracking-widest text-amber-900/60 uppercase">Harvest by Hive</p>
                     {harvestLoading ? (
-                        <div className="flex h-14 items-center justify-center text-xs text-amber-900/40">Loading…</div>
+                        <PanelSpinner className="h-14" />
                     ) : !harvestRows || harvestRows.length === 0 ? (
                         <p className="py-3 text-center text-xs text-amber-900/40">No harvests recorded yet.</p>
                     ) : (

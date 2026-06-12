@@ -14,7 +14,7 @@ export function ChartsFilterBar({ selectedDate, defaultDate, onDateChange }: Cha
                 <p className="mt-1 text-sm text-amber-700">Choose one date to update both trend charts together.</p>
             </div>
             <div className="w-full sm:w-auto">
-                <DatePicker className="w-full sm:w-[160px]" value={selectedDate} onChange={onDateChange} defaultValue={defaultDate} maxDate="today" />
+                <DatePicker className="w-full sm:w-[160px]" value={selectedDate} onChange={onDateChange} defaultValue={defaultDate} />
             </div>
         </div>
     );

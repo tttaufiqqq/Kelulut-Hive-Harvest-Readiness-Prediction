@@ -1,6 +1,7 @@
 import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Info } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { SensorRadarChart } from '@/components/core/data/visualization-charts';
+import { PanelSpinner } from '@/components/core/feedback/panel-spinner';
 import { Dropdown } from '@/components/core/overlay/dropdown';
 import { Modal } from '@/components/core/overlay/modal';
 import { fmtDate, fmtMonth } from '@/lib/format';
@@ -142,7 +143,7 @@ export function DailyHistoryModal({ isOpen, hives, initialHiveIndex, onClose }: 
             </div>
 
             {historyLoading ? (
-                <div className="flex h-40 items-center justify-center text-sm text-amber-900/40">Loading…</div>
+                <PanelSpinner className="h-40" />
             ) : !historyRows || historyRows.length === 0 ? (
                 <p className="py-8 text-center text-sm text-amber-900/40">No daily data available.</p>
             ) : (

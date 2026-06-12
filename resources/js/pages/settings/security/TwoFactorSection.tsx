@@ -49,8 +49,8 @@ return null;
                         <div className="relative inline">
                             <Form action={disable()}>
                                 {({ processing }) => (
-                                    <Button variant="destructive" type="submit" disabled={processing}>
-                                        Disable 2FA
+                                    <Button variant="destructive" type="submit" loading={processing} disabled={processing}>
+                                        {processing ? 'Disabling...' : 'Disable 2FA'}
                                     </Button>
                                 )}
                             </Form>
@@ -79,8 +79,8 @@ return null;
                             ) : (
                                 <Form action={enable()} onSuccess={onToggleSetup}>
                                     {({ processing }) => (
-                                        <Button variant="primary" type="submit" disabled={processing}>
-                                            Enable 2FA
+                                        <Button variant="primary" type="submit" loading={processing} disabled={processing}>
+                                            {processing ? 'Enabling...' : 'Enable 2FA'}
                                         </Button>
                                     )}
                                 </Form>

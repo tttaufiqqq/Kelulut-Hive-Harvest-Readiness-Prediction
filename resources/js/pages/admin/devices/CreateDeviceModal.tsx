@@ -46,7 +46,7 @@ export function CreateDeviceModal({ isOpen, hiveOptions, form, onSubmit, onClose
                 <DatePickerField label="Last Maintenance Date (optional)" value={form.data.last_maintenance_date || null} onChange={(v) => form.setData('last_maintenance_date', v ?? '')} maxDate="today" error={form.errors.last_maintenance_date} />
                 <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
                     <Button type="button" variant="ghost" onClick={onClose} className="w-full">Cancel</Button>
-                    <Button type="submit" variant="primary" disabled={form.processing} className="w-full">
+                    <Button type="submit" variant="primary" loading={form.processing} disabled={form.processing} className="w-full">
                         {form.processing ? 'Registering...' : 'Register Device'}
                     </Button>
                 </div>

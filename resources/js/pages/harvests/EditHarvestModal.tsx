@@ -50,7 +50,7 @@ export function EditHarvestModal({ isOpen, instant, hiveName, colors, flavors, f
                 <TextareaField label="Notes (optional)" value={form.data.notes} onChange={(e) => form.setData('notes', e.target.value)} rows={3} error={form.errors.notes} />
                 <div className="flex gap-3 pt-2">
                     <Button type="button" variant="ghost" onClick={onClose} className="flex-1">Cancel</Button>
-                    <Button type="button" variant="primary" disabled={form.processing} onClick={onSubmit} className="flex-1">
+                    <Button type="button" variant="primary" loading={form.processing} disabled={form.processing} onClick={onSubmit} className="flex-1">
                         {form.processing ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>

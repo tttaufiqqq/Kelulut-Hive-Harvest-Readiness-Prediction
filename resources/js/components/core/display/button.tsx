@@ -4,10 +4,11 @@ import { cn } from '@/lib/utils';
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
     size?: 'sm' | 'md' | 'lg';
+    loading?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
+    ({ className, variant = 'primary', size = 'md', loading, children, ...props }, ref) => {
         const variants = {
             primary:
                 'bg-yellow-400 text-yellow-950 hover:bg-yellow-500 shadow-sm',
@@ -27,6 +28,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <button
                 ref={ref}
+                disabled={loading || props.disabled}
                 className={cn(
                     'inline-flex cursor-pointer items-center justify-center rounded-full font-medium transition-all active:scale-95 disabled:pointer-events-none disabled:opacity-50',
                     variants[variant],
@@ -34,7 +36,31 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                     className,
                 )}
                 {...props}
-            />
+            >
+                {loading && (
+                    <svg
+                        className="mr-2 h-4 w-4 animate-spin"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+                        <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                        />
+                        <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                    </svg>
+                )}
+                {children}
+            </button>
         );
     },
 );

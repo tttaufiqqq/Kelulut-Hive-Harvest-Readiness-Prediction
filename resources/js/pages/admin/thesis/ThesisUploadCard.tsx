@@ -106,7 +106,7 @@ export function ThesisUploadCard({
 
             {selectedFile && (
                 <div className="mt-4 flex gap-3">
-                    <Button onClick={onUpload} disabled={processing} size="md">
+                    <Button onClick={onUpload} loading={processing} disabled={processing} size="md">
                         {processing ? 'Uploading...' : 'Upload Thesis'}
                     </Button>
                     <Button variant="ghost" size="md" onClick={onCancel} disabled={processing}>

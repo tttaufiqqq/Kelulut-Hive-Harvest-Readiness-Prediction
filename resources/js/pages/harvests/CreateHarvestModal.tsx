@@ -45,7 +45,7 @@ export function CreateHarvestModal({ isOpen, hives, colors, flavors, form, onSub
                 <TextareaField label="Notes (optional)" value={form.data.notes} onChange={(e) => form.setData('notes', e.target.value)} placeholder="Any observations about this harvest..." rows={3} error={form.errors.notes} />
                 <div className="flex gap-3 pt-2">
                     <Button type="button" variant="ghost" onClick={onClose} className="flex-1">Cancel</Button>
-                    <Button type="submit" variant="primary" disabled={form.processing} className="flex-1">
+                    <Button type="submit" variant="primary" loading={form.processing} disabled={form.processing} className="flex-1">
                         {form.processing ? 'Saving...' : 'Save Harvest'}
                     </Button>
                 </div>

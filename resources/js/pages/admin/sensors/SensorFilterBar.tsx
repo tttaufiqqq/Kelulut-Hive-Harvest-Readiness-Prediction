@@ -45,7 +45,7 @@ export function SensorFilterBar({ hives, selected, window, date, normalizedLates
                 )}
             </div>
             <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:flex-wrap md:justify-end">
-                <DatePicker className="justify-self-start" value={date ?? today} defaultValue={today} onChange={onDateChange} maxDate="today" />
+                <DatePicker className="justify-self-start" value={date ?? today} defaultValue={today} onChange={onDateChange} />
                 <div className="grid grid-cols-3 gap-1 rounded-2xl bg-yellow-100/50 p-1.5">
                     {WINDOWS.map((w) => (
                         <button key={w} onClick={() => onWindowChange(w)} className={['rounded-xl px-2 py-2 text-sm font-semibold transition-all sm:px-4 sm:py-1.5', w === window ? 'bg-white text-amber-900 shadow-sm' : 'text-amber-900/60 hover:bg-yellow-200/50'].join(' ')}>

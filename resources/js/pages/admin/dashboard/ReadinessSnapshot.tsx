@@ -1,5 +1,6 @@
 import { ReadinessDonutChart } from '@/components/core/data/visualization-charts';
 import { DatePicker } from '@/components/core/date-picker';
+import { PanelSpinner } from '@/components/core/feedback/panel-spinner';
 import { fmtDate } from '@/lib/format';
 
 export interface ReadinessSnapshotProps {
@@ -24,11 +25,11 @@ export function ReadinessSnapshot({ isLiveMode, snapshotDate, snapshotLoading, d
                         <span className="text-xs font-bold text-amber-700">Viewing: {fmtDate(snapshotDate)}</span>
                     )}
                 </div>
-                <DatePicker value={snapshotDate} onChange={onDateChange} placeholder="Pick date…" maxDate="today" />
+                <DatePicker value={snapshotDate} onChange={onDateChange} placeholder="Pick date…" />
             </div>
 
             {snapshotLoading ? (
-                <div className="flex h-[300px] items-center justify-center text-sm text-amber-900/60">Loading…</div>
+                <PanelSpinner className="h-[300px]" />
             ) : (
                 <ReadinessDonutChart
                     data={donutData}

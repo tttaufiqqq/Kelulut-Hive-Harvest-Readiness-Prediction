@@ -1,6 +1,7 @@
 import { Droplets, Thermometer, Wind } from 'lucide-react';
 import { DatePicker } from '@/components/core/date-picker';
 import { Card } from '@/components/core/display/card';
+import { PanelSpinner } from '@/components/core/feedback/panel-spinner';
 import { fmtDate } from '@/lib/format';
 import { STATUS_BADGE, STATUS_LABEL, WARN_CO2_ABOVE  } from './constants';
 import type {HiveData} from './constants';
@@ -32,10 +33,10 @@ export function HiveMonitorGrid({ sortedHives, isMonitorLive, monitorDate, monit
                         </h3>
                     )}
                 </div>
-                <DatePicker value={monitorDate} onChange={onDateChange} placeholder="Pick date..." maxDate="today" />
+                <DatePicker value={monitorDate} onChange={onDateChange} placeholder="Pick date..." />
             </div>
             {monitorLoading ? (
-                <div className="flex h-[200px] items-center justify-center text-sm text-amber-900/60">Loading...</div>
+                <PanelSpinner className="h-[200px]" />
             ) : sortedHives.length === 0 ? (
                 <p className="px-4 py-6 text-center text-sm text-amber-900/60">
                     {isMonitorLive ? 'No hives registered yet.' : 'No data for this date.'}
