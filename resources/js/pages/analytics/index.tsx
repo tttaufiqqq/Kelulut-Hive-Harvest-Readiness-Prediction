@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
-import { Breadcrumbs } from '@/components/core/navigation';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { HarvestBar } from './HarvestBar';
 import type { HarvestRecord } from './HarvestBar';

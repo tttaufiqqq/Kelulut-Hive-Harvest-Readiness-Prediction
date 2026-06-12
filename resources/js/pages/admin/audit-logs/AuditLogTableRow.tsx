@@ -1,4 +1,4 @@
-import { StatusBadge } from '@/components/core/status-badge';
+import { StatusBadge } from '@/components/core/display/status-badge';
 import { fmtSmartTime } from '@/lib/format';
 
 export type AuditLog = {

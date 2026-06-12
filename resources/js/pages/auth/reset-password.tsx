@@ -1,8 +1,8 @@
 import { Form, Head } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 import { AuthFormFieldBlock } from '@/components/auth/auth-form-field-block';
-import { Button } from '@/components/core/button';
-import { Input } from '@/components/core/input';
+import { Button } from '@/components/core/display/button';
+import { Input } from '@/components/core/form/input';
 import { PasswordInput } from '@/components/settings/password-input';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { cn } from '@/lib/utils';

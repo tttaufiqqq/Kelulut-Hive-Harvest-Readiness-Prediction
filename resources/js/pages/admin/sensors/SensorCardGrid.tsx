@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Droplets, Flame, Thermometer } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import { AnimatedMetricValue } from './AnimatedMetricValue';
 import { ArcGauge } from './ArcGauge';
 import { ProgressBar } from './ProgressBar';

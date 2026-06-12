@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Progress } from '@/components/core/feedback';
+import { Progress } from '@/components/core/feedback/feedback';
 import { cn } from '@/lib/utils';
 
 export interface ConfidenceBarProps {

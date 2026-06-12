@@ -1,8 +1,8 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
-import { FlashAlerts } from '@/components/core/flash-alerts';
-import type { FlashMessageBag } from '@/components/core/flash-alerts';
-import { ConfirmModal } from '@/components/core/confirm-modal';
+import { FlashAlerts } from '@/components/core/feedback/flash-alerts';
+import type { FlashMessageBag } from '@/components/core/feedback/flash-alerts';
+import { ConfirmModal } from '@/components/core/overlay/confirm-modal';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { ThesisStatusCard } from './thesis/ThesisStatusCard';
 import { ThesisUploadCard } from './thesis/ThesisUploadCard';

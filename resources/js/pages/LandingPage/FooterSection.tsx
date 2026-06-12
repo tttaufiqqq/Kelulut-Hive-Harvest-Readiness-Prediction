@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { BeeIcon as Bee } from '@/components/core/bee-icon';
-import { Button } from '@/components/core/button';
+import { BeeIcon as Bee } from '@/components/core/brand/bee-icon';
+import { Button } from '@/components/core/display/button';
 
 interface Props {
     dashboardHref: string;

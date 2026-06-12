@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal } from '@/components/core/modal';
+import { Modal } from '@/components/core/overlay/modal';
 import type { UiError } from '@/types';
 import { GridScanIcon } from './two-factor-setup-modal/GridScanIcon';
 import { SetupStep } from './two-factor-setup-modal/SetupStep';

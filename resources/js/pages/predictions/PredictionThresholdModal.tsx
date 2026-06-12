@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/core/button';
-import { Modal } from '@/components/core/modal';
+import { Button } from '@/components/core/display/button';
+import { Modal } from '@/components/core/overlay/modal';
 import { ReadinessBadge } from '@/components/core/readiness-chart-cards';
 import type { PredictionEntry } from './types';
 import { AnimatedNumber } from './AnimatedNumber';

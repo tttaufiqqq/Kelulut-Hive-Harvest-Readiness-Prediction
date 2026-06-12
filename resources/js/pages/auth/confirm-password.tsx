@@ -1,7 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 import { AuthSplitShell } from '@/components/auth/auth-split-shell';
-import { Button } from '@/components/core/button';
+import { Button } from '@/components/core/display/button';
 import { PasswordInput } from '@/components/settings/password-input';
 import { store } from '@/routes/password/confirm';
 

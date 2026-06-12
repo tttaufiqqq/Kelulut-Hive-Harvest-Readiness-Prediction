@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Palette } from 'lucide-react';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import { AppearanceToggleTab } from '@/components/settings/appearance-tabs';
 import { Heading } from '@/components/settings/heading';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

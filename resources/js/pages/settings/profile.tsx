@@ -1,10 +1,10 @@
 import { Form, Head, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import { Button } from '@/components/core/button';
-import { Card } from '@/components/core/card';
-import { Input } from '@/components/core/input';
-import { TextLink } from '@/components/core/text-link';
+import { Button } from '@/components/core/display/button';
+import { Card } from '@/components/core/display/card';
+import { Input } from '@/components/core/form/input';
+import { TextLink } from '@/components/core/navigation/text-link';
 import { DeleteUser } from '@/components/settings/delete-user';
 import { Heading } from '@/components/settings/heading';
 import { Alert, AlertDescription } from '@/components/ui/alert';

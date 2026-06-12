@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
-import { Alert } from '@/components/core/feedback';
-import { Breadcrumbs } from '@/components/core/navigation';
+import { Alert } from '@/components/core/feedback/feedback';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { ChartsFilterBar } from './ChartsFilterBar';

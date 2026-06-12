@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import type { PropsWithChildren } from 'react';
-import { Breadcrumbs } from '@/components/core/navigation';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { cn, toUrl } from '@/lib/utils';

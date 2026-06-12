@@ -1,7 +1,7 @@
 import { X, Download, FileText, ExternalLink } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect } from 'react';
-import { ScrollArea } from '@/components/core/scroll-area';
+import { ScrollArea } from '@/components/core/display/scroll-area';
 
 interface ThesisModalProps {
     isOpen: boolean;

@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { BeeIcon } from '@/components/core/bee-icon';
+import { BeeIcon } from '@/components/core/brand/bee-icon';
 import { cn } from '@/lib/utils';
 
 export interface AuthSplitShellProps {

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import { cn } from '@/lib/utils';
 
 export interface ChartCardProps {

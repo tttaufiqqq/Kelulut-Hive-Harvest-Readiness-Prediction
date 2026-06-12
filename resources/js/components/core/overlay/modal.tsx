@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ScrollArea } from '@/components/core/scroll-area';
+import { ScrollArea } from '@/components/core/display/scroll-area';
 
 interface ModalProps {
     isOpen: boolean;

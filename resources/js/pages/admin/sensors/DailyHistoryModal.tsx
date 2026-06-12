@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Info } from 'lucide-react';
-import { Dropdown } from '@/components/core/dropdown';
-import { Modal } from '@/components/core/modal';
-import { SensorRadarChart } from '@/components/core/visualization-charts';
+import { Dropdown } from '@/components/core/overlay/dropdown';
+import { Modal } from '@/components/core/overlay/modal';
+import { SensorRadarChart } from '@/components/core/data/visualization-charts';
 import { fmtDate } from '@/lib/format';
 import type { Hive } from './types';
 

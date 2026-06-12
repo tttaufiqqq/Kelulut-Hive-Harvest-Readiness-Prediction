@@ -1,6 +1,6 @@
 import { CheckCircle, ExternalLink, FileText, Trash2 } from 'lucide-react';
-import { Button } from '@/components/core/button';
-import { Card } from '@/components/core/card';
+import { Button } from '@/components/core/display/button';
+import { Card } from '@/components/core/display/card';
 
 interface Props {
     thesisUrl: string | null;

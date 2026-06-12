@@ -1,7 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/core/button';
-import { TextLink } from '@/components/core/text-link';
+import { Button } from '@/components/core/display/button';
+import { TextLink } from '@/components/core/navigation/text-link';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { logout } from '@/routes';

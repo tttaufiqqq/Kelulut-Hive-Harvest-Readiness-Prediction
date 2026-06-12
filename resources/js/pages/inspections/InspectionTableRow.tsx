@@ -1,8 +1,8 @@
 import { Edit2, MoreVertical, Trash2 } from 'lucide-react';
-import { BloomingBadge } from '@/components/core/blooming-badge';
-import { Button } from '@/components/core/button';
-import { Dropdown } from '@/components/core/dropdown';
-import { WeatherPills } from '@/components/core/weather-pills';
+import { BloomingBadge } from '@/components/core/display/blooming-badge';
+import { Button } from '@/components/core/display/button';
+import { Dropdown } from '@/components/core/overlay/dropdown';
+import { WeatherPills } from '@/components/core/display/weather-pills';
 import { fmtDate } from '@/lib/format';
 import type { Inspection } from '@/types';
 

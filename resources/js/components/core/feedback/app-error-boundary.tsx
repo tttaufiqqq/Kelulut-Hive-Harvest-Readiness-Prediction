@@ -1,8 +1,8 @@
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import React from 'react';
-import { BeeIcon } from '@/components/core/bee-icon';
-import { Button } from '@/components/core/button';
-import { TextLink } from '@/components/core/text-link';
+import { BeeIcon } from '@/components/core/brand/bee-icon';
+import { Button } from '@/components/core/display/button';
+import { TextLink } from '@/components/core/navigation/text-link';
 
 type AppErrorBoundaryProps = {
     children: React.ReactNode;

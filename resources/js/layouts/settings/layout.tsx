@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import type { PropsWithChildren } from 'react';
-import { Breadcrumbs } from '@/components/core/navigation';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit } from '@/routes/profile';

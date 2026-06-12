@@ -6,9 +6,9 @@ import {
     CrudPagination,
     CrudTableCard,
     CrudTableEmptyRow,
-} from '@/components/core/crud-index-shell';
+} from '@/components/core/data/crud-index-shell';
 import { DatePickerField } from '@/components/core/date-picker';
-import { SelectField } from '@/components/core/select-field';
+import { SelectField } from '@/components/core/form/select-field';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { AuditLogDetailModal } from './AuditLogDetailModal';
 import { AuditLogTableRow } from './AuditLogTableRow';

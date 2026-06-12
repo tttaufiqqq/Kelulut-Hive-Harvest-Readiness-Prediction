@@ -1,12 +1,12 @@
 import { Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Button } from '@/components/core/button';
-import { Card } from '@/components/core/card';
-import { DataTable } from '@/components/core/content';
+import { Button } from '@/components/core/display/button';
+import { Card } from '@/components/core/display/card';
+import { DataTable } from '@/components/core/data/content';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { ReadinessBadge } from '@/components/core/readiness-chart-cards';
-import { ScrollArea } from '@/components/core/scroll-area';
+import { ScrollArea } from '@/components/core/display/scroll-area';
 import type { PaginatedPredictions, PredictionEntry } from './types';
 import { formatPredictionTime, formatRawConfidence, getRowToneStyle, getTrustLabel, getTrustStyle } from './utils';
 

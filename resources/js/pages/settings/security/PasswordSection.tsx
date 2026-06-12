@@ -1,9 +1,9 @@
 import { Form } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import { Button } from '@/components/core/button';
-import { Card } from '@/components/core/card';
-import { InputError } from '@/components/core/input-error';
+import { Button } from '@/components/core/display/button';
+import { Card } from '@/components/core/display/card';
+import { InputError } from '@/components/core/form/input-error';
 import { Heading } from '@/components/settings/heading';
 import { PasswordInput } from '@/components/settings/password-input';
 import { Label } from '@/components/ui/label';

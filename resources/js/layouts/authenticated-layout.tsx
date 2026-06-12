@@ -10,8 +10,8 @@ import {
     BarChart2,
 } from 'lucide-react';
 import React from 'react';
-import { BeeIcon } from '@/components/core/bee-icon';
-import { Dropdown } from '@/components/core/dropdown';
+import { BeeIcon } from '@/components/core/brand/bee-icon';
+import { Dropdown } from '@/components/core/overlay/dropdown';
 import { cn } from '@/lib/utils';
 
 interface AuthenticatedLayoutProps {

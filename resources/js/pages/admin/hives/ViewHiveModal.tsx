@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/core/button';
-import { Modal } from '@/components/core/modal';
+import { Button } from '@/components/core/display/button';
+import { Modal } from '@/components/core/overlay/modal';
 import { HiveStatusBadge } from './HiveStatusBadge';
 import type { HiveRow } from './HiveTableRow';
 

@@ -1,8 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Home, LayoutDashboard } from 'lucide-react';
-import { BeeIcon } from '@/components/core/bee-icon';
-import { Button } from '@/components/core/button';
-import { TextLink } from '@/components/core/text-link';
+import { BeeIcon } from '@/components/core/brand/bee-icon';
+import { Button } from '@/components/core/display/button';
+import { TextLink } from '@/components/core/navigation/text-link';
 import type { Auth } from '@/types/auth';
 import { EmptyStateShell } from './EmptyStateShell';
 import { errorConfigs } from './error-configs';

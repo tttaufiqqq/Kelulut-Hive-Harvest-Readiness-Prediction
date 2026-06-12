@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/core/button';
-import { Input } from '@/components/core/input';
-import { Modal } from '@/components/core/modal';
+import { Button } from '@/components/core/display/button';
+import { Input } from '@/components/core/form/input';
+import { Modal } from '@/components/core/overlay/modal';
 
 type FormInstance = ReturnType<typeof useForm<{ name: string; email: string; phone: string }>>;
 

@@ -1,7 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ScrollArea } from '@/components/core/scroll-area';
-import { ThesisModal } from '@/components/core/thesis-modal';
+import { ScrollArea } from '@/components/core/display/scroll-area';
+import { ThesisModal } from '@/components/core/overlay/thesis-modal';
 import type { Auth } from '@/types';
 import { BrutalistGridSection } from './BrutalistGridSection';
 import { FooterSection } from './FooterSection';

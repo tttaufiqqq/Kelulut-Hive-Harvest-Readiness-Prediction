@@ -1,5 +1,5 @@
 import React from 'react';
-import { InputError } from '@/components/core/input-error';
+import { InputError } from '@/components/core/form/input-error';
 import { cn } from '@/lib/utils';
 
 export interface AuthFormFieldBlockProps {

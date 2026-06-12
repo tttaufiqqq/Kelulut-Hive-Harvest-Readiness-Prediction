@@ -1,5 +1,5 @@
 import { Edit2, MoreVertical, Trash2 } from 'lucide-react';
-import { Dropdown } from '@/components/core/dropdown';
+import { Dropdown } from '@/components/core/overlay/dropdown';
 
 export type SiteRow = {
     id: number;

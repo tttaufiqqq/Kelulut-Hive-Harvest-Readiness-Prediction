@@ -1,10 +1,10 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/core/button';
-import { Card } from '@/components/core/card';
-import { FlashAlerts } from '@/components/core/flash-alerts';
-import type { FlashMessageBag } from '@/components/core/flash-alerts';
+import { Button } from '@/components/core/display/button';
+import { Card } from '@/components/core/display/card';
+import { FlashAlerts } from '@/components/core/feedback/flash-alerts';
+import type { FlashMessageBag } from '@/components/core/feedback/flash-alerts';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { CreateHiveModal } from './CreateHiveModal';
 import type { HiveFormData, SelectOption } from './CreateHiveModal';

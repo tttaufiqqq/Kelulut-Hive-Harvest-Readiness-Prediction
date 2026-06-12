@@ -1,8 +1,8 @@
 import { Form } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/core/button';
-import { InputError } from '@/components/core/input-error';
+import { Button } from '@/components/core/display/button';
+import { InputError } from '@/components/core/form/input-error';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import { confirm } from '@/routes/two-factor';

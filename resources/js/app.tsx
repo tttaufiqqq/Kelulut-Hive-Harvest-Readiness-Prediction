@@ -5,7 +5,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { route } from 'ziggy-js';
 import '../css/app.css';
-import { AppErrorBoundary } from '@/components/core/app-error-boundary';
+import { AppErrorBoundary } from '@/components/core/feedback/app-error-boundary';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;

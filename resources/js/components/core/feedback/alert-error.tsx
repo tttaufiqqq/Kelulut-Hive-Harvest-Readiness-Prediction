@@ -1,4 +1,4 @@
-import { Alert } from '@/components/core/feedback';
+import { Alert } from '@/components/core/feedback/feedback';
 
 export function AlertError({
     errors,

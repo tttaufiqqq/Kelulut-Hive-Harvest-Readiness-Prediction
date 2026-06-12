@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { AlertTriangle, Clock, TrendingUp, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { CrossSiteComparisonChart } from './dashboard/CrossSiteComparisonChart';
 import { FleetHriLineChart } from './dashboard/FleetHriLineChart';

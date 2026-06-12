@@ -1,8 +1,8 @@
 import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/core/button';
-import { Input } from '@/components/core/input';
-import { Modal } from '@/components/core/modal';
-import { SelectField } from '@/components/core/select-field';
+import { Button } from '@/components/core/display/button';
+import { Input } from '@/components/core/form/input';
+import { Modal } from '@/components/core/overlay/modal';
+import { SelectField } from '@/components/core/form/select-field';
 
 export type HiveFormData = {
     name: string;

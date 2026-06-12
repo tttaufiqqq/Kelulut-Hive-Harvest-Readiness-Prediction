@@ -1,5 +1,5 @@
-import { SensorRadarChart } from '@/components/core/visualization-charts';
-import type { SensorProfile } from '@/components/core/visualization-charts';
+import { SensorRadarChart } from '@/components/core/data/visualization-charts';
+import type { SensorProfile } from '@/components/core/data/visualization-charts';
 import type { HriGauge } from './HriGaugeGrid';
 
 interface Props {

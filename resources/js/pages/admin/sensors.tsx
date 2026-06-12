@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { echo } from '@laravel/echo-react';
 import { AlertCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { DailyHistoryModal } from './sensors/DailyHistoryModal';
 import { SensorCardGrid } from './sensors/SensorCardGrid';

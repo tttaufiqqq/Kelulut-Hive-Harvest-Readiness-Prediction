@@ -1,5 +1,5 @@
 import { Bug as Bee } from 'lucide-react';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 
 export function DashboardEmptyState() {
     return (

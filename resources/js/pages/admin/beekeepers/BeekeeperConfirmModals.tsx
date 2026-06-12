@@ -1,4 +1,4 @@
-import { ConfirmModal } from '@/components/core/confirm-modal';
+import { ConfirmModal } from '@/components/core/overlay/confirm-modal';
 import type { User } from '@/types';
 
 type ConfirmableModal =

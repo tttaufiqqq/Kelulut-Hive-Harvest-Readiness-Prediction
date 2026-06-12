@@ -1,8 +1,8 @@
 import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/core/button';
+import { Button } from '@/components/core/display/button';
 import { DatePickerField } from '@/components/core/date-picker';
-import { Modal } from '@/components/core/modal';
-import { SelectField } from '@/components/core/select-field';
+import { Modal } from '@/components/core/overlay/modal';
+import { SelectField } from '@/components/core/form/select-field';
 import { STATUS_OPTIONS } from './CreateDeviceModal';
 import type { DeviceFormData, SelectOption } from './CreateDeviceModal';
 

@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
-import { BeeIcon as Bee } from '@/components/core/bee-icon';
-import { Button } from '@/components/core/button';
+import { BeeIcon as Bee } from '@/components/core/brand/bee-icon';
+import { Button } from '@/components/core/display/button';
 
 interface Props {
     dashboardHref: string;

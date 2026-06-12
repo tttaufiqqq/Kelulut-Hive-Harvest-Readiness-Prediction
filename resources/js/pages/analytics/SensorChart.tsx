@@ -13,7 +13,7 @@ import type { NameType, ValueType } from 'recharts/types/component/DefaultToolti
 import type { TooltipProps } from 'recharts/types/component/Tooltip';
 import { DatePicker } from '@/components/core/date-picker';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
-import { SelectField } from '@/components/core/select-field';
+import { SelectField } from '@/components/core/form/select-field';
 
 export interface SensorReading {
     time: string;

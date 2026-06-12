@@ -1,4 +1,4 @@
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import { ConfidenceBar, ReadinessBadge } from '@/components/core/readiness-chart-cards';
 
 export interface HriGauge {

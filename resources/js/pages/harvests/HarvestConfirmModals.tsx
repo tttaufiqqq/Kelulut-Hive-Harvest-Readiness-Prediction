@@ -1,4 +1,4 @@
-import { ConfirmModal } from '@/components/core/confirm-modal';
+import { ConfirmModal } from '@/components/core/overlay/confirm-modal';
 import { fmtDate } from '@/lib/format';
 import type { Harvest } from '@/types';
 

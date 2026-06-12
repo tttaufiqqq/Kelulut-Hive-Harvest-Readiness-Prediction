@@ -1,9 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { useMemo } from 'react';
-import { BeekeeperTabs } from '@/components/core/beekeeper-tabs';
-import { Breadcrumbs } from '@/components/core/navigation';
-import { ReadinessDonutChart } from '@/components/core/visualization-charts';
-import type { SensorProfile } from '@/components/core/visualization-charts';
+import { BeekeeperTabs } from '@/components/core/navigation/beekeeper-tabs';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
+import { ReadinessDonutChart } from '@/components/core/data/visualization-charts';
+import type { SensorProfile } from '@/components/core/data/visualization-charts';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { HarvestBarChart } from './HarvestBarChart';
 import type { HarvestSummaryItem } from './HarvestBarChart';

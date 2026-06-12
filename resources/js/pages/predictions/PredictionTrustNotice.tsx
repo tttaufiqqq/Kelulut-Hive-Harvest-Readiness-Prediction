@@ -1,4 +1,4 @@
-import { Alert } from '@/components/core/feedback';
+import { Alert } from '@/components/core/feedback/feedback';
 import type { PredictionEntry } from './types';
 import { formatRawConfidence, getTrustAlertStyle, getTrustLabel, getTrustStyle } from './utils';
 

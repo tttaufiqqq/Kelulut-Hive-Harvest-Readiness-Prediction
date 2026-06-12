@@ -3,8 +3,8 @@ import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { ArrowRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AuthFormFieldBlock } from '@/components/auth/auth-form-field-block';
-import { Button } from '@/components/core/button';
-import { Input } from '@/components/core/input';
+import { Button } from '@/components/core/display/button';
+import { Input } from '@/components/core/form/input';
 import {
     InputOTP,
     InputOTPGroup,

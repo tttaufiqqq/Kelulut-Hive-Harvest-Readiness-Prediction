@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { Alert } from '@/components/core/feedback';
+import { Alert } from '@/components/core/feedback/feedback';
 
 export type FlashMessageBag = {
     id?: string | null;

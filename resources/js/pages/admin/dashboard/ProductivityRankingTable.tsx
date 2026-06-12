@@ -1,5 +1,5 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import type { ProductivityItem } from './constants';
 
 export function ProductivityRankingTable({ items, mounted }: { items: ProductivityItem[]; mounted: boolean }) {

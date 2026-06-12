@@ -1,8 +1,8 @@
 import { Form } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import { Button } from '@/components/core/button';
-import { Modal } from '@/components/core/modal';
+import { Button } from '@/components/core/display/button';
+import { Modal } from '@/components/core/overlay/modal';
 import { Heading } from '@/components/settings/heading';
 import { PasswordInput } from '@/components/settings/password-input';
 

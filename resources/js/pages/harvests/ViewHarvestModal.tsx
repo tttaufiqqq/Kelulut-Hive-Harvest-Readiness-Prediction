@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/core/button';
-import { Modal } from '@/components/core/modal';
-import { ProductivityBadge } from '@/components/core/productivity-badge';
+import { Button } from '@/components/core/display/button';
+import { Modal } from '@/components/core/overlay/modal';
+import { ProductivityBadge } from '@/components/core/display/productivity-badge';
 import { fmtDate } from '@/lib/format';
 import type { Harvest } from '@/types';
 

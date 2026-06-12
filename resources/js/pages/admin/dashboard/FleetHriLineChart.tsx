@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
-import { SelectField } from '@/components/core/select-field';
+import { SelectField } from '@/components/core/form/select-field';
 import { DAY_OPTIONS, TOOLTIP_STYLE, type FleetTrendItem } from './constants';
 
 export function FleetHriLineChart({ data }: { data: FleetTrendItem[] }) {

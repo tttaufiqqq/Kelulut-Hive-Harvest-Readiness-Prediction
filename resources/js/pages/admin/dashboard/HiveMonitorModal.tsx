@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, Droplets, Thermometer, Wind } from 'lucide-react';
-import { Modal } from '@/components/core/modal';
-import { SensorRadarChart } from '@/components/core/visualization-charts';
+import { Modal } from '@/components/core/overlay/modal';
+import { SensorRadarChart } from '@/components/core/data/visualization-charts';
 import { READINESS_LABEL, STATUS_BADGE, STATUS_LABEL, WARN_CO2_ABOVE, WARN_HUMID_ABOVE, WARN_TEMP_ABOVE, type HiveData } from './constants';
 import { formatLastReading } from './utils';
 

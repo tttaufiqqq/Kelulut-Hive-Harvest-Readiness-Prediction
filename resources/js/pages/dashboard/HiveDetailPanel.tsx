@@ -9,7 +9,7 @@ import {
     Wind,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import { MetricCard, ReadinessBadge } from '@/components/core/readiness-chart-cards';
 import { cn } from '@/lib/utils';
 import type { HiveCard } from './HiveListCard';

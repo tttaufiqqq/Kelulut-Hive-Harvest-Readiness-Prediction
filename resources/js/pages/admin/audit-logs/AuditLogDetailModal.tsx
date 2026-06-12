@@ -1,5 +1,5 @@
-import { Modal } from '@/components/core/modal';
-import { StatusBadge } from '@/components/core/status-badge';
+import { Modal } from '@/components/core/overlay/modal';
+import { StatusBadge } from '@/components/core/display/status-badge';
 import { fmtSmartTime } from '@/lib/format';
 import type { AuditLog } from './AuditLogTableRow';
 

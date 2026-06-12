@@ -1,5 +1,5 @@
 import { Edit2, MoreVertical, Power, RefreshCw, Trash2 } from 'lucide-react';
-import { Dropdown } from '@/components/core/dropdown';
+import { Dropdown } from '@/components/core/overlay/dropdown';
 import { fmtDate } from '@/lib/format';
 import type { User } from '@/types';
 import { BeekeeperStatusBadge } from './BeekeeperStatusBadge';

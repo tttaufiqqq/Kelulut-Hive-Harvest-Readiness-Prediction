@@ -1,5 +1,5 @@
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 import type { CrossSiteItem } from './constants';
 
 export function CrossSiteComparisonChart({ items, productivityCount, mounted }: { items: CrossSiteItem[]; productivityCount: number; mounted: boolean }) {

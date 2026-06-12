@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { BeeIcon } from '@/components/core/bee-icon';
+import { BeeIcon } from '@/components/core/brand/bee-icon';
 
 interface Props {
     status: number;

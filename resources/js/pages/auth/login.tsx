@@ -3,9 +3,9 @@ import { ArrowRight, Check, Lock, Mail } from 'lucide-react';
 import React from 'react';
 import { AuthFormFieldBlock } from '@/components/auth/auth-form-field-block';
 import { AuthSplitShell } from '@/components/auth/auth-split-shell';
-import { Button } from '@/components/core/button';
-import { Input } from '@/components/core/input';
-import { TextLink } from '@/components/core/text-link';
+import { Button } from '@/components/core/display/button';
+import { Input } from '@/components/core/form/input';
+import { TextLink } from '@/components/core/navigation/text-link';
 import { PasswordInput } from '@/components/settings/password-input';
 
 export default function Login({

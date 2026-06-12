@@ -1,4 +1,4 @@
-import { Card } from '@/components/core/card';
+import { Card } from '@/components/core/display/card';
 
 export function EmptyPredictionState() {
     return (
