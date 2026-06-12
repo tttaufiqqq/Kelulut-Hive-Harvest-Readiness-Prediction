@@ -74,7 +74,7 @@ test('telegram alert job defines retry behavior for external delivery', function
 
 test('telegram alert job is a no-op when the prediction no longer exists', function () {
     $this->mock(TelegramService::class, function (MockInterface $mock) {
-        $mock->shouldNotReceive('sendMessage');
+        $mock->shouldNotReceive('execute');
     });
 
     $job = new SendTelegramAlert(999999);
@@ -87,7 +87,7 @@ test('telegram alert job is a no-op when the beekeeper has no telegram id', func
     $prediction = telegramAlertPrediction(telegramId: null);
 
     $this->mock(TelegramService::class, function (MockInterface $mock) {
-        $mock->shouldNotReceive('sendMessage');
+        $mock->shouldNotReceive('execute');
     });
 
     $job = new SendTelegramAlert($prediction->id);
@@ -100,7 +100,7 @@ test('telegram service throws a typed exception when delivery fails', function (
     config(['services.telegram.token' => 'test-token']);
     Http::fake(['*' => Http::response(['ok' => false], 500)]);
 
-    expect(fn () => app(TelegramService::class)->sendMessage('123456789', 'hello'))
+    expect(fn () => app(TelegramService::class)->execute('123456789', 'hello'))
         ->toThrow(AppException::class);
 });
 
