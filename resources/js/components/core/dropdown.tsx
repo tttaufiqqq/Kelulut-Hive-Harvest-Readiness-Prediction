@@ -93,7 +93,7 @@ export const Dropdown = ({
                                 style={menuStyle}
                                 className="w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-yellow-100 focus:outline-none"
                             >
-                                <div className="py-1">
+                                <div className="max-h-60 overflow-y-auto py-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-amber-50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-thumb:hover]:bg-amber-400">
                                     {items.map((item) => (
                                         <button
                                             key={item.id}

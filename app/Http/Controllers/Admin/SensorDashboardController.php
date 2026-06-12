@@ -92,7 +92,6 @@ class SensorDashboardController extends Controller
         $rows = DB::table('vw_hive_sensor_daily_avg')
             ->where('hive_id', $hive->id)
             ->orderByDesc('reading_date')
-            ->limit(14)
             ->get();
 
         return response()->json([

@@ -1,5 +1,6 @@
 import { Edit2, MoreVertical, Trash2 } from 'lucide-react';
 import { Dropdown } from '@/components/core/dropdown';
+import { fmtDate } from '@/lib/format';
 
 export type DeviceRow = {
     id: number;
@@ -43,8 +44,8 @@ export function DeviceTableRow({ device, index, onView, onEdit, onDelete }: Prop
             <td className="px-6 py-4">
                 <StatusBadge status={device.device_status} />
             </td>
-            <td className="hidden px-6 py-4 text-amber-900/60 md:table-cell">{device.installation_date ?? '—'}</td>
-            <td className="hidden px-6 py-4 text-amber-900/60 lg:table-cell">{device.last_maintenance_date ?? '—'}</td>
+            <td className="hidden px-6 py-4 text-amber-900/60 md:table-cell">{fmtDate(device.installation_date)}</td>
+            <td className="hidden px-6 py-4 text-amber-900/60 lg:table-cell">{fmtDate(device.last_maintenance_date)}</td>
             <td className="px-6 py-4">
                 <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">
                     {device.sensor_log_count}

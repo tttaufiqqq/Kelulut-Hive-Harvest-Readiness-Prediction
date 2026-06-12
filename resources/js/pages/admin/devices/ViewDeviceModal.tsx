@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/core/button';
 import { Modal } from '@/components/core/modal';
+import { fmtDate } from '@/lib/format';
 import { StatusBadge } from './DeviceTableRow';
 import type { DeviceRow } from './DeviceTableRow';
 
@@ -46,8 +47,8 @@ export function ViewDeviceModal({ device, deviceIndex, totalDevices, hasPrev, ha
                         { label: 'Status', value: <StatusBadge status={device.device_status} /> },
                         { label: 'Hive', value: <span className="font-medium text-amber-950">{device.hive_name ?? '—'}</span> },
                         { label: 'Sensor Logs', value: <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">{device.sensor_log_count}</span> },
-                        { label: 'Installed', value: <span className="font-medium text-amber-950">{device.installation_date ?? '—'}</span> },
-                        { label: 'Last Maintenance', value: <span className="font-medium text-amber-950">{device.last_maintenance_date ?? '—'}</span> },
+                        { label: 'Installed', value: <span className="font-medium text-amber-950">{fmtDate(device.installation_date)}</span> },
+                        { label: 'Last Maintenance', value: <span className="font-medium text-amber-950">{fmtDate(device.last_maintenance_date)}</span> },
                     ].map((field) => (
                         <div key={field.label}>
                             <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">{field.label}</p>

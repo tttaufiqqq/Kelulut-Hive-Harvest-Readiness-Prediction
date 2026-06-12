@@ -69,7 +69,7 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
         return () => { channel.stopListening(eventName, reloadSensorProps); realtime.leave(sensorChannelName); };
     }, [sensorChannelName]);
 
-    const selectedHive = hives.find((h) => h.id === selected) ?? null;
+    const historyHiveIndex = Math.max(0, hives.findIndex((h) => h.id === selected));
 
     return (
         <>
@@ -111,7 +111,7 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
                 </div>
             </AdminLayout>
 
-            <DailyHistoryModal isOpen={historyOpen} hive={selectedHive} onClose={() => setHistoryOpen(false)} />
+            <DailyHistoryModal isOpen={historyOpen} hives={hives} initialHiveIndex={historyHiveIndex} onClose={() => setHistoryOpen(false)} />
         </>
     );
 }
