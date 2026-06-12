@@ -36,18 +36,23 @@ export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
     const hasNext = viewIndex !== null && viewIndex < sites.length - 1;
 
     useEffect(() => {
-        if (viewIndex === null) return;
+        if (viewIndex === null) {
+return;
+}
+
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
                 setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p);
             }
+
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
                 setActiveModal((p) => p?.type === 'view' && p.index < sites.length - 1 ? { type: 'view', index: p.index + 1 } : p);
             }
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, sites.length]);
 
@@ -59,13 +64,28 @@ export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
         editForm.setData({ name: site.name, description: site.description ?? '' });
         setActiveModal({ type: 'edit', site });
     };
-    const submitCreate = () => createForm.post(route('admin.sites.store'), { onSuccess: () => { createForm.reset(); close(); } });
-    const openEditConfirm = () => { if (activeModal?.type === 'edit') setActiveModal({ type: 'confirm-edit', site: activeModal.site }); };
-    const confirmEdit = () => { if (activeModal?.type === 'confirm-edit') editForm.patch(route('admin.sites.update', { site: activeModal.site.id }), { onSuccess: close }); };
+    const submitCreate = () => createForm.post(route('admin.sites.store'), { onSuccess: () => {
+ createForm.reset(); close(); 
+} });
+    const openEditConfirm = () => {
+ if (activeModal?.type === 'edit') {
+setActiveModal({ type: 'confirm-edit', site: activeModal.site });
+} 
+};
+    const confirmEdit = () => {
+ if (activeModal?.type === 'confirm-edit') {
+editForm.patch(route('admin.sites.update', { site: activeModal.site.id }), { onSuccess: close });
+} 
+};
     const confirmDelete = () => {
-        if (activeModal?.type !== 'delete') return;
+        if (activeModal?.type !== 'delete') {
+return;
+}
+
         setDeleting(true);
-        router.delete(route('admin.sites.destroy', { site: activeModal.site.id }), { onFinish: () => { setDeleting(false); close(); } });
+        router.delete(route('admin.sites.destroy', { site: activeModal.site.id }), { onFinish: () => {
+ setDeleting(false); close(); 
+} });
     };
 
     const confirmableModal =
@@ -125,14 +145,18 @@ export default function SitesIndex({ sites }: { sites: SiteRow[] }) {
                     hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < sites.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewSite, true); }}
+                    onEdit={() => {
+ close(); openEdit(viewSite, true); 
+}}
                     onClose={close}
                 />
             )}
 
             <SiteFormModal isOpen={activeModal?.type === 'create'} isCreate form={createForm} onSubmit={submitCreate} onClose={close} />
             {activeModal?.type === 'edit' && (
-                <SiteFormModal isOpen isCreate={false} instant={editInstant} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
+                <SiteFormModal isOpen isCreate={false} instant={editInstant} form={editForm} onSubmit={openEditConfirm} onClose={() => {
+ setEditInstant(false); close(); 
+}} />
             )}
 
             <SiteConfirmModals

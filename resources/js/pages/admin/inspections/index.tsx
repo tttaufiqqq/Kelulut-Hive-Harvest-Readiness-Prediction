@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/core/display/button';
 import { Card } from '@/components/core/display/card';
-import { Modal } from '@/components/core/overlay/modal';
 import { SelectField } from '@/components/core/form/select-field';
+import { Modal } from '@/components/core/overlay/modal';
 import { AdminLayout } from '@/layouts/admin-layout';
 import { fmtDate } from '@/lib/format';
 import type {

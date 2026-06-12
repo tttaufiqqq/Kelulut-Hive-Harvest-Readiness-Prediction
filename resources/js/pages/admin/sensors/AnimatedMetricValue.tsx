@@ -14,24 +14,38 @@ export function AnimatedMetricValue({ value, suffix = '', maxFractionDigits = 0,
     const animationFrameRef = useRef<number | null>(null);
 
     useEffect(() => {
-        if (animationFrameRef.current !== null) { cancelAnimationFrame(animationFrameRef.current); animationFrameRef.current = null; }
+        if (animationFrameRef.current !== null) {
+ cancelAnimationFrame(animationFrameRef.current); animationFrameRef.current = null; 
+}
 
         if (value === null) {
             previousValueRef.current = null;
-            animationFrameRef.current = requestAnimationFrame(() => { setDisplayValue(null); animationFrameRef.current = null; }); // eslint-disable-line react-hooks/set-state-in-effect
+            animationFrameRef.current = requestAnimationFrame(() => {
+ setDisplayValue(null); animationFrameRef.current = null; 
+});
+  
             return;
         }
+
         if (previousValueRef.current === null) {
             previousValueRef.current = value;
-            animationFrameRef.current = requestAnimationFrame(() => { setDisplayValue(value); animationFrameRef.current = null; }); // eslint-disable-line react-hooks/set-state-in-effect
+            animationFrameRef.current = requestAnimationFrame(() => {
+ setDisplayValue(value); animationFrameRef.current = null; 
+});
+  
             return;
         }
 
         const startValue = previousValueRef.current;
+
         if (startValue === value) {
-            animationFrameRef.current = requestAnimationFrame(() => { setDisplayValue(value); animationFrameRef.current = null; }); // eslint-disable-line react-hooks/set-state-in-effect
+            animationFrameRef.current = requestAnimationFrame(() => {
+ setDisplayValue(value); animationFrameRef.current = null; 
+});
+  
             return;
         }
+
         previousValueRef.current = value;
 
         const durationMs = 700;
@@ -40,14 +54,26 @@ export function AnimatedMetricValue({ value, suffix = '', maxFractionDigits = 0,
             const progress = Math.min((now - startedAt) / durationMs, 1);
             const easedProgress = 1 - Math.pow(1 - progress, 3);
             const nextValue = startValue + (value - startValue) * easedProgress;
-            setDisplayValue(nextValue); // eslint-disable-line react-hooks/set-state-in-effect
-            if (progress < 1) { animationFrameRef.current = requestAnimationFrame(tick); }
-            else { animationFrameRef.current = null; setDisplayValue(value); } // eslint-disable-line react-hooks/set-state-in-effect
+            setDisplayValue(nextValue);
+  
+            if (progress < 1) {
+ animationFrameRef.current = requestAnimationFrame(tick); 
+} else {
+ animationFrameRef.current = null; setDisplayValue(value); 
+}  
         };
         animationFrameRef.current = requestAnimationFrame(tick);
-        return () => { if (animationFrameRef.current !== null) { cancelAnimationFrame(animationFrameRef.current); animationFrameRef.current = null; } };
+
+        return () => {
+ if (animationFrameRef.current !== null) {
+ cancelAnimationFrame(animationFrameRef.current); animationFrameRef.current = null; 
+} 
+};
     }, [value]);
 
-    if (displayValue === null) return <span className={className}>—</span>;
+    if (displayValue === null) {
+return <span className={className}>—</span>;
+}
+
     return <span className={`tabular-nums ${className}`}>{formatAnimatedReading(displayValue, maxFractionDigits)}{suffix}</span>;
 }

@@ -44,18 +44,30 @@ export function formatAnimatedReading(value: number, maxFractionDigits = 1): str
 }
 
 export function formatSensorReading(value: number | null, suffix = '', maxFractionDigits = 0): string {
-    if (value === null) return '—';
+    if (value === null) {
+return '—';
+}
+
     return `${formatAnimatedReading(value, maxFractionDigits)}${suffix}`;
 }
 
 export function formatRawConfidence(score: number): string {
-    if (score >= 0.9995) return 'Approx. 99.9%+';
+    if (score >= 0.9995) {
+return 'Approx. 99.9%+';
+}
+
     return `${(score * 100).toFixed(1)}%`;
 }
 
 export function getTrustLabel(prediction: PredictionEntry): string {
-    if (prediction.warning_state === 'critical') return 'Low trust';
-    if (prediction.warning_state === 'warning') return 'Use caution';
+    if (prediction.warning_state === 'critical') {
+return 'Low trust';
+}
+
+    if (prediction.warning_state === 'warning') {
+return 'Use caution';
+}
+
     return 'Trusted';
 }
 
@@ -81,12 +93,22 @@ export function formatCapturedTime(prediction: PredictionEntry): string {
 
 export function sensorLevelClass(sensorType: string, thresholdMap: Record<string, string>): string {
     const level = thresholdMap[sensorType];
+
     return SENSOR_LEVEL_CLASSES[level] ?? 'text-amber-900';
 }
 
 export function formatSecondsAgo(secondsAgo: number): string {
-    if (secondsAgo < 60) return 'Just now';
-    if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)} min ago`;
-    if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)} hr ago`;
+    if (secondsAgo < 60) {
+return 'Just now';
+}
+
+    if (secondsAgo < 3600) {
+return `${Math.floor(secondsAgo / 60)} min ago`;
+}
+
+    if (secondsAgo < 86400) {
+return `${Math.floor(secondsAgo / 3600)} hr ago`;
+}
+
     return `${Math.floor(secondsAgo / 86400)} days ago`;
 }

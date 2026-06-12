@@ -27,8 +27,12 @@ const TOOLTIP_STYLE = {
 };
 
 function HarvestTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: HarvestRecord }> }) {
-    if (!active || !payload?.length) return null;
+    if (!active || !payload?.length) {
+return null;
+}
+
     const record = payload[0].payload;
+
     return (
         <div style={TOOLTIP_STYLE} className="px-3 py-2">
             <p className="font-bold">{record.date}</p>

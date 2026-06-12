@@ -3,13 +3,14 @@ import { AlertTriangle, Clock, TrendingUp, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/core/display/card';
 import { AdminLayout } from '@/layouts/admin-layout';
+import { STATUS_TO_LEVEL } from './dashboard/constants';
+import type { CrossSiteItem, FleetTrendItem, HiveData, ProductivityItem } from './dashboard/constants';
 import { CrossSiteComparisonChart } from './dashboard/CrossSiteComparisonChart';
 import { FleetHriLineChart } from './dashboard/FleetHriLineChart';
 import { HiveMonitorGrid } from './dashboard/HiveMonitorGrid';
 import { HiveMonitorModal } from './dashboard/HiveMonitorModal';
 import { ProductivityRankingTable } from './dashboard/ProductivityRankingTable';
 import { ReadinessSnapshot } from './dashboard/ReadinessSnapshot';
-import { STATUS_TO_LEVEL, type CrossSiteItem, type FleetTrendItem, type HiveData, type ProductivityItem } from './dashboard/constants';
 
 export type { HiveData };
 
@@ -33,30 +34,72 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
     const [monitorData, setMonitorData] = useState<HiveData[] | null>(null);
     const [monitorLoading, setMonitorLoading] = useState(false);
 
-    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+    useEffect(() => {
+        setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
+    }, []);
 
     useEffect(() => {
-        if (!snapshotDate) { setSnapshotData(null); return; } // eslint-disable-line react-hooks/set-state-in-effect
+        if (!snapshotDate) {
+            setSnapshotData(null); // eslint-disable-line react-hooks/set-state-in-effect
+
+            return;
+        }
+
         let cancelled = false;
         setSnapshotLoading(true);
         fetch(`/admin/dashboard/readiness-snapshot?date=${snapshotDate}`, { headers: { Accept: 'application/json' } })
             .then((res) => res.json() as Promise<ReadinessSnapshotResponse>)
-            .then((payload) => { if (!cancelled) setSnapshotData(payload.has_data ? payload.data : []); }) // eslint-disable-line react-hooks/set-state-in-effect
-            .catch(() => { if (!cancelled) setSnapshotData([]); }) // eslint-disable-line react-hooks/set-state-in-effect
-            .finally(() => { if (!cancelled) setSnapshotLoading(false); }); // eslint-disable-line react-hooks/set-state-in-effect
-        return () => { cancelled = true; };
+            .then((payload) => {
+                if (!cancelled) {
+                    setSnapshotData(payload.has_data ? payload.data : []);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setSnapshotData([]);
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setSnapshotLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [snapshotDate]);
 
     useEffect(() => {
-        if (!monitorDate) { setMonitorData(null); return; } // eslint-disable-line react-hooks/set-state-in-effect
+        if (!monitorDate) {
+            setMonitorData(null); // eslint-disable-line react-hooks/set-state-in-effect
+
+            return;
+        }
+
         let cancelled = false;
         setMonitorLoading(true);
         fetch(`/admin/dashboard/hive-monitor-snapshot?date=${monitorDate}`, { headers: { Accept: 'application/json' } })
             .then((res) => res.json() as Promise<{ has_data: boolean; data: HiveData[] }>)
-            .then((payload) => { if (!cancelled) setMonitorData(payload.data); }) // eslint-disable-line react-hooks/set-state-in-effect
-            .catch(() => { if (!cancelled) setMonitorData([]); }) // eslint-disable-line react-hooks/set-state-in-effect
-            .finally(() => { if (!cancelled) setMonitorLoading(false); }); // eslint-disable-line react-hooks/set-state-in-effect
-        return () => { cancelled = true; };
+            .then((payload) => {
+                if (!cancelled) {
+                    setMonitorData(payload.data);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setMonitorData([]);
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setMonitorLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [monitorDate]);
 
     const activeHives = monitorDate !== null ? (monitorData ?? []) : hives;
@@ -67,21 +110,40 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
     const alertCount = hives.filter((h) => h.status === 'alert').length;
     const hasPrev = selectedIndex !== null && selectedIndex > 0;
     const hasNext = selectedIndex !== null && selectedIndex < sortedHives.length - 1;
+
     const adminDonutData = useMemo(() => {
         const counts: Record<string, number> = {};
-        for (const hive of hives) { const level = STATUS_TO_LEVEL[hive.status]; counts[level] = (counts[level] ?? 0) + 1; }
+
+        for (const hive of hives) {
+            const level = STATUS_TO_LEVEL[hive.status];
+
+            counts[level] = (counts[level] ?? 0) + 1;
+        }
+
         return Object.entries(counts).map(([level, count]) => ({ level, count }));
     }, [hives]);
+
     const activeDonutData = snapshotDate !== null ? (snapshotData ?? []) : adminDonutData;
     const isLiveMode = snapshotDate === null;
 
     useEffect(() => {
-        if (selectedIndex === null) return;
+        if (selectedIndex === null) {
+            return;
+        }
+
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex((prev) => prev !== null && prev > 0 ? prev - 1 : prev); }
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex((prev) => prev !== null && prev < sortedHives.length - 1 ? prev + 1 : prev); }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                setSelectedIndex((prev) => prev !== null && prev > 0 ? prev - 1 : prev);
+            }
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                setSelectedIndex((prev) => prev !== null && prev < sortedHives.length - 1 ? prev + 1 : prev);
+            }
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [selectedIndex, sortedHives.length]);
 

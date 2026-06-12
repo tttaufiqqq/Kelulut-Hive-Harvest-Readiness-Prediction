@@ -1,7 +1,7 @@
 import { FileText, Upload } from 'lucide-react';
-import { AlertError } from '@/components/core/feedback/alert-error';
 import { Button } from '@/components/core/display/button';
 import { Card } from '@/components/core/display/card';
+import { AlertError } from '@/components/core/feedback/alert-error';
 
 interface Props {
     thesisUrl: string | null;

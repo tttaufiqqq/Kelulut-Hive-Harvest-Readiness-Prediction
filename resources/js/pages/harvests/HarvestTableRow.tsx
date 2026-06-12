@@ -1,7 +1,7 @@
 import { Edit2, MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/core/display/button';
-import { Dropdown } from '@/components/core/overlay/dropdown';
 import { ProductivityBadge } from '@/components/core/display/productivity-badge';
+import { Dropdown } from '@/components/core/overlay/dropdown';
 import { fmtDate } from '@/lib/format';
 import type { Harvest } from '@/types';
 

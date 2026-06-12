@@ -25,7 +25,9 @@ export function TwoFactorSection({
     onToggleSetup,
     twoFactor,
 }: Props) {
-    if (!canManageTwoFactor) return null;
+    if (!canManageTwoFactor) {
+return null;
+}
 
     const { qrCodeSvg, hasSetupData, manualSetupKey, clearSetupData, fetchSetupData, recoveryCodesList, fetchRecoveryCodes, errors } = twoFactor;
 

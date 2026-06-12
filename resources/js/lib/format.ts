@@ -46,17 +46,28 @@ export function fmtDateTime(value: string | null | undefined): string {
 
 /** Month-only display from "yyyy-mm" or full date string: "06/2026" */
 export function fmtMonth(value: string | null | undefined): string {
-    if (!value) return '—';
+    if (!value) {
+return '—';
+}
+
     const normalized = value.length === 7 ? `${value}-01T00:00:00` : `${value}T00:00:00`;
     const d = new Date(normalized);
-    if (isNaN(d.getTime())) return '—';
+
+    if (isNaN(d.getTime())) {
+return '—';
+}
+
     return d.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' });
 }
 
 /** Day+month display: "07/06" — for compact chart axis ticks */
 export function fmtDayMonth(value: string | null | undefined): string {
     const d = toDate(value);
-    if (!d) return '—';
+
+    if (!d) {
+return '—';
+}
+
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
 }
 

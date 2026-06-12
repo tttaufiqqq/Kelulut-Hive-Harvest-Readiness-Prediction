@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/form/select-field';
-import { DAY_OPTIONS, TOOLTIP_STYLE, type FleetTrendItem } from './constants';
+import { ChartCard } from '@/components/core/readiness-chart-cards';
+import { DAY_OPTIONS, TOOLTIP_STYLE  } from './constants';
+import type {FleetTrendItem} from './constants';
 
 export function FleetHriLineChart({ data }: { data: FleetTrendItem[] }) {
     const [mounted, setMounted] = useState(false);
@@ -41,6 +42,7 @@ export function FleetHriLineChart({ data }: { data: FleetTrendItem[] }) {
                                     const date = new Date(d);
                                     const prev = filtered[index - Math.floor(filtered.length / 8)];
                                     const isNewYear = !prev || new Date(prev.summary_date).getFullYear() !== date.getFullYear();
+
                                     return isNewYear
                                         ? date.toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' })
                                         : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });

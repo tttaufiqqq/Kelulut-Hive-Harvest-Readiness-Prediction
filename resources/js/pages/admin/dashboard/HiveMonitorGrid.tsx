@@ -1,8 +1,9 @@
 import { Droplets, Thermometer, Wind } from 'lucide-react';
-import { Card } from '@/components/core/display/card';
 import { DatePicker } from '@/components/core/date-picker';
+import { Card } from '@/components/core/display/card';
 import { fmtDate } from '@/lib/format';
-import { STATUS_BADGE, STATUS_LABEL, WARN_CO2_ABOVE, type HiveData } from './constants';
+import { STATUS_BADGE, STATUS_LABEL, WARN_CO2_ABOVE  } from './constants';
+import type {HiveData} from './constants';
 import { formatLastReading } from './utils';
 
 export interface HiveMonitorGridProps {

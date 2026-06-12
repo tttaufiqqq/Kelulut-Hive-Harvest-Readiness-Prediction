@@ -12,8 +12,8 @@ import {
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import type { TooltipProps } from 'recharts/types/component/Tooltip';
 import { DatePicker } from '@/components/core/date-picker';
-import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/form/select-field';
+import { ChartCard } from '@/components/core/readiness-chart-cards';
 
 export interface SensorReading {
     time: string;
@@ -56,8 +56,15 @@ const SENSOR_SERIES = {
 const sensorTooltipFormatter: NonNullable<TooltipProps<ValueType, NameType>['formatter']> = (value, name) => {
     const numericValue = typeof value === 'number' ? value : 0;
     const resolvedName = typeof name === 'string' || typeof name === 'number' ? String(name) : '';
-    if (resolvedName === 'Temp') return [`${numericValue}°C`, resolvedName];
-    if (resolvedName === 'Humidity') return [`${numericValue}%`, resolvedName];
+
+    if (resolvedName === 'Temp') {
+return [`${numericValue}°C`, resolvedName];
+}
+
+    if (resolvedName === 'Humidity') {
+return [`${numericValue}%`, resolvedName];
+}
+
     return [numericValue, `${resolvedName} ADC`];
 };
 

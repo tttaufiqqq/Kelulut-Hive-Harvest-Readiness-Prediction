@@ -7,20 +7,31 @@ export function pad(value: number) {
 }
 
 export function parsePickerValue(value: string | null, mode: PickerMode) {
-    if (!value) return new Date();
+    if (!value) {
+return new Date();
+}
+
     const normalized = mode === 'month' ? `${value}-01T00:00:00` : `${value}T00:00:00`;
     const parsed = new Date(normalized);
+
     return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
 export function formatPickerValue(year: number, month: number, day: number | null, mode: PickerMode) {
-    if (mode === 'month') return `${year}-${pad(month + 1)}`;
+    if (mode === 'month') {
+return `${year}-${pad(month + 1)}`;
+}
+
     return `${year}-${pad(month + 1)}-${pad(day ?? 1)}`;
 }
 
 export function formatDisplayValue(value: string | null, mode: PickerMode) {
-    if (!value) return null;
+    if (!value) {
+return null;
+}
+
     const parsed = parsePickerValue(value, mode);
+
     return parsed.toLocaleDateString('en-GB', {
         ...(mode === 'day'
             ? { day: '2-digit', month: '2-digit', year: 'numeric' }
@@ -51,5 +62,6 @@ export function buildMenuStyle(trigger: HTMLButtonElement, mode: PickerMode): CS
         Math.max(viewportPadding, rect.left),
         Math.max(viewportPadding, window.innerWidth - width - viewportPadding),
     );
+
     return { position: 'fixed', top, left, width, zIndex: 9999 };
 }

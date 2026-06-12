@@ -18,7 +18,9 @@ export default function LandingPage({ thesisUrl }: Props) {
     const hasThesis = !!thesisUrl;
 
     function handleReadResearch() {
-        if (thesisUrl) setShowThesis(true);
+        if (thesisUrl) {
+setShowThesis(true);
+}
     }
 
     return (

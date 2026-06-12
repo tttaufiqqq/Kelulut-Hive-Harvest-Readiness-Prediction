@@ -1,16 +1,17 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { BeekeeperTabs } from '@/components/core/navigation/beekeeper-tabs';
+import { DataTable } from '@/components/core/data/content';
 import { Button } from '@/components/core/display/button';
 import { Card } from '@/components/core/display/card';
-import { DataTable } from '@/components/core/data/content';
 import { FlashAlerts } from '@/components/core/feedback/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/feedback/flash-alerts';
-import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { SelectField } from '@/components/core/form/select-field';
+import { BeekeeperTabs } from '@/components/core/navigation/beekeeper-tabs';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import type { Harvest, MasterHoneyColor, MasterHoneyFlavor, PaginatedHarvests } from '@/types';
+import { emptyCreate, hiveFilterOptions } from './constants';
 import { CreateHarvestModal } from './CreateHarvestModal';
 import type { HarvestCreateFormData } from './CreateHarvestModal';
 import { EditHarvestModal } from './EditHarvestModal';
@@ -18,7 +19,6 @@ import type { HarvestEditFormData } from './EditHarvestModal';
 import { HarvestConfirmModals } from './HarvestConfirmModals';
 import { harvestColumns } from './HarvestTableRow';
 import { ViewHarvestModal } from './ViewHarvestModal';
-import { emptyCreate, hiveFilterOptions } from './constants';
 
 type ActiveModal =
     | { type: 'create' }
@@ -49,12 +49,21 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors, filter
     const hasNext = viewIndex !== null && viewIndex < harvests.data.length - 1;
 
     useEffect(() => {
-        if (viewIndex === null) return;
+        if (viewIndex === null) {
+return;
+}
+
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p); }
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index < harvests.data.length - 1 ? { type: 'view', index: p.index + 1 } : p); }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+ e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p); 
+}
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+ e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index < harvests.data.length - 1 ? { type: 'view', index: p.index + 1 } : p); 
+}
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, harvests.data.length]);
 
@@ -66,10 +75,32 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors, filter
         editForm.setData({ harvest_date: harvest.harvest_date.slice(0, 10), weight: String(harvest.weight), productivity_level: harvest.productivity_level ?? '', color_id: harvest.color_id ? String(harvest.color_id) : '', flavor_id: harvest.flavor_id ? String(harvest.flavor_id) : '', notes: harvest.notes ?? '' });
         setActiveModal({ type: 'edit', harvest });
     };
-    const submitCreate = (e: React.FormEvent) => { e.preventDefault(); createForm.post(route('harvests.store'), { onSuccess: () => { createForm.reset(); close(); } }); };
-    const openEditConfirm = () => { if (activeModal?.type === 'edit') setActiveModal({ type: 'confirm-edit', harvest: activeModal.harvest }); };
-    const confirmEdit = () => { if (activeModal?.type !== 'confirm-edit') return; editForm.patch(route('harvests.update', { harvest: activeModal.harvest.id }), { onSuccess: close }); };
-    const confirmDelete = () => { if (activeModal?.type !== 'delete') return; setDeleting(true); router.delete(route('harvests.destroy', { harvest: activeModal.harvest.id }), { onFinish: () => { setDeleting(false); close(); } }); };
+    const submitCreate = (e: React.FormEvent) => {
+ e.preventDefault(); createForm.post(route('harvests.store'), { onSuccess: () => {
+ createForm.reset(); close(); 
+} }); 
+};
+    const openEditConfirm = () => {
+ if (activeModal?.type === 'edit') {
+setActiveModal({ type: 'confirm-edit', harvest: activeModal.harvest });
+} 
+};
+    const confirmEdit = () => {
+ if (activeModal?.type !== 'confirm-edit') {
+return;
+}
+
+ editForm.patch(route('harvests.update', { harvest: activeModal.harvest.id }), { onSuccess: close }); 
+};
+    const confirmDelete = () => {
+ if (activeModal?.type !== 'delete') {
+return;
+}
+
+ setDeleting(true); router.delete(route('harvests.destroy', { harvest: activeModal.harvest.id }), { onFinish: () => {
+ setDeleting(false); close(); 
+} }); 
+};
     const confirmableModal = activeModal?.type === 'confirm-edit' || activeModal?.type === 'delete' ? activeModal : null;
 
     return (
@@ -112,10 +143,14 @@ export default function HarvestsIndex({ harvests, hives, colors, flavors, filter
                 <ViewHarvestModal harvest={viewHarvest} harvestIndex={viewIndex!} totalHarvests={harvests.data.length} hasPrev={hasPrev} hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < harvests.data.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewHarvest, true); }} onClose={close} />
+                    onEdit={() => {
+ close(); openEdit(viewHarvest, true); 
+}} onClose={close} />
             )}
             {activeModal?.type === 'edit' && (
-                <EditHarvestModal isOpen instant={editInstant} hiveName={activeModal.harvest.hive?.name} colors={colors} flavors={flavors} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
+                <EditHarvestModal isOpen instant={editInstant} hiveName={activeModal.harvest.hive?.name} colors={colors} flavors={flavors} form={editForm} onSubmit={openEditConfirm} onClose={() => {
+ setEditInstant(false); close(); 
+}} />
             )}
             <HarvestConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
         </AuthenticatedLayout>

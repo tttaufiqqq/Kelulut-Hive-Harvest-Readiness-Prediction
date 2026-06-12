@@ -8,8 +8,8 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/form/select-field';
+import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { fmtMonth } from '@/lib/format';
 
 export interface HarvestSummaryItem {
@@ -59,6 +59,7 @@ export function HarvestBarChart({ data }: Props) {
                           acc[d.hive_id].total_weight += d.total_weight;
                           acc[d.hive_id].harvest_count += d.harvest_count;
                       }
+
                       return acc;
                   }, {}),
               ).sort((a, b) => b.total_weight - a.total_weight)

@@ -24,6 +24,7 @@ export function getPredictionContent(level: string | null): { accent: string; de
             description: 'Predictions will appear once enough sensor data has been collected and processed by the model.',
         };
     }
+
     return PREDICTION_CONTENT[level] ?? {
         accent: 'border-l-amber-300',
         description: 'Monitor this hive in live predictions for the latest model output and sensor context.',

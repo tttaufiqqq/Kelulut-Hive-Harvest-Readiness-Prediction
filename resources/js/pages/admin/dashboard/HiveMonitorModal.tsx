@@ -1,7 +1,8 @@
 import { ChevronLeft, ChevronRight, Droplets, Thermometer, Wind } from 'lucide-react';
-import { Modal } from '@/components/core/overlay/modal';
 import { SensorRadarChart } from '@/components/core/data/visualization-charts';
-import { READINESS_LABEL, STATUS_BADGE, STATUS_LABEL, WARN_CO2_ABOVE, WARN_HUMID_ABOVE, WARN_TEMP_ABOVE, type HiveData } from './constants';
+import { Modal } from '@/components/core/overlay/modal';
+import { READINESS_LABEL, STATUS_BADGE, STATUS_LABEL, WARN_CO2_ABOVE, WARN_HUMID_ABOVE, WARN_TEMP_ABOVE  } from './constants';
+import type {HiveData} from './constants';
 import { formatLastReading } from './utils';
 
 export interface HiveMonitorModalProps {
@@ -21,6 +22,7 @@ export function HiveMonitorModal({ hive, isOpen, hasPrev, hasNext, selectedIndex
         <Modal isOpen={isOpen} onClose={onClose} title={hive?.hive_name ?? ''} maxWidth="lg">
             {hive && (() => {
                 const hasMqData = hive.mq2 > 0;
+
                 return (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">

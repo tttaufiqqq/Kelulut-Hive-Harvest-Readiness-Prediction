@@ -1,9 +1,9 @@
 import { ChartCard, ConfidenceBar } from '@/components/core/readiness-chart-cards';
-import type { PredictionEntry } from './types';
 import { AnimatedNumber } from './AnimatedNumber';
 import { AnimatedReadinessBadge } from './AnimatedReadinessBadge';
 import { PredictionTrustNotice } from './PredictionTrustNotice';
 import { StalenessLabel } from './StalenessLabel';
+import type { PredictionEntry } from './types';
 import { READINESS_BAR_STYLES, formatCapturedTime, formatPredictionTime, getTrustLabel, getTrustStyle } from './utils';
 
 interface LatestPredictionCardProps {

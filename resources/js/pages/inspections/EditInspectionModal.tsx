@@ -1,10 +1,10 @@
-import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/core/display/button';
+import type { useForm } from '@inertiajs/react';
 import { DatePickerField } from '@/components/core/date-picker';
-import { Modal } from '@/components/core/overlay/modal';
+import { Button } from '@/components/core/display/button';
 import { MultiSelectField } from '@/components/core/form/multi-select-field';
 import { SelectField } from '@/components/core/form/select-field';
 import { TextareaField } from '@/components/core/form/textarea-field';
+import { Modal } from '@/components/core/overlay/modal';
 import type { MasterFloraType, MasterWeatherCondition } from '@/types';
 import { BLOOMING_OPTIONS, DAMAGE_OPTIONS, NECTAR_OPTIONS, VEGETATION_OPTIONS, masterToOptions } from './constants';
 import type { InspectionEditFormData } from './constants';
@@ -29,7 +29,9 @@ interface Props {
 export function EditInspectionModal({ isOpen, instant, hiveName, weatherConditions, floraTypes, form, editWeatherIds, editFloraIds, onWeatherChange, onFloraChange, onSubmit, onClose }: Props) {
     return (
         <Modal isOpen={isOpen} instant={instant} onClose={onClose} title="Edit Inspection Record" maxWidth="2xl">
-            <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
+            <form onSubmit={(e) => {
+ e.preventDefault(); onSubmit(); 
+}} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
                         <label className="ml-1 text-sm font-medium text-amber-900">Hive</label>

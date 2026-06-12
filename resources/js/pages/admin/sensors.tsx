@@ -48,25 +48,43 @@ export default function AdminSensors({ hives, selected, window, date, latest, hi
         router.get(route('admin.sensors.index'), { hive_id: selected, window, date: date ?? '', ...params });
 
     useEffect(() => {
-        const resetLiveReload = () => { liveReloadInFlight.current = false; };
-        const removeStartListener = router.on('start', () => { liveReloadInFlight.current = true; });
+        const resetLiveReload = () => {
+ liveReloadInFlight.current = false; 
+};
+        const removeStartListener = router.on('start', () => {
+ liveReloadInFlight.current = true; 
+});
         const removeFinishListener = router.on('finish', resetLiveReload);
-        return () => { removeStartListener(); removeFinishListener(); };
+
+        return () => {
+ removeStartListener(); removeFinishListener(); 
+};
     }, []);
 
     useEffect(() => {
-        if (!sensorChannelName) return;
+        if (!sensorChannelName) {
+return;
+}
+
         const realtime = echo();
         const channel = realtime.private(sensorChannelName);
         const eventName = '.sensor.reading.created';
-        const resetLiveReload = () => { liveReloadInFlight.current = false; };
+        const resetLiveReload = () => {
+ liveReloadInFlight.current = false; 
+};
         const reloadSensorProps = () => {
-            if (document.hidden || liveReloadInFlight.current) return;
+            if (document.hidden || liveReloadInFlight.current) {
+return;
+}
+
             liveReloadInFlight.current = true;
             router.reload({ only: ['latest', 'history', 'last_seen'], onCancel: resetLiveReload, onError: resetLiveReload, onFinish: resetLiveReload, onSuccess: resetLiveReload });
         };
         channel.listen(eventName, reloadSensorProps);
-        return () => { channel.stopListening(eventName, reloadSensorProps); realtime.leave(sensorChannelName); };
+
+        return () => {
+ channel.stopListening(eventName, reloadSensorProps); realtime.leave(sensorChannelName); 
+};
     }, [sensorChannelName]);
 
     const historyHiveIndex = Math.max(0, hives.findIndex((h) => h.id === selected));

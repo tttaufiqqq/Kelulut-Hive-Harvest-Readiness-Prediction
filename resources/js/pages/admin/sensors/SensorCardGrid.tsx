@@ -1,13 +1,13 @@
-import type { ReactNode } from 'react';
 import { Droplets, Flame, Thermometer } from 'lucide-react';
 import { motion } from 'motion/react';
+import type { ReactNode } from 'react';
 import { Card } from '@/components/core/display/card';
 import { AnimatedMetricValue } from './AnimatedMetricValue';
 import { ArcGauge } from './ArcGauge';
 import { ProgressBar } from './ProgressBar';
 import { SensorHeader } from './SensorHeader';
-import { SensorTrendChart } from './SensorTrendChart';
 import { StatusBadge } from './SensorStatusBadge';
+import { SensorTrendChart } from './SensorTrendChart';
 import type { HistoryPoint, NormalizedLatest } from './types';
 import { MQ_GAUGE_MAX, humidColor, mqColor, tempColor } from './utils';
 

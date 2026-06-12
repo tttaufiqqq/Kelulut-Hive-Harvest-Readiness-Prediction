@@ -1,6 +1,6 @@
 import { Check, Copy } from 'lucide-react';
-import { AlertError } from '@/components/core/feedback/alert-error';
 import { Button } from '@/components/core/display/button';
+import { AlertError } from '@/components/core/feedback/alert-error';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppearance } from '@/hooks/use-appearance';
 import { useClipboard } from '@/hooks/use-clipboard';

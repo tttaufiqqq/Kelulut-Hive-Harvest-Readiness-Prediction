@@ -3,7 +3,9 @@ import { Card } from '@/components/core/display/card';
 import type { ProductivityItem } from './constants';
 
 export function ProductivityRankingTable({ items, mounted }: { items: ProductivityItem[]; mounted: boolean }) {
-    if (!mounted || items.length === 0) return null;
+    if (!mounted || items.length === 0) {
+return null;
+}
 
     return (
         <Card>
@@ -21,6 +23,7 @@ export function ProductivityRankingTable({ items, mounted }: { items: Productivi
                             contentStyle={{ borderRadius: 12, border: '1px solid #fef3c7', fontSize: 12 }}
                             formatter={(value, _name, props) => {
                                 const count = (props as { payload?: { harvest_count?: number } }).payload?.harvest_count ?? 0;
+
                                 return [`${((value as number) / 1000).toFixed(2)} kg · ${count} harvest${count !== 1 ? 's' : ''}`, 'Total Yield'];
                             }}
                         />

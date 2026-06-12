@@ -46,18 +46,23 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
     const hasNext = viewIndex !== null && viewIndex < hives.length - 1;
 
     useEffect(() => {
-        if (viewIndex === null) return;
+        if (viewIndex === null) {
+return;
+}
+
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
                 setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p);
             }
+
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
                 setActiveModal((p) => p?.type === 'view' && p.index < hives.length - 1 ? { type: 'view', index: p.index + 1 } : p);
             }
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, hives.length]);
 
@@ -76,18 +81,36 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
         editForm.setData({ name: hive.name, beekeeper_id: String(hive.beekeeper_id), species_id: hive.species_id ? String(hive.species_id) : '', site_id: hive.site_id ? String(hive.site_id) : '', status: hive.status, image: null });
         setActiveModal({ type: 'edit', hive });
     };
-    const submitCreate = () => createForm.post(route('admin.hives.store'), { forceFormData: true, onSuccess: () => { createForm.reset(); close(); } });
-    const openEditConfirm = () => { if (activeModal?.type === 'edit') setActiveModal({ type: 'confirm-edit', hive: activeModal.hive }); };
+    const submitCreate = () => createForm.post(route('admin.hives.store'), { forceFormData: true, onSuccess: () => {
+ createForm.reset(); close(); 
+} });
+    const openEditConfirm = () => {
+ if (activeModal?.type === 'edit') {
+setActiveModal({ type: 'confirm-edit', hive: activeModal.hive });
+} 
+};
     const confirmEdit = () => {
-        if (activeModal?.type !== 'confirm-edit') return;
+        if (activeModal?.type !== 'confirm-edit') {
+return;
+}
+
         editForm.transform((data) => ({ ...data, _method: 'patch' }));
         editForm.post(route('admin.hives.update', { hive: activeModal.hive.id }), { forceFormData: true, onSuccess: close });
     };
-    const confirmToggle = () => { if (activeModal?.type === 'toggle') router.patch(route('admin.hives.toggle-status', { hive: activeModal.hive.id }), {}, { onSuccess: close }); };
+    const confirmToggle = () => {
+ if (activeModal?.type === 'toggle') {
+router.patch(route('admin.hives.toggle-status', { hive: activeModal.hive.id }), {}, { onSuccess: close });
+} 
+};
     const confirmDelete = () => {
-        if (activeModal?.type !== 'delete') return;
+        if (activeModal?.type !== 'delete') {
+return;
+}
+
         setDeleting(true);
-        router.delete(route('admin.hives.destroy', { hive: activeModal.hive.id }), { onFinish: () => { setDeleting(false); close(); } });
+        router.delete(route('admin.hives.destroy', { hive: activeModal.hive.id }), { onFinish: () => {
+ setDeleting(false); close(); 
+} });
     };
 
     const confirmableModal =
@@ -154,7 +177,9 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
                     hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < hives.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewHive, true); }}
+                    onEdit={() => {
+ close(); openEdit(viewHive, true); 
+}}
                     onClose={close}
                 />
             )}
@@ -162,7 +187,9 @@ export default function HivesIndex({ hives, beekeepers, species_list, sites_list
             <CreateHiveModal isOpen={activeModal?.type === 'create'} beekeeperOptions={beekeeperOptions} speciesOptions={speciesOptions} siteOptions={siteOptions} statusOptions={statusOptions} form={createForm} onSubmit={submitCreate} onClose={close} />
 
             {activeModal?.type === 'edit' && (
-                <EditHiveModal isOpen instant={editInstant} beekeeperOptions={beekeeperOptions} speciesOptions={speciesOptions} siteOptions={siteOptions} statusOptions={statusOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
+                <EditHiveModal isOpen instant={editInstant} beekeeperOptions={beekeeperOptions} speciesOptions={speciesOptions} siteOptions={siteOptions} statusOptions={statusOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => {
+ setEditInstant(false); close(); 
+}} />
             )}
 
             <HiveConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmToggle={confirmToggle} onConfirmDelete={confirmDelete} onClose={close} />

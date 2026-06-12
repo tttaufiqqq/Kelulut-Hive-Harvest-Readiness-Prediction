@@ -1,9 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { useMemo } from 'react';
-import { BeekeeperTabs } from '@/components/core/navigation/beekeeper-tabs';
-import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { ReadinessDonutChart } from '@/components/core/data/visualization-charts';
 import type { SensorProfile } from '@/components/core/data/visualization-charts';
+import { BeekeeperTabs } from '@/components/core/navigation/beekeeper-tabs';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { HarvestBarChart } from './HarvestBarChart';
 import type { HarvestSummaryItem } from './HarvestBarChart';
@@ -23,10 +23,12 @@ interface Props {
 export default function Reporting({ hriGauges, readinessTrends, harvestSummary, sensorProfiles }: Props) {
     const donutData = useMemo(() => {
         const counts: Record<string, number> = {};
+
         for (const gauge of hriGauges) {
             const level = gauge.readiness_level ?? 'not_ready';
             counts[level] = (counts[level] ?? 0) + 1;
         }
+
         return Object.entries(counts).map(([level, count]) => ({ level, count }));
     }, [hriGauges]);
 

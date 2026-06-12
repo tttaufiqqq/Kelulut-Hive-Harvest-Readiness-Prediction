@@ -1,5 +1,5 @@
-import { Modal } from '@/components/core/overlay/modal';
 import { StatusBadge } from '@/components/core/display/status-badge';
+import { Modal } from '@/components/core/overlay/modal';
 import { fmtSmartTime } from '@/lib/format';
 import type { AuditLog } from './AuditLogTableRow';
 
@@ -40,6 +40,7 @@ function DiffTable({ log }: { log: AuditLog }) {
                 {allKeys.map((key) => {
                     const oldVal = log.old_values?.[key];
                     const newVal = log.new_values?.[key];
+
                     return (
                         <tr key={key}>
                             <td className="py-2 pr-4 font-mono text-xs font-medium text-amber-900/70">
@@ -73,7 +74,9 @@ interface Props {
 }
 
 export function AuditLogDetailModal({ log, onClose }: Props) {
-    if (!log) return null;
+    if (!log) {
+return null;
+}
 
     return (
         <Modal isOpen onClose={onClose} title="Change Details" maxWidth="2xl">

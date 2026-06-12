@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import type { useForm } from '@inertiajs/react';
 import { Button } from '@/components/core/display/button';
 import { Input } from '@/components/core/form/input';
 import { Modal } from '@/components/core/overlay/modal';
@@ -26,7 +26,9 @@ export function SiteFormModal({ isOpen, isCreate, instant, form, onSubmit, onClo
             maxWidth="sm"
         >
             <form
-                onSubmit={(e) => { e.preventDefault(); onSubmit(); }}
+                onSubmit={(e) => {
+ e.preventDefault(); onSubmit(); 
+}}
                 className="space-y-4"
             >
                 <Input

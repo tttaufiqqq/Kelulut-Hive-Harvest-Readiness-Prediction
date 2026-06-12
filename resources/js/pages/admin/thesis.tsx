@@ -32,7 +32,10 @@ export default function ThesisPage({ thesisUrl, uploadedAt, maxUploadBytes }: Pr
     function resetSelectedFile() {
         setSelectedFile(null);
         uploadForm.reset();
-        if (fileRef.current) fileRef.current.value = '';
+
+        if (fileRef.current) {
+fileRef.current.value = '';
+}
     }
 
     function validatePdf(file: File): string | null {
@@ -41,22 +44,34 @@ export default function ThesisPage({ thesisUrl, uploadedAt, maxUploadBytes }: Pr
             file.type === 'application/x-pdf' ||
             file.type === '';
         const hasPdfExtension = /\.pdf$/i.test(file.name);
-        if (!isPdfMime && !hasPdfExtension) return 'Please choose a PDF file for the thesis.';
-        if (file.size > maxUploadBytes)
-            return `The thesis PDF must be ${maxUploadBytes / 1024 / 1024} MB or smaller.`;
+
+        if (!isPdfMime && !hasPdfExtension) {
+return 'Please choose a PDF file for the thesis.';
+}
+
+        if (file.size > maxUploadBytes) {
+return `The thesis PDF must be ${maxUploadBytes / 1024 / 1024} MB or smaller.`;
+}
+
         return null;
     }
 
     function handleFile(file: File | null) {
-        if (!file) return;
+        if (!file) {
+return;
+}
+
         setClientErrors([]);
         uploadForm.clearErrors();
         const validationError = validatePdf(file);
+
         if (validationError) {
             setClientErrors([validationError]);
             resetSelectedFile();
+
             return;
         }
+
         setSelectedFile(file);
         uploadForm.setData('thesis', file);
     }
@@ -70,8 +85,10 @@ export default function ThesisPage({ thesisUrl, uploadedAt, maxUploadBytes }: Pr
     function handleUpload() {
         if (!selectedFile) {
             setClientErrors(['Please choose a thesis PDF to upload.']);
+
             return;
         }
+
         uploadForm.post(route('admin.thesis.upload'), {
             forceFormData: true,
             preserveScroll: true,

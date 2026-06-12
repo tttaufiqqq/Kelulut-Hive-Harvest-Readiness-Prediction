@@ -13,13 +13,13 @@ import { PredictionThresholdModal } from './PredictionThresholdModal';
 import { PredictionTrendChart } from './PredictionTrendChart';
 import { SensorSnapshot } from './SensorSnapshot';
 import { SensorTrendChart } from './SensorTrendChart';
-import type { PaginatedPredictions, PredictionTrendItem } from './types';
+import type { PaginatedPredictions, PredictionEntry, PredictionTrendItem } from './types';
 import { usePredictionPage } from './use-prediction-page';
 import { formatPredictionTime } from './utils';
 
 interface Props {
     hive: { id: number; name: string };
-    latestPrediction: import('./types').PredictionEntry | null;
+    latestPrediction: PredictionEntry | null;
     sensorWarnings: string[];
     predictionTrends: PredictionTrendItem[];
     historyPredictions: PaginatedPredictions;

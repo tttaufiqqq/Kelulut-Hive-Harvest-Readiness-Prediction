@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Info } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { SensorRadarChart } from '@/components/core/data/visualization-charts';
 import { Dropdown } from '@/components/core/overlay/dropdown';
 import { Modal } from '@/components/core/overlay/modal';
-import { SensorRadarChart } from '@/components/core/data/visualization-charts';
 import { fmtDate, fmtMonth } from '@/lib/format';
 import type { Hive } from './types';
 
@@ -27,7 +27,6 @@ export interface DailyHistoryModalProps {
     onClose: () => void;
 }
 
-
 export function DailyHistoryModal({ isOpen, hives, initialHiveIndex, onClose }: DailyHistoryModalProps) {
     const [activeIndex, setActiveIndex] = useState(initialHiveIndex);
     const [historyCache, setHistoryCache] = useState<Record<number, DayRow[]>>({});
@@ -43,41 +42,84 @@ export function DailyHistoryModal({ isOpen, hives, initialHiveIndex, onClose }: 
     const hasNext = activeIndex < hives.length - 1;
 
     useEffect(() => {
-        if (isOpen) setActiveIndex(initialHiveIndex); // eslint-disable-line react-hooks/set-state-in-effect
+        if (isOpen) {
+            setActiveIndex(initialHiveIndex); // eslint-disable-line react-hooks/set-state-in-effect
+        }
     }, [isOpen, initialHiveIndex]);
 
-    useEffect(() => { setFilterMonth(null); setCurrentPage(1); }, [activeIndex]);
+    useEffect(() => {
+        setFilterMonth(null); // eslint-disable-line react-hooks/set-state-in-effect
+        setCurrentPage(1);
+    }, [activeIndex]);
 
     useEffect(() => {
-        if (!isOpen || !activeHive) return;
-        if (historyRows !== null) return;
+        if (!isOpen || !activeHive) {
+            return;
+        }
+
+        if (historyRows !== null) {
+            return;
+        }
+
         let cancelled = false;
         setHistoryLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
         fetch(`/admin/sensors/${activeHive.id}/daily-history`, { headers: { Accept: 'application/json' } })
             .then((res) => res.json() as Promise<{ days: DayRow[] }>)
-            .then((data) => { if (!cancelled) setHistoryCache((prev) => ({ ...prev, [activeHive.id]: data.days ?? [] })); }) // eslint-disable-line react-hooks/set-state-in-effect
-            .catch(() => { if (!cancelled) setHistoryCache((prev) => ({ ...prev, [activeHive.id]: [] })); }) // eslint-disable-line react-hooks/set-state-in-effect
-            .finally(() => { if (!cancelled) setHistoryLoading(false); }); // eslint-disable-line react-hooks/set-state-in-effect
-        return () => { cancelled = true; };
+            .then((data) => {
+                if (!cancelled) {
+                    setHistoryCache((prev) => ({ ...prev, [activeHive.id]: data.days ?? [] }));
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setHistoryCache((prev) => ({ ...prev, [activeHive.id]: [] }));
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setHistoryLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [isOpen, activeHive, historyRows]);
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen) {
+            return;
+        }
+
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex((i) => Math.max(0, i - 1)); }
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex((i) => Math.min(hives.length - 1, i + 1)); }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveIndex((i) => Math.max(0, i - 1));
+            }
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveIndex((i) => Math.min(hives.length - 1, i + 1));
+            }
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [isOpen, hives.length]);
 
     const monthOptions = useMemo(() => {
-        if (!historyRows) return [];
+        if (!historyRows) {
+            return [];
+        }
+
         return [...new Set(historyRows.map((r) => r.date.slice(0, 7)))].sort((a, b) => b.localeCompare(a));
     }, [historyRows]);
 
     const filteredRows = useMemo(() => {
-        if (!historyRows) return [];
+        if (!historyRows) {
+            return [];
+        }
+
         return filterMonth ? historyRows.filter((r) => r.date.startsWith(filterMonth)) : historyRows;
     }, [historyRows, filterMonth]);
 
@@ -146,8 +188,24 @@ export function DailyHistoryModal({ isOpen, hives, initialHiveIndex, onClose }: 
                                             </div>
                                         }
                                         items={[
-                                            { id: 'all', label: 'All months', icon: !filterMonth ? <Check className="h-3.5 w-3.5" /> : undefined, onClick: () => { setFilterMonth(null); setCurrentPage(1); } },
-                                            ...monthOptions.map((m) => ({ id: m, label: fmtMonth(m), icon: filterMonth === m ? <Check className="h-3.5 w-3.5" /> : undefined, onClick: () => { setFilterMonth(m); setCurrentPage(1); } })),
+                                            {
+                                                id: 'all',
+                                                label: 'All months',
+                                                icon: !filterMonth ? <Check className="h-3.5 w-3.5" /> : undefined,
+                                                onClick: () => {
+                                                    setFilterMonth(null);
+                                                    setCurrentPage(1);
+                                                },
+                                            },
+                                            ...monthOptions.map((m) => ({
+                                                id: m,
+                                                label: fmtMonth(m),
+                                                icon: filterMonth === m ? <Check className="h-3.5 w-3.5" /> : undefined,
+                                                onClick: () => {
+                                                    setFilterMonth(m);
+                                                    setCurrentPage(1);
+                                                },
+                                            })),
                                         ]}
                                     />
                                     <span className="text-xs text-amber-900/40">{filteredRows.length} record{filteredRows.length !== 1 ? 's' : ''}</span>

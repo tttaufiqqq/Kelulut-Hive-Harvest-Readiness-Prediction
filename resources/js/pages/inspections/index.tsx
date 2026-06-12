@@ -1,23 +1,23 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { BeekeeperTabs } from '@/components/core/navigation/beekeeper-tabs';
+import { DataTable } from '@/components/core/data/content';
 import { Button } from '@/components/core/display/button';
 import { Card } from '@/components/core/display/card';
-import { DataTable } from '@/components/core/data/content';
 import { FlashAlerts } from '@/components/core/feedback/flash-alerts';
 import type { FlashMessageBag } from '@/components/core/feedback/flash-alerts';
-import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { SelectField } from '@/components/core/form/select-field';
+import { BeekeeperTabs } from '@/components/core/navigation/beekeeper-tabs';
+import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import type { Inspection, MasterFloraType, MasterWeatherCondition, PaginatedInspections } from '@/types';
+import { emptyCreate, hiveFilterOptions, toMultiIds } from './constants';
+import type { InspectionCreateFormData, InspectionEditFormData } from './constants';
 import { CreateInspectionModal } from './CreateInspectionModal';
 import { EditInspectionModal } from './EditInspectionModal';
 import { InspectionConfirmModals } from './InspectionConfirmModals';
 import { inspectionColumns } from './InspectionTableRow';
 import { ViewInspectionModal } from './ViewInspectionModal';
-import { emptyCreate, hiveFilterOptions, toMultiIds } from './constants';
-import type { InspectionCreateFormData, InspectionEditFormData } from './constants';
 
 type ActiveModal =
     | { type: 'create' }
@@ -53,12 +53,21 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
     const [editFloraIds, setEditFloraIds] = useState<number[]>([]);
 
     useEffect(() => {
-        if (viewIndex === null) return;
+        if (viewIndex === null) {
+return;
+}
+
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p); }
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index < inspections.data.length - 1 ? { type: 'view', index: p.index + 1 } : p); }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+ e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p); 
+}
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+ e.preventDefault(); setActiveModal((p) => p?.type === 'view' && p.index < inspections.data.length - 1 ? { type: 'view', index: p.index + 1 } : p); 
+}
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, inspections.data.length]);
 
@@ -75,15 +84,32 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
     const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
         createForm.transform((data) => ({ ...data, weather_ids: createWeatherIds, flora_ids: createFloraIds }));
-        createForm.post(route('inspections.store'), { onSuccess: () => { createForm.reset(); setCreateWeatherIds([]); setCreateFloraIds([]); close(); } });
+        createForm.post(route('inspections.store'), { onSuccess: () => {
+ createForm.reset(); setCreateWeatherIds([]); setCreateFloraIds([]); close(); 
+} });
     };
-    const openEditConfirm = () => { if (activeModal?.type === 'edit') setActiveModal({ type: 'confirm-edit', inspection: activeModal.inspection }); };
+    const openEditConfirm = () => {
+ if (activeModal?.type === 'edit') {
+setActiveModal({ type: 'confirm-edit', inspection: activeModal.inspection });
+} 
+};
     const confirmEdit = () => {
-        if (activeModal?.type !== 'confirm-edit') return;
+        if (activeModal?.type !== 'confirm-edit') {
+return;
+}
+
         editForm.transform((data) => ({ ...data, weather_ids: editWeatherIds, flora_ids: editFloraIds }));
         editForm.patch(route('inspections.update', { inspection: activeModal.inspection.id }), { onSuccess: close });
     };
-    const confirmDelete = () => { if (activeModal?.type !== 'delete') return; setDeleting(true); router.delete(route('inspections.destroy', { inspection: activeModal.inspection.id }), { onFinish: () => { setDeleting(false); close(); } }); };
+    const confirmDelete = () => {
+ if (activeModal?.type !== 'delete') {
+return;
+}
+
+ setDeleting(true); router.delete(route('inspections.destroy', { inspection: activeModal.inspection.id }), { onFinish: () => {
+ setDeleting(false); close(); 
+} }); 
+};
     const onHiveFilter = (val: string) => router.get(route('inspections.index'), val ? { hive_id: val } : {}, { preserveState: true, replace: true });
     const confirmableModal = activeModal?.type === 'confirm-edit' || activeModal?.type === 'delete' ? activeModal : null;
 
@@ -127,10 +153,14 @@ export default function InspectionsIndex({ inspections, hives, weatherConditions
                 <ViewInspectionModal inspection={viewInspection} inspectionIndex={viewIndex!} totalInspections={inspections.data.length} hasPrev={hasPrev} hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < inspections.data.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewInspection, true); }} onClose={close} />
+                    onEdit={() => {
+ close(); openEdit(viewInspection, true); 
+}} onClose={close} />
             )}
             {activeModal?.type === 'edit' && (
-                <EditInspectionModal isOpen instant={editInstant} hiveName={activeModal.inspection.hive?.name} weatherConditions={weatherConditions} floraTypes={floraTypes} form={editForm} editWeatherIds={editWeatherIds} editFloraIds={editFloraIds} onWeatherChange={setEditWeatherIds} onFloraChange={setEditFloraIds} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
+                <EditInspectionModal isOpen instant={editInstant} hiveName={activeModal.inspection.hive?.name} weatherConditions={weatherConditions} floraTypes={floraTypes} form={editForm} editWeatherIds={editWeatherIds} editFloraIds={editFloraIds} onWeatherChange={setEditWeatherIds} onFloraChange={setEditFloraIds} onSubmit={openEditConfirm} onClose={() => {
+ setEditInstant(false); close(); 
+}} />
             )}
             <InspectionConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />
         </AuthenticatedLayout>

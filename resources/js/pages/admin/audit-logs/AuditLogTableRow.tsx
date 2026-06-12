@@ -22,18 +22,25 @@ const EVENT_TONES = {
 function changedPreview(log: AuditLog): string {
     if (log.event === 'created') {
         const count = Object.keys(log.new_values ?? {}).filter((k) => k !== 'id').length;
+
         return count > 0 ? `${count} fields` : '—';
     }
 
     if (log.event === 'deleted') {
         const count = Object.keys(log.old_values ?? {}).filter((k) => k !== 'id').length;
+
         return count > 0 ? `${count} fields` : '—';
     }
 
     const keys = Object.keys(log.new_values ?? {}).filter((k) => k !== 'id');
-    if (keys.length === 0) return '—';
+
+    if (keys.length === 0) {
+return '—';
+}
+
     const shown = keys.slice(0, 3);
     const extra = keys.length - shown.length;
+
     return shown.join(', ') + (extra > 0 ? ` +${extra}` : '');
 }
 

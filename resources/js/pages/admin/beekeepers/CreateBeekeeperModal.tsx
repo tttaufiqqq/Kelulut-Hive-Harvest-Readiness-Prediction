@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import type { useForm } from '@inertiajs/react';
 import { Button } from '@/components/core/display/button';
 import { Input } from '@/components/core/form/input';
 import { Modal } from '@/components/core/overlay/modal';

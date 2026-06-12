@@ -14,8 +14,13 @@ export function HiveDropdown({ hives, selected, onSelect }: HiveDropdownProps) {
     const selectedHive = hives.find((h) => h.id === selected);
 
     useEffect(() => {
-        const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+        const handler = (e: MouseEvent) => {
+ if (ref.current && !ref.current.contains(e.target as Node)) {
+setOpen(false);
+} 
+};
         document.addEventListener('mousedown', handler);
+
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
@@ -28,7 +33,9 @@ export function HiveDropdown({ hives, selected, onSelect }: HiveDropdownProps) {
             {open && (
                 <div className="absolute top-full left-0 z-20 mt-2 w-full min-w-0 overflow-hidden rounded-2xl border border-yellow-100 bg-white shadow-lg sm:min-w-[180px]">
                     {hives.map((h) => (
-                        <button key={h.id} onClick={() => { onSelect(h.id); setOpen(false); }} className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-amber-900 transition-colors hover:bg-yellow-50/60">
+                        <button key={h.id} onClick={() => {
+ onSelect(h.id); setOpen(false); 
+}} className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-amber-900 transition-colors hover:bg-yellow-50/60">
                             <span className={h.id === selected ? 'font-bold' : 'font-medium'}>{h.name}</span>
                             {h.id === selected && <Check className="h-3.5 w-3.5 text-amber-500" />}
                         </button>

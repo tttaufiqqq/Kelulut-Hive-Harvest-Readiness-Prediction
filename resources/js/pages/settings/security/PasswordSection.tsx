@@ -29,8 +29,13 @@ export function PasswordSection({ passwordInputRef, currentPasswordInputRef }: P
                     resetOnError={['password', 'password_confirmation', 'current_password']}
                     resetOnSuccess
                     onError={(errors) => {
-                        if (errors.password) passwordInputRef.current?.focus();
-                        if (errors.current_password) currentPasswordInputRef.current?.focus();
+                        if (errors.password) {
+passwordInputRef.current?.focus();
+}
+
+                        if (errors.current_password) {
+currentPasswordInputRef.current?.focus();
+}
                     }}
                     className="space-y-6"
                 >

@@ -24,28 +24,42 @@ export function TwoFactorSetupModal({ isOpen, onClose, requiresConfirmation, two
         if (twoFactorEnabled) {
             return { title: 'Two-factor authentication enabled', description: 'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.', buttonText: 'Close' };
         }
+
         if (showVerificationStep) {
             return { title: 'Verify authentication code', description: 'Enter the 6-digit code from your authenticator app', buttonText: 'Continue' };
         }
+
         return { title: 'Enable two-factor authentication', description: 'To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app', buttonText: 'Continue' };
     }, [twoFactorEnabled, showVerificationStep]);
 
     const handleModalNextStep = useCallback(() => {
-        if (requiresConfirmation) { setShowVerificationStep(true); return; }
+        if (requiresConfirmation) {
+ setShowVerificationStep(true);
+
+ return; 
+}
+
         clearSetupData();
         onClose();
     }, [requiresConfirmation, clearSetupData, onClose]);
 
     const resetModalState = useCallback(() => {
         setShowVerificationStep(false);
-        if (twoFactorEnabled) { clearSetupData(); }
+
+        if (twoFactorEnabled) {
+ clearSetupData(); 
+}
     }, [twoFactorEnabled, clearSetupData]);
 
     useEffect(() => {
-        if (isOpen && !qrCodeSvg) { fetchSetupData(); }
+        if (isOpen && !qrCodeSvg) {
+ fetchSetupData(); 
+}
     }, [isOpen, qrCodeSvg, fetchSetupData]);
 
-    const handleClose = useCallback(() => { resetModalState(); onClose(); }, [onClose, resetModalState]);
+    const handleClose = useCallback(() => {
+ resetModalState(); onClose(); 
+}, [onClose, resetModalState]);
 
     return (
         <Modal isOpen={isOpen} onClose={handleClose} title={modalConfig.title}>

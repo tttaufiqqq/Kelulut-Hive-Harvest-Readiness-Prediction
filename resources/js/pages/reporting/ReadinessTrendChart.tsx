@@ -10,8 +10,8 @@ import {
     YAxis,
 } from 'recharts';
 import { DatePickerField } from '@/components/core/date-picker';
-import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { SelectField } from '@/components/core/form/select-field';
+import { ChartCard } from '@/components/core/readiness-chart-cards';
 import { fmtDayMonth } from '@/lib/format';
 
 export interface ReadinessTrend {
@@ -134,6 +134,7 @@ export function ReadinessTrendChart({ trends }: Props) {
                                 contentStyle={TOOLTIP_STYLE}
                                 formatter={(value) => {
                                     const v = typeof value === 'number' ? value : Number(value ?? 0);
+
                                     return [`${v}%`, 'HRI'];
                                 }}
                             />

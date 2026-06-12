@@ -1,10 +1,10 @@
-import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/core/display/button';
+import type { useForm } from '@inertiajs/react';
 import { DatePickerField } from '@/components/core/date-picker';
-import { Modal } from '@/components/core/overlay/modal';
+import { Button } from '@/components/core/display/button';
 import { MultiSelectField } from '@/components/core/form/multi-select-field';
 import { SelectField } from '@/components/core/form/select-field';
 import { TextareaField } from '@/components/core/form/textarea-field';
+import { Modal } from '@/components/core/overlay/modal';
 import type { MasterFloraType, MasterWeatherCondition } from '@/types';
 import { BLOOMING_OPTIONS, DAMAGE_OPTIONS, NECTAR_OPTIONS, VEGETATION_OPTIONS, hiveFormOptions, masterToOptions } from './constants';
 import type { InspectionCreateFormData } from './constants';

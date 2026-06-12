@@ -8,7 +8,9 @@ interface Props {
 }
 
 export function SensorProfilesGrid({ hivesWithProfiles, sensorProfiles }: Props) {
-    if (hivesWithProfiles.length === 0) return null;
+    if (hivesWithProfiles.length === 0) {
+return null;
+}
 
     return (
         <div>

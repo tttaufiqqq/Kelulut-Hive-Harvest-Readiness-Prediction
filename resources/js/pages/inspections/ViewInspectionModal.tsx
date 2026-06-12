@@ -1,8 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BloomingBadge } from '@/components/core/display/blooming-badge';
 import { Button } from '@/components/core/display/button';
-import { Modal } from '@/components/core/overlay/modal';
 import { WeatherPills } from '@/components/core/display/weather-pills';
+import { Modal } from '@/components/core/overlay/modal';
 import { fmtDate } from '@/lib/format';
 import type { Inspection } from '@/types';
 

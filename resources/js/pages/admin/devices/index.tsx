@@ -54,18 +54,23 @@ export default function DevicesIndex({
     const hasNext = viewIndex !== null && viewIndex < devices.length - 1;
 
     useEffect(() => {
-        if (viewIndex === null) return;
+        if (viewIndex === null) {
+return;
+}
+
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
                 setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p);
             }
+
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
                 setActiveModal((p) => p?.type === 'view' && p.index < devices.length - 1 ? { type: 'view', index: p.index + 1 } : p);
             }
         };
         window.addEventListener('keydown', handler);
+
         return () => window.removeEventListener('keydown', handler);
     }, [viewIndex, devices.length]);
 
@@ -78,13 +83,28 @@ export default function DevicesIndex({
         editForm.setData({ hive_id: String(device.hive_id), device_status: device.device_status, installation_date: device.installation_date ?? '', last_maintenance_date: device.last_maintenance_date ?? '' });
         setActiveModal({ type: 'edit', device });
     };
-    const submitCreate = () => createForm.post(route('admin.devices.store'), { onSuccess: () => { createForm.reset(); close(); } });
-    const openEditConfirm = () => { if (activeModal?.type === 'edit') setActiveModal({ type: 'confirm-edit', device: activeModal.device }); };
-    const confirmEdit = () => { if (activeModal?.type === 'confirm-edit') editForm.patch(route('admin.devices.update', { device: activeModal.device.id }), { onSuccess: close }); };
+    const submitCreate = () => createForm.post(route('admin.devices.store'), { onSuccess: () => {
+ createForm.reset(); close(); 
+} });
+    const openEditConfirm = () => {
+ if (activeModal?.type === 'edit') {
+setActiveModal({ type: 'confirm-edit', device: activeModal.device });
+} 
+};
+    const confirmEdit = () => {
+ if (activeModal?.type === 'confirm-edit') {
+editForm.patch(route('admin.devices.update', { device: activeModal.device.id }), { onSuccess: close });
+} 
+};
     const confirmDelete = () => {
-        if (activeModal?.type !== 'delete') return;
+        if (activeModal?.type !== 'delete') {
+return;
+}
+
         setDeleting(true);
-        router.delete(route('admin.devices.destroy', { device: activeModal.device.id }), { onFinish: () => { setDeleting(false); close(); } });
+        router.delete(route('admin.devices.destroy', { device: activeModal.device.id }), { onFinish: () => {
+ setDeleting(false); close(); 
+} });
     };
 
     const availableOptions = available_hives.map((h) => ({ value: String(h.id), label: h.name }));
@@ -149,7 +169,9 @@ export default function DevicesIndex({
                     hasNext={hasNext}
                     onPrev={() => setActiveModal((p) => p?.type === 'view' && p.index > 0 ? { type: 'view', index: p.index - 1 } : p)}
                     onNext={() => setActiveModal((p) => p?.type === 'view' && p.index < devices.length - 1 ? { type: 'view', index: p.index + 1 } : p)}
-                    onEdit={() => { close(); openEdit(viewDevice, true); }}
+                    onEdit={() => {
+ close(); openEdit(viewDevice, true); 
+}}
                     onClose={close}
                 />
             )}
@@ -157,7 +179,9 @@ export default function DevicesIndex({
             <CreateDeviceModal isOpen={activeModal?.type === 'create'} hiveOptions={availableOptions} form={createForm} onSubmit={submitCreate} onClose={close} />
 
             {activeModal?.type === 'edit' && (
-                <EditDeviceModal isOpen instant={editInstant} deviceIdentifier={activeModal.device.node_identifier} hiveOptions={allHiveOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => { setEditInstant(false); close(); }} />
+                <EditDeviceModal isOpen instant={editInstant} deviceIdentifier={activeModal.device.node_identifier} hiveOptions={allHiveOptions} form={editForm} onSubmit={openEditConfirm} onClose={() => {
+ setEditInstant(false); close(); 
+}} />
             )}
 
             <DeviceConfirmModals activeModal={confirmableModal} deleting={deleting} editProcessing={editForm.processing} instant={editInstant} onConfirmEdit={confirmEdit} onConfirmDelete={confirmDelete} onClose={close} />

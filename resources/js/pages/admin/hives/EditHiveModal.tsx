@@ -1,8 +1,8 @@
-import { useForm } from '@inertiajs/react';
+import type { useForm } from '@inertiajs/react';
 import { Button } from '@/components/core/display/button';
 import { Input } from '@/components/core/form/input';
-import { Modal } from '@/components/core/overlay/modal';
 import { SelectField } from '@/components/core/form/select-field';
+import { Modal } from '@/components/core/overlay/modal';
 import type { HiveFormData, SelectOption } from './CreateHiveModal';
 
 type HiveFormInstance = ReturnType<typeof useForm<HiveFormData>>;
@@ -22,7 +22,9 @@ interface Props {
 export function EditHiveModal({ isOpen, instant, beekeeperOptions, speciesOptions, siteOptions, statusOptions, form, onSubmit, onClose }: Props) {
     return (
         <Modal isOpen={isOpen} instant={instant} onClose={onClose} title="Edit Hive" maxWidth="md">
-            <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
+            <form onSubmit={(e) => {
+ e.preventDefault(); onSubmit(); 
+}} className="space-y-4">
                 <SelectField label="Beekeeper" value={form.data.beekeeper_id} onChange={(v) => form.setData('beekeeper_id', v)} options={beekeeperOptions} error={form.errors.beekeeper_id} />
                 <Input label="Hive Name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} autoFocus error={form.errors.name} />
                 <SelectField label="Species (optional)" value={form.data.species_id} onChange={(v) => form.setData('species_id', v)} options={speciesOptions} error={form.errors.species_id} />

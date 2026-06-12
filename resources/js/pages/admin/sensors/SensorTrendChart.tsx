@@ -10,8 +10,15 @@ const TOOLTIP_STYLE = { backgroundColor: '#FFFBEB', border: '1px solid #FEF3C7',
 const sensorTooltipFormatter: NonNullable<TooltipProps<ValueType, NameType>['formatter']> = (value, name) => {
     const numericValue = typeof value === 'number' ? value : 0;
     const resolvedName = typeof name === 'string' || typeof name === 'number' ? String(name) : '';
-    if (resolvedName === 'Temperature') return [`${numericValue.toFixed(1).replace(/\.0$/, '')}°C`, resolvedName];
-    if (resolvedName === 'Humidity') return [`${numericValue.toFixed(1).replace(/\.0$/, '')}%`, resolvedName];
+
+    if (resolvedName === 'Temperature') {
+        return [`${numericValue.toFixed(1).replace(/\.0$/, '')}°C`, resolvedName];
+    }
+
+    if (resolvedName === 'Humidity') {
+        return [`${numericValue.toFixed(1).replace(/\.0$/, '')}%`, resolvedName];
+    }
+
     return [numericValue, resolvedName];
 };
 
@@ -23,7 +30,10 @@ export interface SensorTrendChartProps {
 
 export function SensorTrendChart({ data, dataKey, label }: SensorTrendChartProps) {
     const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+
+    useEffect(() => {
+        setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
+    }, []);
 
     const values = data.map((point) => point[dataKey]).filter((value): value is number => typeof value === 'number');
     const minValue = values.length > 0 ? Math.min(...values) : 0;

@@ -1,8 +1,8 @@
-import { useForm } from '@inertiajs/react';
-import { Button } from '@/components/core/display/button';
+import type { useForm } from '@inertiajs/react';
 import { DatePickerField } from '@/components/core/date-picker';
-import { Modal } from '@/components/core/overlay/modal';
+import { Button } from '@/components/core/display/button';
 import { SelectField } from '@/components/core/form/select-field';
+import { Modal } from '@/components/core/overlay/modal';
 
 export type DeviceFormData = {
     hive_id: string;
@@ -31,7 +31,9 @@ interface Props {
 export function CreateDeviceModal({ isOpen, hiveOptions, form, onSubmit, onClose }: Props) {
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Register Device" maxWidth="sm">
-            <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
+            <form onSubmit={(e) => {
+ e.preventDefault(); onSubmit(); 
+}} className="space-y-4">
                 <div>
                     <p className="mb-1 text-xs font-bold tracking-widest text-amber-900/40 uppercase">Device ID</p>
                     <p className="rounded-xl border border-dashed border-amber-200 bg-amber-50/60 px-3 py-2 font-mono text-sm text-amber-900/40">

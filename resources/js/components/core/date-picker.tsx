@@ -39,20 +39,36 @@ export function DatePicker({ value, onChange, defaultValue, className, mode = 'd
     useEffect(() => {
         const h = (e: MouseEvent | TouchEvent) => {
             const t = (e instanceof TouchEvent ? e.touches[0]?.target : e.target) as Node;
-            if (!triggerRef.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false);
+
+            if (!triggerRef.current?.contains(t) && !menuRef.current?.contains(t)) {
+setOpen(false);
+}
         };
         document.addEventListener('mousedown', h);
         document.addEventListener('touchstart', h as EventListener);
-        return () => { document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h as EventListener); };
+
+        return () => {
+ document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h as EventListener); 
+};
     }, []);
 
     useEffect(() => {
-        if (!open || typeof window === 'undefined') return;
-        const sync = () => { if (triggerRef.current) setMenuStyle(buildMenuStyle(triggerRef.current, mode)); };
+        if (!open || typeof window === 'undefined') {
+return;
+}
+
+        const sync = () => {
+ if (triggerRef.current) {
+setMenuStyle(buildMenuStyle(triggerRef.current, mode));
+} 
+};
         sync();
         window.addEventListener('resize', sync);
         window.addEventListener('scroll', sync, true);
-        return () => { window.removeEventListener('resize', sync); window.removeEventListener('scroll', sync, true); };
+
+        return () => {
+ window.removeEventListener('resize', sync); window.removeEventListener('scroll', sync, true); 
+};
     }, [open, mode]);
 
     const year = viewDate.getFullYear();
@@ -62,14 +78,44 @@ export function DatePicker({ value, onChange, defaultValue, className, mode = 'd
     const hasCustomValue = Boolean(value && value !== defaultValue);
     const prevView = () => setViewDate(mode === 'month' ? new Date(year - 1, month, 1) : new Date(year, month - 1, 1));
     const nextView = () => {
-        if (mode === 'month') { if (year < today.getFullYear()) setViewDate(new Date(year + 1, month, 1)); return; }
+        if (mode === 'month') {
+ if (year < today.getFullYear()) {
+setViewDate(new Date(year + 1, month, 1));
+}
+
+ return; 
+}
+
         const next = new Date(year, month + 1, 1);
-        if (next.getFullYear() < today.getFullYear() || (next.getFullYear() === today.getFullYear() && next.getMonth() <= today.getMonth())) setViewDate(next);
+
+        if (next.getFullYear() < today.getFullYear() || (next.getFullYear() === today.getFullYear() && next.getMonth() <= today.getMonth())) {
+setViewDate(next);
+}
     };
     const isNextDisabled = mode === 'month' ? year >= today.getFullYear() : year > today.getFullYear() || (year === today.getFullYear() && month >= today.getMonth());
-    const selectDay = (day: number) => { const v = formatPickerValue(year, month, day, 'day'); if (new Date(`${v}T00:00:00`) > today) return; onChange(v); setOpen(false); };
-    const selectMonth = (mi: number) => { if (isFutureMonth(year, mi, today)) return; onChange(formatPickerValue(year, mi, null, 'month')); setOpen(false); };
-    const handleOpen = () => { if (!open && triggerRef.current && typeof window !== 'undefined') setMenuStyle(buildMenuStyle(triggerRef.current, mode)); setOpen((o) => !o); };
+    const selectDay = (day: number) => {
+ const v = formatPickerValue(year, month, day, 'day');
+
+ if (new Date(`${v}T00:00:00`) > today) {
+return;
+}
+
+ onChange(v); setOpen(false); 
+};
+    const selectMonth = (mi: number) => {
+ if (isFutureMonth(year, mi, today)) {
+return;
+}
+
+ onChange(formatPickerValue(year, mi, null, 'month')); setOpen(false); 
+};
+    const handleOpen = () => {
+ if (!open && triggerRef.current && typeof window !== 'undefined') {
+setMenuStyle(buildMenuStyle(triggerRef.current, mode));
+}
+
+ setOpen((o) => !o); 
+};
 
     return (
         <div className={cn('relative inline-block', className)}>
@@ -81,7 +127,9 @@ export function DatePicker({ value, onChange, defaultValue, className, mode = 'd
                 <span>{displayLabel ?? placeholder ?? (mode === 'month' ? 'Select month' : 'Select date')}</span>
             </button>
             {hasCustomValue && (
-                <button type="button" onClick={(e) => { e.stopPropagation(); onChange(null); }} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700" aria-label={mode === 'month' ? 'Clear month' : 'Clear date'}>
+                <button type="button" onClick={(e) => {
+ e.stopPropagation(); onChange(null); 
+}} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700" aria-label={mode === 'month' ? 'Clear month' : 'Clear date'}>
                     <X className="h-3 w-3 text-white" />
                 </button>
             )}
@@ -109,20 +157,36 @@ export function DatePickerField({ label, value, onChange, placeholder, error, ma
     useEffect(() => {
         const h = (e: MouseEvent | TouchEvent) => {
             const t = (e instanceof TouchEvent ? e.touches[0]?.target : e.target) as Node;
-            if (!triggerRef.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false);
+
+            if (!triggerRef.current?.contains(t) && !menuRef.current?.contains(t)) {
+setOpen(false);
+}
         };
         document.addEventListener('mousedown', h);
         document.addEventListener('touchstart', h as EventListener);
-        return () => { document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h as EventListener); };
+
+        return () => {
+ document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h as EventListener); 
+};
     }, []);
 
     useEffect(() => {
-        if (!open || typeof window === 'undefined') return;
-        const sync = () => { if (triggerRef.current) setMenuStyle(buildMenuStyle(triggerRef.current, mode)); };
+        if (!open || typeof window === 'undefined') {
+return;
+}
+
+        const sync = () => {
+ if (triggerRef.current) {
+setMenuStyle(buildMenuStyle(triggerRef.current, mode));
+} 
+};
         sync();
         window.addEventListener('resize', sync);
         window.addEventListener('scroll', sync, true);
-        return () => { window.removeEventListener('resize', sync); window.removeEventListener('scroll', sync, true); };
+
+        return () => {
+ window.removeEventListener('resize', sync); window.removeEventListener('scroll', sync, true); 
+};
     }, [open, mode]);
 
     const year = viewDate.getFullYear();
@@ -130,16 +194,46 @@ export function DatePickerField({ label, value, onChange, placeholder, error, ma
     const headerLabel = getHeaderLabel(viewDate, mode);
     const displayLabel = formatDisplayValue(value, mode);
     const hasCustomValue = Boolean(value && value !== defaultValue);
-    const handleOpen = () => { if (!open && triggerRef.current && typeof window !== 'undefined') setMenuStyle(buildMenuStyle(triggerRef.current, mode)); setOpen((o) => !o); };
+    const handleOpen = () => {
+ if (!open && triggerRef.current && typeof window !== 'undefined') {
+setMenuStyle(buildMenuStyle(triggerRef.current, mode));
+}
+
+ setOpen((o) => !o); 
+};
     const prevView = () => setViewDate(mode === 'month' ? new Date(year - 1, month, 1) : new Date(year, month - 1, 1));
     const nextView = () => {
-        if (mode === 'month') { if (maxDate !== 'today' || year + 1 <= today.getFullYear()) setViewDate(new Date(year + 1, month, 1)); return; }
+        if (mode === 'month') {
+ if (maxDate !== 'today' || year + 1 <= today.getFullYear()) {
+setViewDate(new Date(year + 1, month, 1));
+}
+
+ return; 
+}
+
         const next = new Date(year, month + 1, 1);
-        if (maxDate !== 'today' || next.getFullYear() < today.getFullYear() || (next.getFullYear() === today.getFullYear() && next.getMonth() <= today.getMonth())) setViewDate(next);
+
+        if (maxDate !== 'today' || next.getFullYear() < today.getFullYear() || (next.getFullYear() === today.getFullYear() && next.getMonth() <= today.getMonth())) {
+setViewDate(next);
+}
     };
     const isNextDisabled = maxDate === 'today' && (mode === 'month' ? year >= today.getFullYear() : year > today.getFullYear() || (year === today.getFullYear() && month >= today.getMonth()));
-    const selectDay = (day: number) => { const v = formatPickerValue(year, month, day, 'day'); if (maxDate === 'today' && new Date(`${v}T00:00:00`) > today) return; onChange(v); setOpen(false); };
-    const selectMonth = (mi: number) => { if (maxDate === 'today' && isFutureMonth(year, mi, today)) return; onChange(formatPickerValue(year, mi, null, 'month')); setOpen(false); };
+    const selectDay = (day: number) => {
+ const v = formatPickerValue(year, month, day, 'day');
+
+ if (maxDate === 'today' && new Date(`${v}T00:00:00`) > today) {
+return;
+}
+
+ onChange(v); setOpen(false); 
+};
+    const selectMonth = (mi: number) => {
+ if (maxDate === 'today' && isFutureMonth(year, mi, today)) {
+return;
+}
+
+ onChange(formatPickerValue(year, mi, null, 'month')); setOpen(false); 
+};
 
     return (
         <div className="w-full space-y-1.5">
@@ -156,7 +250,9 @@ export function DatePickerField({ label, value, onChange, placeholder, error, ma
                     </span>
                 </button>
                 {hasCustomValue && clearable && (
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onChange(null); }} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700" aria-label={mode === 'month' ? 'Clear month' : 'Clear date'}>
+                    <button type="button" onClick={(e) => {
+ e.stopPropagation(); onChange(null); 
+}} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-900 transition-colors hover:bg-amber-700" aria-label={mode === 'month' ? 'Clear month' : 'Clear date'}>
                         <X className="h-3 w-3 text-white" />
                     </button>
                 )}

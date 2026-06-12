@@ -3,7 +3,9 @@ import { Card } from '@/components/core/display/card';
 import type { CrossSiteItem } from './constants';
 
 export function CrossSiteComparisonChart({ items, productivityCount, mounted }: { items: CrossSiteItem[]; productivityCount: number; mounted: boolean }) {
-    if (!mounted || items.length === 0) return null;
+    if (!mounted || items.length === 0) {
+return null;
+}
 
     return (
         <Card>

@@ -15,6 +15,7 @@ export function useAnimatedNumber(value: number, durationMs = 700): number {
 
         if (startValue === value) {
             setDisplayValue(value);
+
             return;
         }
 

@@ -1,5 +1,5 @@
-import { formatAnimatedReading } from './utils';
 import { useAnimatedNumber } from './use-animated-number';
+import { formatAnimatedReading } from './utils';
 
 interface AnimatedNumberProps {
     value: number;
@@ -10,6 +10,7 @@ interface AnimatedNumberProps {
 
 export function AnimatedNumber({ value, suffix = '', maxFractionDigits = 0, className = '' }: AnimatedNumberProps) {
     const displayValue = useAnimatedNumber(value);
+
     return (
         <span className={`tabular-nums ${className}`}>
             {formatAnimatedReading(displayValue, maxFractionDigits)}

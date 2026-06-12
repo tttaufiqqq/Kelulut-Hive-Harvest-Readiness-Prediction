@@ -22,11 +22,17 @@ export const READINESS_SOLID_COLORS: Record<string, string> = {
 };
 
 export function getReadinessLabel(level: string | null) {
-    if (!level) return 'Awaiting Data';
+    if (!level) {
+return 'Awaiting Data';
+}
+
     return READINESS_LABELS[level] ?? level;
 }
 
 export function getReadinessColor(level: string | null) {
-    if (!level) return '#78716c';
+    if (!level) {
+return '#78716c';
+}
+
     return READINESS_SOLID_COLORS[level] ?? '#d97706';
 }
