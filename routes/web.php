@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 Route::get('/', function () {
     $exists = Storage::disk('public')->exists('thesis/thesis.pdf');
 
-    return inertia('LandingPage', [
+    return inertia('LandingPage/index', [
         'thesisUrl' => $exists ? route('thesis.pdf') : null,
     ]);
 })->name('home');

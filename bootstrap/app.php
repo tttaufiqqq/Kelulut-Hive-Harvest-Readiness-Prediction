@@ -101,7 +101,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($request->inertia()) {
-                return Inertia::render('error', [
+                return Inertia::render('error/index', [
                     'status' => $e->status,
                     'title' => $payload['title'],
                     'message' => $payload['message'],
@@ -147,7 +147,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->isMethod('GET') && in_array($status, [403, 404, 419, 429, 500, 503], true)) {
                 $error = UserFacingError::fromStatus($status);
 
-                return Inertia::render('error', [
+                return Inertia::render('error/index', [
                     'status' => $status,
                     'title' => $error['title'],
                     'message' => $error['message'],

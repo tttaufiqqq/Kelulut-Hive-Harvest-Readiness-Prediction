@@ -35,7 +35,7 @@ class DashboardController extends Controller
                 'avg_mq135' => $hive->summary?->avg_mq135,
             ]);
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('dashboard/index', [
             'hives' => $hives->values()->all(),
         ]);
     }

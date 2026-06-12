@@ -15,6 +15,6 @@ class ReportingController extends Controller
         $beekeeperId = auth()->id();
         $hives = Hive::where('beekeeper_id', $beekeeperId)->with(['species', 'site'])->get();
 
-        return Inertia::render('reporting', $this->data->execute($beekeeperId, $hives));
+        return Inertia::render('reporting/index', $this->data->execute($beekeeperId, $hives));
     }
 }

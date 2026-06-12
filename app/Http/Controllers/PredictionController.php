@@ -77,7 +77,7 @@ class PredictionController extends Controller
             ? SensorReadings::missingLabels(SensorReadings::fromLog($latestSensorLog))
             : [];
 
-        return Inertia::render('predictions', [
+        return Inertia::render('predictions/index', [
             'hive'               => ['id' => $hive->id, 'name' => $hive->name],
             'latestPrediction'   => $latestPrediction
                 ? $this->formatter->execute($latestPrediction)

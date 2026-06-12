@@ -15,6 +15,6 @@ class AnalyticsController extends Controller
     {
         abort_if($hive->beekeeper_id !== auth()->id(), 403);
 
-        return Inertia::render('analytics', $this->analytics->execute($hive, $request));
+        return Inertia::render('analytics/index', $this->analytics->execute($hive, $request));
     }
 }
