@@ -149,7 +149,7 @@ class MlPredictionService
                 'out_of_distribution' => false,
                 'out_of_distribution_features' => [],
                 'prediction_timestamp' => now(),
-            ]);
+            ], queueAlert: false);
         } catch (\Throwable $e) {
             AppErrorReporter::report(
                 $e,
@@ -176,9 +176,9 @@ class MlPredictionService
         return 'queued';
     }
 
-    private function persistPrediction(SensorLog $log, array $attributes): PredictionRunResult
+    private function persistPrediction(SensorLog $log, array $attributes, bool $queueAlert = true): PredictionRunResult
     {
-        return DB::transaction(function () use ($log, $attributes) {
+        return DB::transaction(function () use ($log, $attributes, $queueAlert) {
             $prediction = Prediction::create($attributes);
 
             // On MySQL, trg_predictions_after_insert handles hri_summary automatically.
@@ -193,7 +193,10 @@ class MlPredictionService
                 $prediction->prediction_timestamp->toIso8601String(),
             );
 
-            $telegramDispatch = $this->queueReadinessAlert($prediction);
+            // synthetic_ready skips the queued alert — the controller sends synchronously instead.
+            $telegramDispatch = $queueAlert
+                ? $this->queueReadinessAlert($prediction)
+                : 'not_attempted';
 
             return PredictionRunResult::predictionCreated($prediction, $telegramDispatch);
         });

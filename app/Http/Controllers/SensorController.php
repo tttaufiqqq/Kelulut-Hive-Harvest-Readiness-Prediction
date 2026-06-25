@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\AppErrorCode;
 use App\Exceptions\AppException;
+use App\Jobs\SendTelegramAlert;
 use App\Models\IotNode;
 use App\Models\SensorLog;
 use App\Services\MlPredictionService;
 use App\Services\PredictionRunResult;
 use App\Services\SensorIngestionService;
+use App\Support\AppErrorReporter;
 use App\Support\SensorReadings;
 use App\Http\Middleware\AssignRequestId;
 use Illuminate\Http\Request;
@@ -94,11 +96,34 @@ class SensorController extends Controller
         if ($data['mode'] === 'synthetic_ready') {
             $result = $this->mlService->createSyntheticReadyPrediction($log);
 
+            // Send the Telegram alert synchronously so it fires immediately without
+            // relying on a queue worker. dispatchSync() runs SendTelegramAlert::handle()
+            // inline in this process — same logic as the queued job, zero worker dependency.
+            $telegramOutcome = 'not_attempted';
+            if ($result->prediction) {
+                try {
+                    SendTelegramAlert::dispatchSync($result->prediction->id);
+                    $telegramOutcome = 'sent';
+                } catch (\Throwable $e) {
+                    AppErrorReporter::report(
+                        $e,
+                        AppErrorCode::TelegramDeliveryFailed,
+                        context: [
+                            'prediction_id'  => $result->prediction->id,
+                            'diagnostic_mode' => 'synthetic_ready',
+                        ],
+                        level: 'warning',
+                    );
+                    $telegramOutcome = 'send_failed';
+                }
+            }
+
             return response()->json([
-                'message' => 'Internal diagnostic synthetic-ready run created a marked ready prediction and queued the Telegram alert job.',
+                'message' => 'Internal diagnostic synthetic-ready run created a marked ready prediction and sent the Telegram alert immediately.',
                 'mode'    => $data['mode'],
                 ...$this->withMeta($request),
                 ...$this->formatPredictionRunResult($result),
+                'telegram_dispatch' => $telegramOutcome,
             ], 201);
         }
 

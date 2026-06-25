@@ -210,9 +210,10 @@ test('successful full pipeline stores a sensor log, stores a prediction, and que
     Queue::assertPushed(SendTelegramAlert::class, fn (SendTelegramAlert $job) => $job->predictionId === $prediction->id);
 });
 
-test('successful synthetic ready mode stores a marked synthetic prediction and queues telegram alert', function () {
-    Queue::fake();
-    Http::fake();
+test('successful synthetic ready mode stores a marked synthetic prediction and sends telegram immediately', function () {
+    // Queue::fake() is intentionally absent — synthetic_ready sends Telegram synchronously
+    // via dispatchSync(), bypassing the queue worker entirely.
+    Http::fake(['*/api.telegram.org/*' => Http::response(['ok' => true], 200)]);
     ['hive' => $hive] = telegramDiagnosticStack();
 
     $response = $this->postJson(
@@ -223,9 +224,9 @@ test('successful synthetic ready mode stores a marked synthetic prediction and q
 
     $response->assertStatus(201)
         ->assertJson([
-            'readiness_level' => 'ready',
+            'readiness_level'   => 'ready',
             'prediction_source' => 'synthetic_diagnostic',
-            'telegram_dispatch' => 'queued',
+            'telegram_dispatch' => 'sent',
         ]);
 
     $prediction = Prediction::first();
@@ -233,13 +234,25 @@ test('successful synthetic ready mode stores a marked synthetic prediction and q
     expect(SensorLog::count())->toBe(1);
     expect($prediction->model_version)->toBe('synthetic_diagnostic_ready_v1');
     expect($prediction->prediction_warning)->toContain('Synthetic diagnostic prediction');
-    Queue::assertPushed(SendTelegramAlert::class, fn (SendTelegramAlert $job) => $job->predictionId === $prediction->id);
-    Http::assertNothingSent();
+    // Telegram API was called synchronously — confirm the HTTP call reached the bot endpoint
+    Http::assertSent(fn ($req) => str_contains($req->url(), 'api.telegram.org'));
 });
 
 test('synthetic diagnostic predictions are clearly distinguishable from real ml predictions', function () {
     Queue::fake();
-    fakeReadyMl();
+    // Fake both the ML endpoint and the Telegram API — synthetic_ready now calls
+    // Telegram synchronously via dispatchSync(), so the Telegram URL must be faked too.
+    Http::fake([
+        '*/predict'          => Http::response([
+            'readiness_level' => 'ready', 'raw_readiness_level' => 'ready',
+            'hri_value' => 1.0, 'raw_hri_value' => 1.0,
+            'confidence_score' => 0.92, 'model_version' => 'test-model-v2',
+            'warning_state' => 'normal', 'guardrail_action' => 'none',
+            'threshold_warning_level' => null, 'prediction_warning' => null,
+            'out_of_distribution' => false, 'out_of_distribution_features' => [],
+        ], 200),
+        '*/api.telegram.org/*' => Http::response(['ok' => true], 200),
+    ]);
     ['hive' => $hive] = telegramDiagnosticStack();
 
     $this->postJson(
@@ -262,6 +275,10 @@ test('synthetic diagnostic predictions are clearly distinguishable from real ml 
     expect($syntheticPrediction->prediction_warning)->toContain('Synthetic diagnostic prediction');
     expect($syntheticPrediction->model_version)->not->toBe($realPrediction->model_version);
 
+    // Queue::fake() intercepts dispatchSync() on ShouldQueue jobs by routing them through
+    // dispatchToQueue('sync') — so the Telegram HTTP call is never executed here.
+    // full_pipeline: 1 ML HTTP call + 1 queued job via dispatch()
+    // synthetic_ready: 0 ML calls + 1 captured job via dispatchSync() (no Telegram HTTP call)
     Http::assertSentCount(1);
     Queue::assertPushed(SendTelegramAlert::class, 2);
 });
