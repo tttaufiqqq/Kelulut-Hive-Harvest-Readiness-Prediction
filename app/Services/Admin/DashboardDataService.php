@@ -76,15 +76,28 @@ class DashboardDataService
             ->get()
             ->keyBy('id');
 
-        // Query D: predictions for today's log IDs only
-        $predictions = Prediction::whereIn('sensor_log_id', $latestTodayLogIds->values())->get()->keyBy('sensor_log_id');
+        // Query D: latest prediction per hive today — keyed by hive_id.
+        // Uses MAX(predictions.id) so that a newer unpredicted sensor log arriving after
+        // the synthetic_ready script does not hide the prediction stored for an earlier log.
+        $latestPredIdByHive = DB::table('predictions')
+            ->join('sensor_logs', 'predictions.sensor_log_id', '=', 'sensor_logs.id')
+            ->whereIn('sensor_logs.hive_id', $hives->pluck('id'))
+            ->whereDate('sensor_logs.record_timestamp', $targetDate)
+            ->groupBy('sensor_logs.hive_id')
+            ->selectRaw('sensor_logs.hive_id, MAX(predictions.id) as pred_id')
+            ->pluck('pred_id', 'hive_id');
 
-        return $hives->map(function ($hive) use ($latestTodayLogIds, $latestEverLogIds, $sensorLogs, $predictions, $alertHiveIds) {
+        $predictions = Prediction::whereIn('id', $latestPredIdByHive->values())
+            ->get()
+            ->keyBy('id');
+
+        return $hives->map(function ($hive) use ($latestTodayLogIds, $latestEverLogIds, $sensorLogs, $predictions, $latestPredIdByHive, $alertHiveIds) {
             $targetDateLogId = $latestTodayLogIds->get($hive->id);
             $everLogId = $latestEverLogIds->get($hive->id);
             $targetDateLog = $targetDateLogId ? $sensorLogs->get($targetDateLogId) : null;
             $everLog = $everLogId ? $sensorLogs->get($everLogId) : null;
-            $prediction = $targetDateLogId ? $predictions->get($targetDateLogId) : null;
+            $predId = $latestPredIdByHive->get($hive->id);
+            $prediction = $predId ? $predictions->get($predId) : null;
             $hasAlert = $alertHiveIds->contains($hive->id);
 
             if (! $targetDateLog) {

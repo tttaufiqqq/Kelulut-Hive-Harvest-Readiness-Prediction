@@ -16,6 +16,10 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'beekeeper', 'guard_name' => 'web']);
     config(['services.telegram.test_secret' => 'test-telegram-secret']);
+    // TelegramService::execute() throws before making any HTTP call when the token
+    // is missing — set a dummy token so the token check passes in tests that run the
+    // job synchronously via dispatchSync() (e.g. synthetic_ready without Queue::fake()).
+    config(['services.telegram.token' => 'test-bot-token']);
 });
 
 function telegramDiagnosticStack(string $deviceStatus = 'active'): array

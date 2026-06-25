@@ -161,7 +161,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                         <span className="text-amber-600">{stats.pending} pending</span>
                     </div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <Card className="flex cursor-pointer items-start gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50" onClick={() => router.visit(route('admin.sensors.index'))}>
+                        <Card className="flex cursor-pointer items-start gap-4 border-l-4 border-l-red-400 transition-colors hover:bg-yellow-50/50" onClick={() => { const idx = sortedHives.findIndex((h) => h.status === 'alert'); if (idx !== -1) setSelectedIndex(idx); }}>
                             <div className="mt-1 shrink-0 rounded-2xl bg-red-100 p-3"><AlertTriangle className="h-5 w-5 text-red-500" /></div>
                             <div>
                                 <p className="text-2xl font-black text-amber-950">{alertCount}</p>
@@ -169,7 +169,7 @@ export default function AdminDashboard({ stats, hives = [], productivityRanking 
                                 <p className="mt-0.5 text-xs text-amber-900/60">Hives with sensor readings exceeding safe thresholds today</p>
                             </div>
                         </Card>
-                        <Card className="flex cursor-pointer items-start gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50" onClick={() => router.visit(route('admin.sensors.index'))}>
+                        <Card className="flex cursor-pointer items-start gap-4 border-l-4 border-l-emerald-400 transition-colors hover:bg-yellow-50/50" onClick={() => { const idx = sortedHives.findIndex((h) => h.status === 'ready'); if (idx !== -1) setSelectedIndex(idx); }}>
                             <div className="mt-1 shrink-0 rounded-2xl bg-emerald-100 p-3"><TrendingUp className="h-5 w-5 text-emerald-600" /></div>
                             <div>
                                 <p className="text-2xl font-black text-amber-950">{readyCount}</p>
