@@ -118,32 +118,32 @@ Header: `X-API-Key: buzzyhive-iot-key-2026`
 
 ## ML Output
 
-Flask returns a continuous HRI value and a guarded readiness label:
+Flask classifies the reading into one of four labels and maps each to a fixed HRI value (`ml/runtime.py:13-18 HRI_MAP`):
+
+| `readiness_level` | `hri_value` | Telegram alert |
+|---|---|---|
+| `not_ready` | 0.25 | No |
+| `approaching` | 0.50 | No |
+| `nearly_ready` | 0.75 | No |
+| `ready` | 1.00 | Yes |
+
+`hri_value` is **not** a continuous regression output. It is a fixed label→score mapping applied after guardrails. The guardrail layer may change `readiness_level` (e.g., `ready → nearly_ready`), which also changes `hri_value` accordingly. `raw_hri_value` preserves the pre-guardrail score.
+
+Full response fields:
 
 | Field | Type | Description |
 |---|---|---|
-| `readiness_level` | string | Guarded label after guardrails: `not_ready` / `approaching` / `nearly_ready` / `ready` |
-| `raw_readiness_level` | string | Raw model output before any guardrail override |
-| `hri_value` | float (0–1) | Guarded continuous HRI score (not a fixed mapping per level) |
-| `raw_hri_value` | float (0–1) | Raw model score before guardrail modification |
-| `confidence_score` | float (0–1) | KNN vote ratio (e.g. 0.86 = 86% of neighbours voted for this class) |
-| `warning_state` | string | `normal` or `warning` — indicates guardrail trust level |
-| `guardrail_action` | string | `none` / `downgrade` / `suppress` — what the guardrail did |
-| `out_of_distribution` | bool | True if any feature falls outside the training min/max range |
-| `out_of_distribution_features` | array | Which features triggered OOD, with observed vs training bounds |
+| `readiness_level` | string | Guarded label (post-guardrail) |
+| `raw_readiness_level` | string | Raw model label before guardrail override |
+| `hri_value` | float | Fixed: `HRI_MAP[readiness_level]` |
+| `raw_hri_value` | float | Fixed: `HRI_MAP[raw_readiness_level]` |
+| `confidence_score` | float (0–1) | KNN vote ratio — `max(predict_proba)` (e.g. 0.86 = 6 of 7 neighbours voted for winning class) |
+| `warning_state` | string | `normal` / `warning` / `critical` |
+| `guardrail_action` | string | `none` / `annotate` / `downgrade` / `suppress` |
+| `out_of_distribution` | bool | True if any feature is outside training `feature_bounds` |
+| `out_of_distribution_features` | array | Which features, with observed vs training min/max |
 | `prediction_warning` | string\|null | Human-readable explanation when guardrails reduce trust |
-| `threshold_warning_level` | string\|null | `warning` or `critical` when sensor thresholds conflict with the ML result |
-
-Telegram alert fires when `readiness_level === 'ready'`.
-
-HRI score bands (per `docs/ml/ml-decision-policy.md`):
-
-| Score range | Label |
-|---|---|
-| < 0.35 | `not_ready` |
-| 0.35 – 0.60 | `approaching` |
-| 0.60 – 0.80 | `nearly_ready` |
-| ≥ 0.80 | `ready` |
+| `threshold_warning_level` | string\|null | `warning` or `critical` when sensor thresholds conflict |
 
 ---
 
