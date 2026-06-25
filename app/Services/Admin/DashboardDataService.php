@@ -100,15 +100,19 @@ class DashboardDataService
             $prediction = $predId ? $predictions->get($predId) : null;
             $hasAlert = $alertHiveIds->contains($hive->id);
 
+            // A 'ready' prediction takes priority over an alert: the hive can simultaneously
+            // have a threshold spike AND be ready for harvest. Alerts still surface in the
+            // Need Attention card. Non-ready predictions yield to alerts so the admin sees
+            // the urgency (alert) rather than a lower-priority growing/offline state.
             if (! $targetDateLog) {
                 $status = 'no_data';
+            } elseif ($prediction && in_array($prediction->readiness_level, ['ready', 'Ready to Harvest'], true)) {
+                $status = 'ready';
             } elseif ($hasAlert) {
                 $status = 'alert';
             } elseif ($prediction) {
                 $status = match ($prediction->readiness_level) {
-                    'Ready to Harvest', 'ready' => 'ready',
-                    'Nearly Ready', 'Approaching', 'Not Ready',
-                    'nearly_ready', 'approaching', 'not_ready' => 'growing',
+                    'Nearly Ready', 'nearly_ready', 'Approaching', 'approaching', 'Not Ready', 'not_ready' => 'growing',
                     default => 'offline',
                 };
             } else {
