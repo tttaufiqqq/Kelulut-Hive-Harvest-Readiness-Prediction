@@ -74,6 +74,8 @@ buzzyhive/
 │   ├── deploy.yml              # tests → build → FTP upload → deploy hook
 │   ├── lint.yml                # ESLint + Prettier + Pint
 │   └── deploy-ml.yml           # smoke-test → upload ml/ → Passenger restart
+├── scripts/
+│   └── trigger-prod-ready-alert.ps1  # Manual diagnostic: injects a synthetic "Ready" prediction + Telegram alert
 └── public/
     └── deploy-hook.php         # Post-deploy: composer install (if changed), migrate, seed, cache
 ```
@@ -154,7 +156,22 @@ The ESP32 firmware reads sensors every interval and sends a JSON POST to `/api/s
 }
 ```
 
-The endpoint stores the reading in `sensor_logs`, calls the Flask ML API for a prediction, stores the result in `predictions`, updates `hri_summary`, and dispatches a Telegram alert if readiness is "Ready to Harvest".
+The endpoint stores the reading in `sensor_logs`, calls the Flask ML API for a prediction, stores the result in `predictions`, updates `hri_summary`, and queues a Telegram alert if readiness is "Ready to Harvest".
+
+---
+
+## Diagnostic Tool
+
+`scripts/trigger-prod-ready-alert.ps1` is a local PowerShell script for manually verifying the Telegram alert pipeline end-to-end without waiting for the IoT device to produce a "ready" reading.
+
+It POST to `POST /api/internal/test-telegram-ready` with a test secret header and a chosen `mode`:
+
+- `full_pipeline` — stores a real sensor log, calls the Flask ML API, stores the prediction, and queues a Telegram alert if the model returns "ready"
+- `synthetic_ready` — stores a sensor log and creates a synthetic "ready" prediction directly (bypasses ML), then sends the Telegram alert synchronously without the queue
+
+The endpoint is protected by `X-Test-Secret` header matched against `services.telegram.test_secret` in `.env`. It requires the target `hive_id` and a registered `device_id` for that hive. The synthetic prediction is marked with `model_version: synthetic_diagnostic_ready_v1` so it is clearly distinguishable from real ML predictions.
+
+Run it locally against production by setting `PROD_URL`, `TEST_SECRET`, `HIVE_ID`, and `DEVICE_ID` at the top of the script.
 
 **Sensors:** DHT11 (temp/humidity), MQ2 (smoke/LPG), MQ3 (alcohol/VOC), MQ5 (LPG/natural gas), MQ135 (air quality/CO2)
 **ADC:** `analogReadResolution(10)` — 0–1023 range on all MQ sensors.
@@ -195,7 +212,7 @@ Roles are managed via Spatie Permission. Admins assign roles when inviting users
 Push to `main` (app files only — docs and unrelated changes are ignored) triggers:
 
 1. **Lint** (`lint.yml`) — ESLint, Prettier, Laravel Pint — runs in parallel
-2. **Tests** (`deploy.yml`) — Pest on PHP 8.3 + 8.4 in parallel, SQLite in-memory, `Vite::fake()` (no frontend build needed) — 119 tests / 501 assertions
+2. **Tests** (`deploy.yml`) — Pest on PHP 8.3 + 8.4 in parallel, SQLite in-memory, `Vite::fake()` (no frontend build needed) — 168 tests / 842 assertions
 3. **Build** (after tests pass) — installs deps, runs `npm run build`, uploads `public/build/` as a GitHub Actions artifact
 4. **Deploy** (after build) — downloads artifact, FTPs changed files only to Exabytes, hits `deploy-hook.php`
 

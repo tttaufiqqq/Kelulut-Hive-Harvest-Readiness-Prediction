@@ -11,12 +11,13 @@ The notebook-generated baseline did the following:
 - fit `MinMaxScaler`
 - selected KNN from a notebook experiment and persisted `model.pkl` and `scaler.pkl`
 
-The currently loaded artifacts still reflect that old design:
+The legacy artifacts reflected that old design. The current deployed model was rebuilt via `ml/train_model.py`:
 
 - model family: `KNeighborsClassifier`
-- hyperparameters: `n_neighbors=1`, `weights='uniform'`
+- hyperparameters: `n_neighbors=7`, `weights='distance'`
+- dataset: `synthetic_flat` (`ml/datasets/synthetic_readiness_training_flat_v1.csv`)
 - scaler: `MinMaxScaler`
-- artifact compatibility risk: the legacy pickles were created under `scikit-learn 1.4.2` but are currently being loaded by `scikit-learn 1.8.0`, which reinforces the need for a rebuilt scripted workflow
+- artifacts rebuilt to eliminate the `scikit-learn 1.4.2 → 1.8.0` pickle compatibility risk
 
 ## Script Entry Points
 

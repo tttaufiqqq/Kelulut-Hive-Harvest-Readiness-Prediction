@@ -247,6 +247,8 @@ Without a build, `public/build/manifest.json` does not exist and Laravel throws 
 
 **Why not just build in tests:** The build takes ~10–15s and runs in both PHP 8.3 and 8.4 matrix runners — that's 20–30s of wasted time per push for something tests don't actually need.
 
+**Current test count:** 168 tests / 842 assertions. The CI environment must set `config('services.telegram.token')` to a dummy value in `tests/Feature/TelegramDiagnosticTest.php` (done via `beforeEach`) — without it, `TelegramService::execute()` throws before making any HTTP call, causing `synthetic_ready` tests to report `telegram_dispatch: send_failed` instead of `sent`.
+
 ---
 
 ## Build Job — Why a Separate Job

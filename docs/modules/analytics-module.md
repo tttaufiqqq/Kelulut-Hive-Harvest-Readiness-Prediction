@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Analytics Module provides beekeepers with a per-hive intelligence dashboard. It aggregates sensor readings, ML predictions, HRI trends, and harvest records into a single read-only view. Access is strictly scoped — a beekeeper can only view analytics for hives assigned to them (403 on foreign hive IDs). The module covers DFD process P7 (Dashboard/Reports) and consists of one controller, one page, and four feature tests. All 92 tests pass.
+The Analytics Module provides beekeepers with a per-hive intelligence dashboard. It aggregates sensor readings, ML predictions, HRI trends, and harvest records into a single read-only view. Access is strictly scoped — a beekeeper can only view analytics for hives assigned to them (403 on foreign hive IDs). The module covers DFD process P7 (Dashboard/Reports) and consists of one controller, one page, and four feature tests. Full suite: 168 tests — all pass.
 
 ---
 
@@ -152,7 +152,7 @@ Changes made to `dashboard.tsx` and `DashboardController` as part of completing 
 | 3 | Admin cannot access beekeeper analytics route | redirect |
 | 4 | Analytics response contains correct Inertia props | `hive`, `hriTrend`, `sensorReadings`, `latestPrediction`, `harvestHistory` all present |
 
-**4 tests — all pass. Full suite (92 tests) — all pass.**
+**4 tests — all pass. Full suite (168 tests / 842 assertions) — all pass.**
 
 ```bash
 php artisan test tests/Feature/AnalyticsTest.php

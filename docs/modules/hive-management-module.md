@@ -158,7 +158,7 @@ All hive forms use `forceFormData: true`. Images stored at `storage/app/public/h
 | 9 | Beekeeper cannot POST to admin hives store | redirect dashboard |
 | 10 | Unauthenticated user redirected to login | redirect login |
 
-**10 tests — all pass. Full suite (49 tests) — all pass.**
+**10 tests — all pass. Full suite (168 tests / 842 assertions) — all pass.**
 
 ```bash
 php artisan test tests/Feature/Admin/HiveManagementTest.php

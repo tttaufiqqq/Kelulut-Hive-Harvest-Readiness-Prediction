@@ -28,26 +28,37 @@ Middleware:
 
 ### Admin\DashboardController
 
-Extracted from the inline closure that previously lived in `routes/admin.php`.
+Thin controller. All business logic extracted to `app/Services/Admin/DashboardDataService.php`.
 
 **Methods:**
 
 | Method | Description |
 |--------|-------------|
-| `index()` | Returns stats + liveHiveMonitor + productivityRanking + crossSiteComparison to `admin/dashboard` |
-| `liveHiveMonitor()` | All hives with latest sensor_log + latest prediction per hive (3 queries) |
-| `productivityRanking()` | Hives ordered by `SUM(harvests.weight) DESC` |
-| `crossSiteComparison()` | Raw join: hives + master_sites + hri_summary + harvests, grouped by site |
-| `deriveStatus()` | Maps `PREDICTION.readiness_level` → `HiveData.status` string |
+| `index()` | Stats + delegates to `DashboardDataService::execute()` → returns hives, productivityRanking, crossSiteComparison, fleetHriTrend to `admin/dashboard` |
+| `readinessSnapshot()` | JSON endpoint — readiness distribution counts for a given date (used by fleet donut date picker) |
+| `hiveMonitorSnapshot()` | JSON endpoint — full HiveData array for a given date (used by live hive monitor date picker) |
 
-**Status derivation:**
+### DashboardDataService
+
+`app/Services/Admin/DashboardDataService.php`
+
+**Prediction lookup (critical):** Uses `MAX(predictions.id)` per hive per date, keyed by `hive_id` — not `MAX(sensor_log_id)`. This ensures the latest prediction is found even when the IoT device sends new unpredicted sensor logs after the prediction was stored (which would advance `MAX(sensor_log_id)` past the predicted log).
+
+**Status derivation priority (in order):**
+
 ```
-'Ready to Harvest' → 'ready'
-'Nearly Ready'     → 'growing'
-'Approaching'      → 'growing'
-'Not Ready'        → 'alert'
-null               → 'offline'
+no sensor log today                            → 'no_data'
+prediction.readiness_level === 'ready'         → 'ready'   ← takes priority over alerts
+hive has threshold violations today            → 'alert'
+prediction exists (non-ready)                  → 'growing'
+no prediction                                  → 'offline'
 ```
+
+`'ready'` takes priority over threshold alerts because a hive can simultaneously breach a sensor threshold AND be classified as ready for harvest. Alerts still appear in the "Need Attention" counter on the admin dashboard, so they are not suppressed — only the hive's individual status card shows 'ready' instead of 'alert'.
+
+**Productivity ranking:** `vw_harvest_summary_per_hive` view, ordered by `total_weight * total_harvests` DESC.
+
+**Cross-site comparison:** Joins hives + master_sites + hri_summary + harvests, grouped by site, returning avg HRI %, total weight, hive count.
 
 ### ReportingController
 
@@ -69,7 +80,17 @@ null               → 'offline'
 stats: { total: number; pending: number; active: number }
 
 hives: HiveData[]
-// HiveData = { id, beekeeper, species, weight, temp, humidity, co2, readiness, status }
+// HiveData = {
+//   id, hive_name, beekeeper, species,
+//   weight,       // total lifetime harvest weight (kg)
+//   temp,         // latest sensor reading for target date (°C)
+//   humidity,     // latest sensor reading for target date (%)
+//   co2,          // mq135_value from latest sensor reading
+//   mq2, mq3, mq5,
+//   readiness,    // confidence_score * 100 (integer %)
+//   status,       // 'no_data' | 'ready' | 'alert' | 'growing' | 'offline'
+//   last_reading, // ISO8601 timestamp of the most recent sensor log ever
+// }
 
 productivityRanking: Array<{
     hive_name: string;
@@ -81,9 +102,11 @@ productivityRanking: Array<{
 crossSiteComparison: Array<{
     site_name: string;
     avg_hri_pct: number;    // AVG(hri_summary.avg_hri_value) * 100
-    total_weight: number;   // SUM(harvests.weight)
+    total_weight: number;   // SUM(harvests.weight) in kg
     hive_count: number;
 }>
+
+fleetHriTrend: FleetTrendItem[]  // 30-day daily HRI trend across all hives
 ```
 
 ### Beekeeper Reporting (`reporting`)
@@ -94,7 +117,7 @@ hriGauges: Array<{
     hive_name: string;
     site_name: string | null;
     readiness_level: string | null;   // raw PREDICTION.readiness_level
-    hri_value: number | null;         // 0.25 / 0.50 / 0.75 / 1.00
+    hri_value: number | null;         // continuous 0–1 from ML API
     confidence_pct: number | null;    // confidence_score * 100, rounded
 }>
 
@@ -106,17 +129,30 @@ readinessTrends: Array<{
 }>
 ```
 
+### Beekeeper Dashboard (`dashboard`)
+
+The beekeeper My Hives page uses `DashboardController::index()`. It also queries `MAX(predictions.id)` per hive today to get the `hri_value` from the same prediction as the badge's `readiness_level`. This prevents the 25% / "Ready to Harvest" contradiction that arises when the badge comes from `latest_readiness_level` (latest prediction) but the % comes from `avg_hri_value` (daily average across all predictions).
+
+```ts
+// hive prop on /dashboard includes:
+hri_value:       // latest today's prediction hri_value (falls back to avg_hri_value if no today prediction)
+readiness_level: // hri_summary.latest_readiness_level (most recent prediction label)
+```
+
 ---
 
 ## Frontend
 
 ### Admin Dashboard (`resources/js/pages/admin/dashboard.tsx`)
 
-- Action cards: alertCount + readyCount derived from `hives` prop (no longer from mock)
-- Live Hive Monitor: real hives, empty state if none
-- P6.3 ProductivityRankingChart: horizontal BarChart (Recharts), layout=vertical, amber fill
-- P6.4 CrossSiteChart: grouped BarChart, dual Y-axis (HRI % left, harvest kg right)
+- **Action cards:** "Need Attention" and "Ready to Harvest" cards open the `HiveMonitorModal` for the first matching hive (not a route navigation). Clicking "Need Attention" jumps to the first `status === 'alert'` hive; "Ready to Harvest" jumps to the first `status === 'ready'` hive.
+- **Live Hive Monitor:** real hives, sorted by readiness %, supports date picker for historical view
+- **Fleet Readiness donut:** date-switchable — fetches from `/admin/dashboard/readiness-snapshot?date=` on date change
+- **P6.3 ProductivityRankingTable:** data from `vw_harvest_summary_per_hive` view
+- **P6.4 CrossSiteComparisonChart:** grouped BarChart, dual Y-axis (HRI % left, harvest kg right)
+- **FleetHriLineChart:** 30-day fleet-wide HRI trend
 - Charts rendered only after `mounted=true` (SSR-safe)
+- `admin/dashboard.tsx` is split into sub-components under `resources/js/pages/admin/dashboard/`
 
 ### Beekeeper Reporting (`resources/js/pages/reporting.tsx`)
 
@@ -141,13 +177,16 @@ Ready to Harvest → green-100 / green-800
 | `tests/Feature/ReportingTest.php` | 5 | guest redirect, beekeeper 200, admin blocked, props shape, own-hive scoping |
 | `tests/Feature/Admin/DashboardTest.php` | 5 | admin 200, beekeeper blocked, guest blocked, props shape, real hive count |
 
-Total suite: 102 tests, 334 assertions — all passing.
+Total suite: 168 tests, 842 assertions — all passing.
 
 ---
 
 ## Notes
 
-- `co2` in HiveData is mapped from `mq135_value` (MQ135 = VOC/CO₂ sensor). Column header changed from "CO₂" to "MQ135" in the table.
-- `weight` in HiveData is `SUM(harvests.weight)` — total lifetime harvest weight per hive.
+- `co2` in HiveData is mapped from `mq135_value` (MQ135 = VOC/CO₂ sensor).
+- `weight` in HiveData is `SUM(harvests.weight)` — total lifetime harvest weight per hive (kg).
 - `MOCK_HIVES` and `MOCK_ACTIVITY` constants removed from admin dashboard after M6 wiring.
 - No new admin tab added — M6 sections append below Live Hive Monitor in the existing `/admin` page.
+- `readiness` in HiveData is `confidence_score * 100` (integer %) — not hri_value. It is used as the sort key for `sortedHives` on the frontend.
+- Status `'no_data'` is distinct from `'offline'`: `no_data` means no sensor log exists for the selected date; `offline` means a sensor log exists but no prediction has been made yet.
+- The admin "Need Attention" and "Ready to Harvest" counts always read from the live `hives` prop (server-rendered) regardless of which date the monitor date picker is set to.

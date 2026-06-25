@@ -15,7 +15,7 @@ The currently deployed baseline model was trained from `ml/dataset.csv`, which c
 | `temp` | 25.3 | 33.6 |
 | `humidity` | 60.4 | 81.8 |
 
-Any live reading outside these bounds is now flagged as out-of-distribution, because the legacy `KNeighborsClassifier(n_neighbors=1)` was only trained inside this narrow feature window.
+Any live reading outside these bounds is flagged as out-of-distribution. The current deployed model is `KNeighborsClassifier(n_neighbors=7, weights='distance')` trained on `synthetic_readiness_training_flat_v1.csv` — the legacy `n_neighbors=1` model has been replaced, but the guardrail feature bounds above reflect the original legacy dataset and should be re-calibrated once a real labeled dataset is available.
 
 ## Guardrail Policy
 

@@ -18,15 +18,22 @@ ESP32 POST /api/sensor-data
   → [payload validation]
   → [IotNode resolve: device_id + hive_id + device_status=active]
   → SensorLog::create()
+  → SensorReadingCreated::dispatch() → Pusher broadcast (realtime dashboard update)
   → match master_sensor_thresholds → insert sensor_log_thresholds (non-blocking)
-  → MlPredictionService::predict($log)
+  → MlPredictionService::runPrediction($log)
        → Http::post(Flask /predict, {mq2,mq3,mq5,mq135,temp,humidity})
-       → Flask returns {readiness_level, hri_value, confidence_score}
-       → Prediction::create()
-       → HriSummary::updateOrCreate(hive_id + today, daily averages) (non-blocking)
-       → if readiness_level === 'ready' → SendTelegramAlert::dispatch()
+       → Flask returns {readiness_level, raw_readiness_level, hri_value, raw_hri_value,
+                        confidence_score, warning_state, guardrail_action, out_of_distribution,
+                        out_of_distribution_features, prediction_warning, threshold_warning_level}
+       → Prediction::create() inside DB::transaction()
+       → HriSummary::updateOrCreate(hive_id + today, daily averages)
+           (MySQL: trigger trg_predictions_after_insert; SQLite: PHP fallback)
+       → PredictionCreated::dispatch() → Pusher broadcast
+       → if readiness_level === 'ready' → SendTelegramAlert::dispatch()->afterCommit()
   → 201 {"status":"ok"} to ESP32
 ```
+
+**Key implementation detail — `persistPrediction($queueAlert)`:** The `MlPredictionService::persistPrediction()` method accepts a `bool $queueAlert = true` parameter. This prevents double-dispatching Telegram alerts. The IoT ingestion path passes the default (`true`). The synthetic diagnostic endpoint passes `queueAlert: false` and handles the Telegram send itself synchronously via `dispatchSync()`.
 
 ---
 
@@ -36,7 +43,7 @@ ESP32 POST /api/sensor-data
 
 | Layer | File | Responsibility |
 |-------|------|----------------|
-| Controller | `app/Http/Controllers/SensorController.php` | Auth, validation, node resolution, sensor log, threshold matching |
+| Controller | `app/Http/Controllers/SensorController.php` | Auth, validation, node resolution, sensor log, threshold matching; also hosts `testTelegramReady()` diagnostic endpoint |
 | Service | `app/Services/MlPredictionService.php` | Flask call, prediction store, HRI summary update, Telegram trigger |
 | Model | `app/Models/SensorLog.php` | SENSOR_LOG table, hive + iotNode relationships |
 | Model | `app/Models/IotNode.php` | IOT_NODE table, device registry |
@@ -70,7 +77,8 @@ ESP32 POST /api/sensor-data
 |-----|-------|----------|
 | `IOT_API_KEY` | `buzzyhive-iot-key-2026` | `.env` → `config('app.iot_api_key')` |
 | `ML_API_URL` | `http://localhost:5000` | `.env` → `config('services.ml.url')` |
-| `TELEGRAM_BOT_TOKEN` | set in env | `.env` |
+| `TELEGRAM_BOT_TOKEN` | set in env | `.env` → `config('services.telegram.token')` |
+| `TEST_TELEGRAM_SECRET` | set in env | `.env` → `config('services.telegram.test_secret')` — guards the diagnostic endpoint |
 
 ---
 
@@ -110,16 +118,61 @@ Header: `X-API-Key: buzzyhive-iot-key-2026`
 
 ## ML Output
 
-Flask returns one of four readiness levels mapped to a fixed HRI score:
+Flask returns a continuous HRI value and a guarded readiness label:
 
-| readiness_level | hri_value | Telegram alert |
-|----------------|-----------|----------------|
-| `not_ready` | 0.25 | No |
-| `approaching` | 0.50 | No |
-| `nearly_ready` | 0.75 | No |
-| `ready` | 1.00 | Yes |
+| Field | Type | Description |
+|---|---|---|
+| `readiness_level` | string | Guarded label after guardrails: `not_ready` / `approaching` / `nearly_ready` / `ready` |
+| `raw_readiness_level` | string | Raw model output before any guardrail override |
+| `hri_value` | float (0–1) | Guarded continuous HRI score (not a fixed mapping per level) |
+| `raw_hri_value` | float (0–1) | Raw model score before guardrail modification |
+| `confidence_score` | float (0–1) | KNN vote ratio (e.g. 0.86 = 86% of neighbours voted for this class) |
+| `warning_state` | string | `normal` or `warning` — indicates guardrail trust level |
+| `guardrail_action` | string | `none` / `downgrade` / `suppress` — what the guardrail did |
+| `out_of_distribution` | bool | True if any feature falls outside the training min/max range |
+| `out_of_distribution_features` | array | Which features triggered OOD, with observed vs training bounds |
+| `prediction_warning` | string\|null | Human-readable explanation when guardrails reduce trust |
+| `threshold_warning_level` | string\|null | `warning` or `critical` when sensor thresholds conflict with the ML result |
 
-`confidence_score` = KNN vote ratio (0–1, e.g. 0.8 = 80% of neighbours voted for this class).
+Telegram alert fires when `readiness_level === 'ready'`.
+
+HRI score bands (per `docs/ml/ml-decision-policy.md`):
+
+| Score range | Label |
+|---|---|
+| < 0.35 | `not_ready` |
+| 0.35 – 0.60 | `approaching` |
+| 0.60 – 0.80 | `nearly_ready` |
+| ≥ 0.80 | `ready` |
+
+---
+
+## Telegram Diagnostic Endpoint
+
+`POST /api/internal/test-telegram-ready`
+
+An internal HTTP endpoint for verifying the Telegram alert pipeline without waiting for the IoT device to produce a real "ready" prediction. Protected by `X-Test-Secret` header checked against `config('services.telegram.test_secret')`.
+
+| Mode | Behaviour |
+|---|---|
+| `full_pipeline` | Stores a real sensor log → calls Flask ML → stores prediction → queues Telegram alert if "ready" |
+| `synthetic_ready` | Stores a sensor log → creates a synthetic "ready" prediction (no ML call) → sends Telegram synchronously |
+
+**Synthetic prediction fields** (distinguishable from real ML output):
+- `model_version: synthetic_diagnostic_ready_v1`
+- `hri_value: 0.85`, `confidence_score: 0.88`
+- `prediction_warning: 'Synthetic diagnostic prediction created by the internal Telegram readiness test endpoint.'`
+
+**Response codes:**
+- `201` — pipeline succeeded (prediction stored, Telegram queued or sent)
+- `409` — full_pipeline ran but ML returned a non-ready level
+- `503` — full_pipeline ran but Flask ML API was unavailable
+- `401` — missing or wrong test secret
+- `404` — device_id not found or device_status not active
+- `422` — payload validation failed
+
+Controller: `app/Http/Controllers/SensorController::testTelegramReady()`
+Script: `scripts/trigger-prod-ready-alert.ps1`
 
 ---
 
@@ -151,7 +204,7 @@ Five `2026_04_29` fix migrations were written for a live MySQL DB with old colum
 
 ## Tests
 
-File: `tests/Feature/SensorIngestTest.php`
+### `tests/Feature/SensorIngestTest.php`
 
 | # | Test | Assertion |
 |---|------|-----------|
@@ -165,10 +218,27 @@ File: `tests/Feature/SensorIngestTest.php`
 | 8 | Flask down (ConnectionException) | 201 + sensor_log saved + no prediction |
 | 9 | Threshold matching | `sensor_log_thresholds` row written for matched threshold |
 
-All 9 tests pass. Run with:
+### `tests/Feature/TelegramDiagnosticTest.php`
+
+| # | Test | Assertion |
+|---|------|-----------|
+| 1 | Missing or wrong test secret | 401, no sensor_log stored |
+| 2 | Invalid payload or inactive device | 422 / 404, no sensor_log stored |
+| 3 | full_pipeline — ML returns non-ready | 409, prediction stored, Telegram NOT queued |
+| 4 | full_pipeline — ML unavailable | 503, sensor_log saved, no prediction, Telegram NOT queued |
+| 5 | full_pipeline — ML returns ready | 201, sensor_log + prediction stored, Telegram queued |
+| 6 | synthetic_ready — success | 201, prediction stored with `model_version=synthetic_diagnostic_ready_v1`, Telegram sent synchronously |
+| 7 | Synthetic vs real prediction distinction | Both prediction types coexist, `model_version` values differ, `prediction_warning` present on synthetic |
+
+**CI note:** Tests set `config(['services.telegram.token' => 'test-bot-token'])` in `beforeEach`. Without a dummy token, `TelegramService::execute()` throws before making any HTTP call — causing `synthetic_ready` to report `telegram_dispatch: send_failed`.
+
+**Queue::fake() + dispatchSync() behaviour:** When `Queue::fake()` is active, `dispatchSync()` on a `ShouldQueue` job routes through `dispatchToQueue('sync')` — the `QueueFake` captures the job without executing `handle()`. No Telegram HTTP call fires. This is why the distinguishable-predictions test expects `Http::assertSentCount(1)` (one ML call) not 2.
+
+Run with:
 
 ```bash
 php artisan test --filter=SensorIngest
+php artisan test --filter=TelegramDiagnostic
 ```
 
 ---

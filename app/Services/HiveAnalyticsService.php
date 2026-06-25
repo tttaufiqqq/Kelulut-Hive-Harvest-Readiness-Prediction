@@ -104,12 +104,17 @@ class HiveAnalyticsService
         $totalHarvests = (int) ($harvestSummary?->total_harvests ?? 0);
         $lastHarvestDate = $harvestSummary?->last_harvest_date;
 
+        // Use the latest prediction's hri_value for the HRI Score card so the % and badge
+        // always come from the same prediction. avg_hri_value is a daily average that stays
+        // low when most readings today were not_ready, even if the latest one is ready.
+        $latestHriValue = $latestPrediction ? $latestPrediction['hri_value'] : ($summary?->avg_hri_value ?? 0);
+
         return [
             'hive' => [
                 'id'                     => $hive->id,
                 'name'                   => $hive->name,
                 'latest_readiness_level' => $summary?->latest_readiness_level,
-                'avg_hri_pct'            => round(($summary?->avg_hri_value ?? 0) * 100),
+                'avg_hri_pct'            => round($latestHriValue * 100),
                 'avg_hri_7d_pct'         => $avg7dPct,
                 'total_harvests'         => $totalHarvests,
                 'last_harvest_date'      => $lastHarvestDate,
