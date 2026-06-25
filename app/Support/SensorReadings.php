@@ -69,21 +69,7 @@ class SensorReadings
         }
 
         if (is_string($value)) {
-            $trimmed = trim($value);
-
-            if ($trimmed === '') {
-                return true;
-            }
-
-            if (! is_numeric($trimmed)) {
-                return false;
-            }
-
-            return (float) $trimmed === 0.0;
-        }
-
-        if (is_int($value) || is_float($value)) {
-            return (float) $value === 0.0;
+            return trim($value) === '';
         }
 
         return false;

@@ -44,7 +44,7 @@ test('live predictions response supports empty prediction state', function () {
         );
 });
 
-test('live predictions flags legacy zero readings as missing sensor data', function () {
+test('live predictions does not flag zero sensor readings as missing — zero is a valid ADC reading', function () {
     $beekeeper = User::factory()->create();
     $beekeeper->assignRole('beekeeper');
     $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
@@ -71,7 +71,7 @@ test('live predictions flags legacy zero readings as missing sensor data', funct
         ->assertInertia(fn (Assert $page) => $page
             ->component('predictions/index')
             ->where('latestPrediction', null)
-            ->where('sensorWarnings', ['MQ-3', 'MQ-135'])
+            ->where('sensorWarnings', [])
             ->has('historyPredictions.data', 0)
             ->has('predictionTrends', 0)
         );
@@ -157,7 +157,7 @@ test('live predictions response includes enriched process payload', function () 
         );
 });
 
-test('live predictions normalizes zero sensor values in stored prediction payloads', function () {
+test('live predictions returns zero sensor values as zero — not null', function () {
     $beekeeper = User::factory()->create();
     $beekeeper->assignRole('beekeeper');
     $hive = Hive::create(['beekeeper_id' => $beekeeper->id, 'name' => 'My Hive']);
@@ -194,9 +194,9 @@ test('live predictions normalizes zero sensor values in stored prediction payloa
             ->where('latestPrediction.sensor_values.temp', 31.8)
             ->where('latestPrediction.sensor_values.humidity', 88)
             ->where('latestPrediction.sensor_values.mq2_value', 39)
-            ->where('latestPrediction.sensor_values.mq3_value', null)
+            ->where('latestPrediction.sensor_values.mq3_value', 0)
             ->where('latestPrediction.sensor_values.mq5_value', 127)
-            ->where('latestPrediction.sensor_values.mq135_value', null)
+            ->where('latestPrediction.sensor_values.mq135_value', 0)
         );
 });
 

@@ -242,7 +242,7 @@ test('partial payload without gas sensors saves row with null gas fields', funct
     expect(Prediction::count())->toBe(0);
 });
 
-test('zero sensor readings are normalized to null and prediction is skipped', function () {
+test('zero sensor readings are stored as-is and prediction runs normally', function () {
     fakeMlOk();
     ['hive' => $hive] = sensorStack();
 
@@ -261,13 +261,15 @@ test('zero sensor readings are normalized to null and prediction is skipped', fu
 
     $response->assertStatus(201);
     $log = SensorLog::first();
-    expect($log->temp)->toBeNull();
-    expect($log->humidity)->toBeNull();
-    expect($log->mq2_value)->toBeNull();
-    expect($log->mq3_value)->toBeNull();
-    expect($log->mq5_value)->toBeNull();
-    expect($log->mq135_value)->toBeNull();
-    expect(Prediction::count())->toBe(0);
+    // 0 is a valid ADC reading — stored as-is, not normalised to null
+    expect($log->temp)->toBe(0.0);
+    expect($log->humidity)->toBe(0.0);
+    expect($log->mq2_value)->toBe(0);
+    expect($log->mq3_value)->toBe(0);
+    expect($log->mq5_value)->toBe(0);
+    expect($log->mq135_value)->toBe(0);
+    // Prediction runs because no fields are missing
+    expect(Prediction::count())->toBe(1);
 });
 
 // ── Test 11: missing temp + humidity → row saved, no prediction created ───

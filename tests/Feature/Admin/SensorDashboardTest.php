@@ -12,7 +12,7 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'beekeeper', 'guard_name' => 'web']);
 });
 
-test('admin sensors normalizes legacy zero readings to missing in latest props', function () {
+test('admin sensors shows zero sensor readings as zero — not null', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
@@ -42,12 +42,12 @@ test('admin sensors normalizes legacy zero readings to missing in latest props',
         ->get(route('admin.sensors.index', ['hive_id' => $hive->id]))
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/sensors')
-            ->where('latest.temperature', null)
+            ->where('latest.temperature', 0)
             ->where('latest.humidity', 88)
             ->where('latest.mq2', 39)
-            ->where('latest.mq3', null)
+            ->where('latest.mq3', 0)
             ->where('latest.mq5', 127)
-            ->where('latest.mq135', null)
+            ->where('latest.mq135', 0)
             ->where('history.0.temperature', 0)
             ->where('history.0.mq3', 0)
             ->where('history.0.mq135', 0)

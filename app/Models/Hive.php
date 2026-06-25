@@ -49,7 +49,7 @@ class Hive extends Model
 
     public function summary(): HasOne
     {
-        return $this->hasOne(HriSummary::class);
+        return $this->hasOne(HriSummary::class)->latestOfMany('summary_date');
     }
 
     public function harvests(): HasMany
