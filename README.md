@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/utem-logo.png" alt="Universiti Teknikal Malaysia Melaka" width="180">
+</p>
+
 # BuzzyHive 2.0
 
 IoT-based harvest readiness monitoring system for kelulut (stingless bee) farming in Malaysia.
