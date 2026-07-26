@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import type { ChartDateFilterValue } from '@/components/core/chart-date-filter/types';
 import { Alert } from '@/components/core/feedback/feedback';
 import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
@@ -23,7 +24,16 @@ interface Props {
     sensorWarnings: string[];
     predictionTrends: PredictionTrendItem[];
     historyPredictions: PaginatedPredictions;
-    filters: { page: number; chart_date: string; default_chart_date: string };
+    filters: {
+        page: number;
+        filter_type: 'date' | 'week';
+        chart_date: string;
+        default_chart_date: string;
+        chart_month: string;
+        default_chart_month: string;
+        chart_week: number;
+        default_chart_week: number;
+    };
 }
 
 export default function Predictions({ hive, latestPrediction, sensorWarnings, predictionTrends, historyPredictions, filters }: Props) {
@@ -35,12 +45,18 @@ export default function Predictions({ hive, latestPrediction, sensorWarnings, pr
         hasPrevHistory, hasNextHistory,
     } = usePredictionPage({ hive, latestPrediction, historyPredictions, filters });
 
-    function handleChartDateChange(date: string | null) {
-        router.get(
-            route('predictions.live', { hive: hive.id }),
-            { chart_date: date ?? filters.default_chart_date, page: filters.page },
-            { preserveState: true, preserveScroll: true, only: ['predictionTrends', 'filters'] },
-        );
+    const chartFilterValue: ChartDateFilterValue =
+        filters.filter_type === 'week'
+            ? { type: 'week', month: filters.chart_month, week: filters.chart_week }
+            : { type: 'date', date: filters.chart_date };
+
+    function handleChartFilterChange(value: ChartDateFilterValue) {
+        const params =
+            value.type === 'week'
+                ? { filter_type: 'week', chart_month: value.month, chart_week: value.week, page: filters.page }
+                : { filter_type: 'date', chart_date: value.date, page: filters.page };
+
+        router.get(route('predictions.live', { hive: hive.id }), params, { preserveState: true, preserveScroll: true, only: ['predictionTrends', 'filters'] });
     }
 
     return (
@@ -79,7 +95,7 @@ export default function Predictions({ hive, latestPrediction, sensorWarnings, pr
                     <>
                         <LatestPredictionCard prediction={latestPrediction} secondsAgo={secondsAgo} justUpdated={justUpdated} />
                         <div className="space-y-6">
-                            <ChartsFilterBar selectedDate={filters.chart_date} defaultDate={filters.default_chart_date} onDateChange={handleChartDateChange} />
+                            <ChartsFilterBar value={chartFilterValue} defaultDate={filters.default_chart_date} onChange={handleChartFilterChange} />
                             <div className="grid gap-6 xl:grid-cols-2">
                                 <PredictionTrendChart data={predictionTrends} />
                                 <SensorTrendChart data={predictionTrends} />

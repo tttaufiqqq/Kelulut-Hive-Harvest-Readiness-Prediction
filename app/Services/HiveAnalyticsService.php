@@ -5,13 +5,20 @@ namespace App\Services;
 use App\Models\Harvest;
 use App\Models\Hive;
 use App\Models\Prediction;
-use App\Models\SensorLog;
+use App\Services\BuildHourlySensorReadingsService;
+use App\Services\BuildWeeklySensorReadingsService;
+use App\Support\CalendarWeeks;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class HiveAnalyticsService
 {
+    public function __construct(
+        private readonly BuildHourlySensorReadingsService $hourlySensorReadingsBuilder,
+        private readonly BuildWeeklySensorReadingsService $weeklySensorReadingsBuilder,
+    ) {}
+
     public function execute(Hive $hive, Request $request): array
     {
         // ── Q1: HRI trend — last 30 days, grouped by date ─────────────────────
@@ -34,37 +41,20 @@ class HiveAnalyticsService
                 'avg_7d'    => $avg7dPct,
             ]);
 
-        // ── Q2: Sensor readings — selected date (default today), grouped by hour
-        $sensorDate = $request->date('sensor_date') ?? today();
+        // ── Q2: Sensor readings — selected date (hourly) or week (daily), default today
+        $defaultSensorDate = today();
+        $defaultSensorMonth = today()->startOfMonth();
+        $defaultSensorWeek = CalendarWeeks::weekNumberFor(today());
 
-        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
-        $hourExpr = $isSqlite
-            ? "strftime('%H:00', record_timestamp)"
-            : 'DATE_FORMAT(record_timestamp, "%H:00")';
+        $sensorFilterType = $request->string('sensor_filter_type', 'date')->value();
+        $sensorDate = $request->date('sensor_date') ?? $defaultSensorDate;
+        $sensorMonth = $request->date('sensor_month') ?? $defaultSensorMonth;
+        $sensorWeek = (int) $request->integer('sensor_week', $defaultSensorWeek);
+        $weekRange = CalendarWeeks::range($sensorMonth, $sensorWeek);
 
-        $sensorReadings = SensorLog::where('hive_id', $hive->id)
-            ->whereDate('record_timestamp', $sensorDate)
-            ->selectRaw("
-                {$hourExpr} as time,
-                AVG(temp)         as temp,
-                AVG(humidity)     as humidity,
-                AVG(mq2_value)    as mq2,
-                AVG(mq3_value)    as mq3,
-                AVG(mq5_value)    as mq5,
-                AVG(mq135_value)  as mq135
-            ")
-            ->groupByRaw($hourExpr)
-            ->orderBy('time')
-            ->get()
-            ->map(fn ($row) => [
-                'time'     => $row->time,
-                'temp'     => round($row->temp, 1),
-                'humidity' => round($row->humidity, 1),
-                'mq2'      => round($row->mq2),
-                'mq3'      => round($row->mq3),
-                'mq5'      => round($row->mq5),
-                'mq135'    => round($row->mq135),
-            ]);
+        $sensorReadings = $sensorFilterType === 'week'
+            ? $this->weeklySensorReadingsBuilder->execute($hive, $weekRange['start'], $weekRange['end'])
+            : $this->hourlySensorReadingsBuilder->execute($hive, $sensorDate);
 
         // ── Q3: Latest prediction ─────────────────────────────────────────────
         try {
@@ -123,6 +113,15 @@ class HiveAnalyticsService
             'sensorReadings'   => $sensorReadings,
             'latestPrediction' => $latestPrediction,
             'harvestHistory'   => $harvestHistory,
+            'filters'          => [
+                'sensor_filter_type'   => $sensorFilterType,
+                'sensor_date'          => Carbon::parse($sensorDate)->toDateString(),
+                'default_sensor_date'  => Carbon::parse($defaultSensorDate)->toDateString(),
+                'sensor_month'         => Carbon::parse($sensorMonth)->format('Y-m'),
+                'default_sensor_month' => Carbon::parse($defaultSensorMonth)->format('Y-m'),
+                'sensor_week'          => $weekRange['week'],
+                'default_sensor_week'  => $defaultSensorWeek,
+            ],
         ];
     }
 }

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Hive;
 use App\Models\Prediction;
 use App\Models\SensorLog;
+use App\Services\BuildWeeklyPredictionTrendService;
 use App\Services\FormatPredictionService;
 use App\Services\FormatPredictionTrendService;
+use App\Support\CalendarWeeks;
 use App\Support\SensorReadings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ class PredictionController extends Controller
     public function __construct(
         private readonly FormatPredictionService $formatter,
         private readonly FormatPredictionTrendService $trendFormatter,
+        private readonly BuildWeeklyPredictionTrendService $weeklyTrendBuilder,
     ) {}
 
     public function show(Request $request, Hive $hive)
@@ -46,7 +49,14 @@ class PredictionController extends Controller
             ->orderByDesc('predictions.prediction_timestamp')
             ->first();
         $defaultChartDate = Carbon::today();
+        $defaultChartMonth = Carbon::today()->startOfMonth();
+        $defaultChartWeek = CalendarWeeks::weekNumberFor(Carbon::today());
+
+        $filterType = $request->string('filter_type', 'date')->value();
         $chartDate = $request->date('chart_date') ?? $defaultChartDate;
+        $chartMonth = $request->date('chart_month') ?? $defaultChartMonth;
+        $chartWeek = (int) $request->integer('chart_week', $defaultChartWeek);
+        $weekRange = CalendarWeeks::range($chartMonth, $chartWeek);
 
         $historyQuery = (clone $baseQuery)
             ->orderByDesc('predictions.prediction_timestamp');
@@ -60,14 +70,16 @@ class PredictionController extends Controller
             ->withQueryString()
             ->through(fn (Prediction $prediction) => $this->formatter->execute($prediction));
 
-        $predictionTrends = (clone $baseQuery)
-            ->whereDate('predictions.prediction_timestamp', $chartDate)
-            ->orderByDesc('predictions.prediction_timestamp')
-            ->limit(24)
-            ->get()
-            ->reverse()
-            ->values()
-            ->map(fn (Prediction $prediction) => $this->trendFormatter->execute($prediction, $chartDate));
+        $predictionTrends = $filterType === 'week'
+            ? $this->weeklyTrendBuilder->execute($hive, $weekRange['start'], $weekRange['end'])
+            : (clone $baseQuery)
+                ->whereDate('predictions.prediction_timestamp', $chartDate)
+                ->orderByDesc('predictions.prediction_timestamp')
+                ->limit(24)
+                ->get()
+                ->reverse()
+                ->values()
+                ->map(fn (Prediction $prediction) => $this->trendFormatter->execute($prediction, $chartDate));
 
         $latestSensorLog = SensorLog::where('hive_id', $hive->id)
             ->latest('record_timestamp')
@@ -86,9 +98,14 @@ class PredictionController extends Controller
             'historyPredictions' => $historyPredictions,
             'sensorWarnings'     => $sensorWarnings,
             'filters'            => [
-                'page'               => (int) $request->integer('page', 1),
-                'chart_date'         => Carbon::parse($chartDate)->toDateString(),
-                'default_chart_date' => Carbon::parse($defaultChartDate)->toDateString(),
+                'page'                => (int) $request->integer('page', 1),
+                'filter_type'         => $filterType,
+                'chart_date'          => Carbon::parse($chartDate)->toDateString(),
+                'default_chart_date'  => Carbon::parse($defaultChartDate)->toDateString(),
+                'chart_month'         => Carbon::parse($chartMonth)->format('Y-m'),
+                'default_chart_month' => Carbon::parse($defaultChartMonth)->format('Y-m'),
+                'chart_week'          => $weekRange['week'],
+                'default_chart_week'  => $defaultChartWeek,
             ],
         ]);
     }

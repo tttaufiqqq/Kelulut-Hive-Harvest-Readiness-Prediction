@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import type { ChartDateFilterValue } from '@/components/core/chart-date-filter/types';
 import { Breadcrumbs } from '@/components/core/navigation/navigation';
 import { AuthenticatedLayout } from '@/layouts/authenticated-layout';
 import { HarvestBar } from './HarvestBar';
@@ -20,16 +20,30 @@ interface Props {
     sensorReadings: SensorReading[];
     latestPrediction: LatestPrediction | null;
     harvestHistory: HarvestRecord[];
+    filters: {
+        sensor_filter_type: 'date' | 'week';
+        sensor_date: string;
+        default_sensor_date: string;
+        sensor_month: string;
+        default_sensor_month: string;
+        sensor_week: number;
+        default_sensor_week: number;
+    };
 }
 
-export default function Analytics({ hive, hriTrend, sensorReadings, latestPrediction, harvestHistory }: Props) {
-    const todayString = () => new Date().toISOString().slice(0, 10);
-    const [sensorDate, setSensorDate] = useState(todayString);
+export default function Analytics({ hive, hriTrend, sensorReadings, latestPrediction, harvestHistory, filters }: Props) {
+    const sensorFilterValue: ChartDateFilterValue =
+        filters.sensor_filter_type === 'week'
+            ? { type: 'week', month: filters.sensor_month, week: filters.sensor_week }
+            : { type: 'date', date: filters.sensor_date };
 
-    function handleSensorDateChange(date: string | null) {
-        const resolved = date ?? todayString();
-        setSensorDate(resolved);
-        router.get(route('analytics.show', { hive: hive.id }), { sensor_date: resolved }, { preserveState: true, preserveScroll: true, only: ['sensorReadings'] });
+    function handleSensorFilterChange(value: ChartDateFilterValue) {
+        const params =
+            value.type === 'week'
+                ? { sensor_filter_type: 'week', sensor_month: value.month, sensor_week: value.week }
+                : { sensor_filter_type: 'date', sensor_date: value.date };
+
+        router.get(route('analytics.show', { hive: hive.id }), params, { preserveState: true, preserveScroll: true, only: ['sensorReadings', 'filters'] });
     }
 
     return (
@@ -54,7 +68,7 @@ export default function Analytics({ hive, hriTrend, sensorReadings, latestPredic
                     <div className="h-full lg:col-span-2"><HriTrendChart data={hriTrend} /></div>
                 </div>
 
-                <SensorChart data={sensorReadings} selectedDate={sensorDate} onDateChange={handleSensorDateChange} />
+                <SensorChart data={sensorReadings} value={sensorFilterValue} onChange={handleSensorFilterChange} />
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <LatestPredictionCard prediction={latestPrediction} />

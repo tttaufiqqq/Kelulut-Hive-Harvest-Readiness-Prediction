@@ -11,7 +11,8 @@ import {
 } from 'recharts';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import type { TooltipProps } from 'recharts/types/component/Tooltip';
-import { DatePicker } from '@/components/core/date-picker';
+import { ChartDateFilter } from '@/components/core/chart-date-filter/ChartDateFilter';
+import type { ChartDateFilterValue } from '@/components/core/chart-date-filter/types';
 import { SelectField } from '@/components/core/form/select-field';
 import { ChartCard } from '@/components/core/readiness-chart-cards';
 
@@ -70,11 +71,11 @@ return [`${numericValue}%`, resolvedName];
 
 interface Props {
     data: SensorReading[];
-    selectedDate: string;
-    onDateChange: (date: string | null) => void;
+    value: ChartDateFilterValue;
+    onChange: (value: ChartDateFilterValue) => void;
 }
 
-export function SensorChart({ data, selectedDate, onDateChange }: Props) {
+export function SensorChart({ data, value, onChange }: Props) {
     const todayYMD = new Date().toISOString().slice(0, 10);
     const [mounted, setMounted] = useState(false);
     const [group, setGroup] = useState('all');
@@ -97,8 +98,8 @@ export function SensorChart({ data, selectedDate, onDateChange }: Props) {
             title="Daily sensor curves"
             description="Filter the selected date into environment or gas sensor groups."
             actions={
-                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-nowrap sm:justify-end">
-                    <DatePicker className="w-full shrink-0 sm:w-[152px]" value={selectedDate} onChange={onDateChange} defaultValue={todayYMD} />
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                    <ChartDateFilter value={value} defaultDate={todayYMD} onChange={onChange} />
                     <div className="min-w-0 sm:w-[210px] sm:flex-none">
                         <SelectField value={group} onChange={setGroup} options={SENSOR_GROUP_OPTIONS} />
                     </div>
