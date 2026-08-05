@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import type { PropsWithChildren } from 'react';
@@ -21,6 +22,12 @@ const NAV_ITEMS: NavItem[] = [
     { title: 'Inspections', href: '/admin/inspections', icon: null },
     { title: 'Thesis', href: '/admin/thesis', icon: null },
     { title: 'Audit Log', href: '/admin/audit-logs', icon: null },
+];
+
+// Power BI exports served as static files from public/reports — plain links, not Inertia routes.
+const REPORT_LINKS = [
+    { title: 'Environmental Intelligence', href: '/reports/environmental-intelligence.html' },
+    { title: 'Hive Insights', href: '/reports/hive-insights.html' },
 ];
 
 export function AdminLayout({ children }: PropsWithChildren) {
@@ -92,6 +99,22 @@ export function AdminLayout({ children }: PropsWithChildren) {
                             </Link>
                         ))}
                     </nav>
+                </div>
+
+                {/* ── Power BI report links ── */}
+                <div className="flex flex-wrap gap-2">
+                    {REPORT_LINKS.map((link) => (
+                        <a
+                            key={link.href}
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 rounded-xl border border-yellow-200 bg-white px-3 py-2 text-xs font-semibold whitespace-nowrap text-amber-900/70 transition-colors hover:bg-yellow-50"
+                        >
+                            {link.title}
+                            <ExternalLink className="h-3 w-3" />
+                        </a>
+                    ))}
                 </div>
 
                 {/* ── Page content (full width) ── */}
