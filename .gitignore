@@ -37,3 +37,5 @@ TELEGRAM_ALERT_TESTING_STRATEGY.md
 TEST_CASES.md
 TEST_INVENTORY.md
 scripts/test-prod-prediction-levels.ps1
+/database/dumps
+/scripts/db_backups
