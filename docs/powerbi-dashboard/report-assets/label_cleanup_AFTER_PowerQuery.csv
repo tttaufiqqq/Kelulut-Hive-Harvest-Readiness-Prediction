@@ -1,0 +1,9 @@
+inspection_id,blooming_status,vegetation_density,nectar_source_availability,structural_damage
+23,Early Bloom,Moderate,Moderate,None
+178,No Bloom,Dense,Abundant,None
+504,Early Bloom,Sparse,Abundant,None
+631,No Bloom,Dense,Abundant,None
+811,Early Bloom,Dense,Abundant,Minor
+1046,Early Bloom,Dense,Abundant,None
+1108,Early Bloom,Moderate,Scarce,None
+1150,Early Bloom,Moderate,Moderate,None

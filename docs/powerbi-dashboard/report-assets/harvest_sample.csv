@@ -1,0 +1,11 @@
+harvest_id,hive_id,harvest_date,weight_g,honey_colour,honey_flavour,productivity_level
+1115,9,2025-01-07,439.9,Amber,Sour,low
+1116,9,2025-01-10,467.6,Light Yellow,Floral,medium
+1117,9,2025-01-13,502.7,Dark Brown,Mildly Sour,medium
+1119,9,2025-01-19,486.8,Dark Amber,Sour,medium
+1120,9,2025-01-22,392.1,Dark Amber,Strong,medium
+1129,9,2025-02-22,528.7,Dark Brown,Floral,medium
+1130,9,2025-02-26,408.1,Cream White,Mild,medium
+1131,9,2025-03-01,508,Light Amber,Sour,medium
+1139,9,2025-03-29,580,Amber,Mild,medium
+1145,9,2025-04-21,484.5,Amber,Earthy,medium

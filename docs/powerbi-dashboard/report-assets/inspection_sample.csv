@@ -1,0 +1,11 @@
+inspection_id,hive_id,inspection_date,blooming_status,vegetation_density,nectar_source_availability,structural_damage
+873,7,2025-01-08,no_bloom,dense,abundant,none
+874,7,2025-01-11,early_bloom,moderate,abundant,minor
+875,7,2025-01-15,no_bloom,dense,scarce,none
+61,7,2025-01-16,early_bloom,moderate,moderate,none
+876,7,2025-01-19,no_bloom,moderate,abundant,minor
+877,7,2025-01-23,early_bloom,dense,moderate,none
+878,7,2025-01-26,no_bloom,sparse,abundant,none
+879,7,2025-01-30,peak_bloom,dense,abundant,none
+880,7,2025-02-03,peak_bloom,sparse,scarce,minor
+881,7,2025-02-07,peak_bloom,dense,abundant,none

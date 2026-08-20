@@ -15,7 +15,12 @@ use Illuminate\Support\Facades\DB;
  */
 class InspectionGapFillSeeder extends Seeder
 {
-    private const RANGE_END = 'today';
+    // Extended (Session 6, page 5) from 'today' to 2028-08-31 -- covers the
+    // harvest table's full date range (harvests.harvest_date runs to
+    // 2028-08-27 after the Section 8a calibration shift), so "pre-harvest
+    // inspection" matching has real data to match against for harvests
+    // that were deliberately pushed into the future.
+    private const RANGE_END = '2028-08-31';
 
     // Matches observed overall proportions in the existing ~2,180 inspections.
     private const BLOOMING_POOL = [
@@ -88,7 +93,7 @@ class InspectionGapFillSeeder extends Seeder
                     'blooming_status' => $bloomingStatus,
                     'vegetation_density' => $vegetationDensity,
                     'nectar_source_availability' => $nectarAvailability,
-                    'structural_damage' => $structuralDamage === 'none' ? null : $structuralDamage,
+                    'structural_damage' => $structuralDamage,
                     'food_source_observation' => $nectarAvailability === 'abundant'
                         ? 'Heavy foraging activity. Multiple nectar sources identified.'
                         : ($nectarAvailability === 'scarce'
