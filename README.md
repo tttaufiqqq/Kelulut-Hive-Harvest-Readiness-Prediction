@@ -6,7 +6,9 @@
 
 IoT-based harvest readiness monitoring system for kelulut (stingless bee) farming in Malaysia.
 
-Sensors on the hive push environmental data to the platform, a machine learning model classifies harvest readiness, and beekeepers get a clean dashboard to manage hives, log harvests, record inspections, and track analytics — all from a web browser.
+- Sensors on the hive push environmental data to the platform
+- A machine learning model classifies harvest readiness
+- Beekeepers manage hives, log harvests, record inspections, and track analytics from a web browser
 
 **Live:** [buzzyhive.urban-alert.com](https://buzzyhive.urban-alert.com)
 
@@ -14,34 +16,32 @@ Sensors on the hive push environmental data to the platform, a machine learning 
 
 ## Features
 
-- **Real-time sensor ingestion** — ESP32 posts temperature, humidity, and gas (MQ2/MQ3/MQ5/MQ135) readings via HTTP
-- **ML harvest readiness** — Flask API runs a KNN classifier with guardrails (OOD detection, confidence-based downgrade, threshold conflict detection) and returns one of four labels: Not Ready / Approaching / Nearly Ready / Ready to Harvest
-- **Realtime updates** — Pusher + Laravel Echo pushes live predictions and sensor readings to the dashboard without page refresh
-- **Telegram alerts** — notifies the beekeeper automatically when the hive hits "Ready to Harvest"
-- **Two-factor authentication** — TOTP-based 2FA available on all accounts
-- **Hive management** — add/edit hives, assign beekeepers, track species and site
-- **Harvest records** — log weight, honey color, flavor, and productivity per harvest
-- **Inspection logs** — record hive inspections with weather conditions and flora observations
-- **Analytics dashboard** — HRI trend charts, sensor readings, harvest history, 30-day summaries
-- **Reporting** — per-hive HRI gauge and readiness trend across time
-- **Role-based access** — Admin manages users and master data; Beekeepers manage their own hives
-- **Admin invite-only** — no self-registration; admins issue invites
+- Real-time sensor ingestion: ESP32 posts temperature, humidity, and gas (MQ2/MQ3/MQ5/MQ135) readings via HTTP
+- ML harvest readiness: Flask API runs a KNN classifier with guardrails (OOD detection, confidence-based downgrade, threshold conflict detection), returns Not Ready / Approaching / Nearly Ready / Ready to Harvest
+- Realtime updates: Pusher + Laravel Echo pushes live predictions and sensor readings to the dashboard without a page refresh
+- Telegram alerts: notifies the beekeeper when a hive hits "Ready to Harvest"
+- Two-factor authentication: TOTP-based 2FA on all accounts
+- Hive management: add/edit hives, assign beekeepers, track species and site
+- Harvest records: log weight, honey color, flavor, and productivity per harvest
+- Inspection logs: record hive inspections with weather conditions and flora observations
+- Analytics dashboard: HRI trend charts, sensor readings, harvest history, 30-day summaries
+- Reporting: per-hive HRI gauge and readiness trend over time
+- Role-based access: Admin manages users and master data; Beekeepers manage their own hives
+- Admin invite-only: no self-registration, admins issue invites
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend | Laravel 13 (PHP 8.3+) |
-| Frontend | React 19 + TypeScript (Inertia.js) |
-| Styling | Tailwind CSS v4 + Radix UI |
-| Auth & Roles | Laravel Fortify + Spatie Permission |
-| Database | MySQL (production) / SQLite (tests) |
-| ML API | Python + scikit-learn (KNN) → Flask REST API |
-| Hardware | ESP32 + DHT11 + MQ2 + MQ3 + MQ5 + MQ135 |
-| Hosting | Exabytes shared hosting (LiteSpeed) |
-| CI/CD | GitHub Actions → artifact build → FTP deploy → post-deploy hook |
+- Backend: Laravel 13 (PHP 8.3+)
+- Frontend: React 19 + TypeScript (Inertia.js)
+- Styling: Tailwind CSS v4 + Radix UI
+- Auth & Roles: Laravel Fortify + Spatie Permission
+- Database: MySQL (production) / SQLite (tests)
+- ML API: Python + scikit-learn (KNN) served via Flask REST API
+- Hardware: ESP32 + DHT11 + MQ2 + MQ3 + MQ5 + MQ135
+- Hosting: Exabytes shared hosting (LiteSpeed)
+- CI/CD: GitHub Actions, artifact build, FTP deploy, post-deploy hook
 
 ---
 
@@ -65,19 +65,19 @@ buzzyhive/
 │   ├── reporting.tsx            # HRI gauges + readiness trend
 │   └── admin/                  # Admin dashboard, sensor monitor, user management
 ├── database/
-│   ├── migrations/             # Full schema — master tables, core tables, junctions
+│   ├── migrations/             # Full schema: master tables, core tables, junctions
 │   └── seeders/                # MasterDataSeeder (auto) + demo data seeders (manual once)
 ├── ml/
-│   ├── app.py                  # Flask REST API — POST /predict
+│   ├── app.py                  # Flask REST API, POST /predict
 │   ├── model.pkl               # Trained KNN model
 │   ├── scaler.pkl              # Feature scaler
 │   ├── train.ipynb             # Training notebook (expanded synthetic dataset)
 │   └── requirements.txt
 ├── diagrams/                   # ERD + DFD (.drawio)
 ├── .github/workflows/
-│   ├── deploy.yml              # tests → build → FTP upload → deploy hook
+│   ├── deploy.yml              # tests, build, FTP upload, deploy hook
 │   ├── lint.yml                # ESLint + Prettier + Pint
-│   └── deploy-ml.yml           # smoke-test → upload ml/ → Passenger restart
+│   └── deploy-ml.yml           # smoke-test, upload ml/, Passenger restart
 ├── scripts/
 │   └── trigger-prod-ready-alert.ps1  # Manual diagnostic: injects a synthetic "Ready" prediction + Telegram alert
 └── public/
@@ -138,7 +138,7 @@ cd ml
 pip install -r requirements.txt
 python app.py
 # Runs on http://localhost:5000
-# POST /predict — accepts { temp, humidity, mq2_value, mq3_value, mq5_value, mq135_value }
+# POST /predict accepts { temp, humidity, mq2_value, mq3_value, mq5_value, mq135_value }
 ```
 
 ---
@@ -162,50 +162,45 @@ The ESP32 firmware reads sensors every interval and sends a JSON POST to `/api/s
 
 The endpoint stores the reading in `sensor_logs`, calls the Flask ML API for a prediction, stores the result in `predictions`, updates `hri_summary`, and queues a Telegram alert if readiness is "Ready to Harvest".
 
+- Sensors: DHT11 (temp/humidity), MQ2 (smoke/LPG), MQ3 (alcohol/VOC), MQ5 (LPG/natural gas), MQ135 (air quality/CO2)
+- ADC: `analogReadResolution(10)`, 0-1023 range on all MQ sensors
+
 ---
 
 ## Diagnostic Tool
 
-`scripts/trigger-prod-ready-alert.ps1` is a local PowerShell script for manually verifying the Telegram alert pipeline end-to-end without waiting for the IoT device to produce a "ready" reading.
+`scripts/trigger-prod-ready-alert.ps1` is a local PowerShell script for manually verifying the Telegram alert pipeline end-to-end, without waiting for the IoT device to produce a "ready" reading.
 
-It POST to `POST /api/internal/test-telegram-ready` with a test secret header and a chosen `mode`:
+It posts to `POST /api/internal/test-telegram-ready` with a test secret header and a chosen `mode`:
 
-- `full_pipeline` — stores a real sensor log, calls the Flask ML API, stores the prediction, and queues a Telegram alert if the model returns "ready"
-- `synthetic_ready` — stores a sensor log and creates a synthetic "ready" prediction directly (bypasses ML), then sends the Telegram alert synchronously without the queue
+- `full_pipeline`: stores a real sensor log, calls the Flask ML API, stores the prediction, queues a Telegram alert if the model returns "ready"
+- `synthetic_ready`: stores a sensor log and creates a synthetic "ready" prediction directly (bypasses ML), sends the Telegram alert synchronously without the queue
 
-The endpoint is protected by `X-Test-Secret` header matched against `services.telegram.test_secret` in `.env`. It requires the target `hive_id` and a registered `device_id` for that hive. The synthetic prediction is marked with `model_version: synthetic_diagnostic_ready_v1` so it is clearly distinguishable from real ML predictions.
+Notes:
 
-Run it locally against production by setting `PROD_URL`, `TEST_SECRET`, `HIVE_ID`, and `DEVICE_ID` at the top of the script.
-
-**Sensors:** DHT11 (temp/humidity), MQ2 (smoke/LPG), MQ3 (alcohol/VOC), MQ5 (LPG/natural gas), MQ135 (air quality/CO2)
-**ADC:** `analogReadResolution(10)` — 0–1023 range on all MQ sensors.
+- The endpoint is protected by an `X-Test-Secret` header matched against `services.telegram.test_secret` in `.env`
+- Requires the target `hive_id` and a registered `device_id` for that hive
+- The synthetic prediction is marked with `model_version: synthetic_diagnostic_ready_v1` so it's distinguishable from real ML predictions
+- Run it locally against production by setting `PROD_URL`, `TEST_SECRET`, `HIVE_ID`, and `DEVICE_ID` at the top of the script
 
 ---
 
 ## ML Pipeline
 
-**Task:** Multi-class classification — kelulut honey harvest readiness from sensor readings.
-
-**Labels:** `not_ready` / `approaching` / `nearly_ready` / `ready`
-
-**Model:** K-Nearest Neighbours (KNN, k=7, distance-weighted)
-
-**Dataset:** Expanded synthetic dataset anchored on Aida 'Izwani's thesis baselines (same species, same sensor types).
-
-**Guardrails (`ml/runtime.py`):** OOD detection per feature, confidence-based label downgrade, threshold conflict detection — stored alongside the raw model output for auditability.
-
-**Stack:** scikit-learn → `.pkl` model + scaler → Flask REST API on cPanel (Passenger WSGI)
-
-**Output per prediction:** `readiness_level`, `raw_readiness_level`, `hri_value`, `raw_hri_value`, `confidence_score`, `warning_state`, `guardrail_action`, `out_of_distribution`
+- Task: multi-class classification, kelulut honey harvest readiness from sensor readings
+- Labels: `not_ready` / `approaching` / `nearly_ready` / `ready`
+- Model: K-Nearest Neighbours (KNN, k=7, distance-weighted)
+- Dataset: expanded synthetic dataset anchored on Aida 'Izwani's thesis baselines (same species, same sensor types)
+- Guardrails (`ml/runtime.py`): OOD detection per feature, confidence-based label downgrade, threshold conflict detection, stored alongside the raw model output for auditability
+- Stack: scikit-learn to `.pkl` model + scaler, served via Flask REST API on cPanel (Passenger WSGI)
+- Output per prediction: `readiness_level`, `raw_readiness_level`, `hri_value`, `raw_hri_value`, `confidence_score`, `warning_state`, `guardrail_action`, `out_of_distribution`
 
 ---
 
 ## Roles
 
-| Role | Access |
-|---|---|
-| `admin` | Full access — manage beekeepers, master data, view all hives |
-| `beekeeper` | Own hives only — sensor dashboard, harvests, inspections |
+- `admin`: full access, manages beekeepers and master data, views all hives
+- `beekeeper`: own hives only, sensor dashboard, harvests, inspections
 
 Roles are managed via Spatie Permission. Admins assign roles when inviting users.
 
@@ -213,28 +208,28 @@ Roles are managed via Spatie Permission. Admins assign roles when inviting users
 
 ## CI/CD
 
-Push to `main` (app files only — docs and unrelated changes are ignored) triggers:
+Push to `main` (app files only, docs and unrelated changes are ignored) triggers:
 
-1. **Lint** (`lint.yml`) — ESLint, Prettier, Laravel Pint — runs in parallel
-2. **Tests** (`deploy.yml`) — Pest on PHP 8.3 + 8.4 in parallel, SQLite in-memory, `Vite::fake()` (no frontend build needed) — 168 tests / 842 assertions
-3. **Build** (after tests pass) — installs deps, runs `npm run build`, uploads `public/build/` as a GitHub Actions artifact
-4. **Deploy** (after build) — downloads artifact, FTPs changed files only to Exabytes, hits `deploy-hook.php`
+1. Lint (`lint.yml`): ESLint, Prettier, Laravel Pint, runs in parallel
+2. Tests (`deploy.yml`): Pest on PHP 8.3 + 8.4 in parallel, SQLite in-memory, `Vite::fake()` (no frontend build needed), 168 tests / 842 assertions
+3. Build (after tests pass): installs deps, runs `npm run build`, uploads `public/build/` as a GitHub Actions artifact
+4. Deploy (after build): downloads artifact, FTPs changed files only to Exabytes, hits `deploy-hook.php`
 
-**Deploy hook** (runs on server via HTTP):
-- `composer install` — **not automated**; hook returns 409 if `composer.lock` changed — requires manual install on the server first
+Deploy hook (runs on server via HTTP):
+
+- `composer install`: not automated, hook returns 409 if `composer.lock` changed, requires manual install on the server first
 - `php artisan migrate --force`
 - `php artisan db:seed --class=MasterDataSeeder`
 - `php artisan config:cache` + `route:cache` + `view:cache`
 
-**Estimated pipeline time:** ~3–4 min (warm cache, code-only change)
+Estimated pipeline time: 3-4 min (warm cache, code-only change)
 
 ---
 
 ## Database Schema
 
-| Group | Tables |
-|---|---|
-| Master / lookup | master_species, master_sites, master_sensor_thresholds, master_honey_colors, master_honey_flavors, master_weather_conditions, master_flora_types |
-| Core | hives, iot_nodes, sensor_logs, predictions, harvests, inspections, hri_summary |
-| Junction | inspection_weather, inspection_flora, sensor_log_thresholds |
-| Laravel system | users, cache, jobs, permissions (Spatie) |
+- Master / lookup: master_species, master_sites, master_sensor_thresholds, master_honey_colors, master_honey_flavors, master_weather_conditions, master_flora_types
+- Core: hives, iot_nodes, sensor_logs, predictions, harvests, inspections, hri_summary
+- Junction: inspection_weather, inspection_flora, sensor_log_thresholds
+- Laravel system: users, cache, jobs, permissions (Spatie)
+</content>
