@@ -34,6 +34,15 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a reverse proxy (Azure Container Apps ingress) the app only sees plain
+        // HTTP from the proxy. Set TRUSTED_PROXIES (for example "*") there so Laravel
+        // honours X-Forwarded-Proto and builds https URLs. Unset on shared hosting,
+        // which leaves behaviour unchanged.
+        $trustedProxies = env('TRUSTED_PROXIES');
+        if (is_string($trustedProxies) && $trustedProxies !== '') {
+            $middleware->trustProxies(at: $trustedProxies === '*' ? '*' : explode(',', $trustedProxies));
+        }
+
         $middleware->append(AssignRequestId::class);
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 

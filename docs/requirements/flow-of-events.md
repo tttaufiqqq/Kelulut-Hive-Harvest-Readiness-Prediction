@@ -246,11 +246,11 @@ Each use case is documented with: Actor, Preconditions, Main Flow, Alternate Flo
 **Actor:** Flask ML Service (triggered by SensorController after UC18)
 **Preconditions:**
 - A `SensorLog` record has been created (UC18 completed successfully).
-- The Flask ML service is running at `ML_API_URL/predict`.
+- The Flask ML service is running at `ML_URL/predict`.
 
 ### Main Flow
 1. `MlPredictionService` constructs a JSON payload from the sensor log: `mq2_value`, `mq3_value`, `mq5_value`, `mq135_value`, `temp`, `humidity`.
-2. The service sends `POST {ML_API_URL}/predict` with a 5-second timeout.
+2. The service sends `POST {ML_URL}/predict` with a 5-second timeout.
 3. Flask receives the payload, applies the MinMaxScaler, and runs the trained KNN classifier.
 4. Flask returns: `readiness_level` (one of: not_ready / approaching / nearly_ready / ready), `hri_value` (class-to-score map: 0.25 / 0.50 / 0.75 / 1.00), and `confidence_score` (KNN vote ratio, e.g. 0.80).
 5. `MlPredictionService` creates a `Prediction` record in the database with the returned values and `prediction_timestamp = now()`.

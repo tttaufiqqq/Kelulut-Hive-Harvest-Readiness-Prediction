@@ -1,0 +1,45 @@
+# Keep the build context small: it is sent to the Docker daemon on every build.
+
+.git
+.github
+.idea
+.vscode
+.phpunit.cache
+
+# Rebuilt inside the image
+node_modules
+vendor
+public/build
+public/hot
+public/storage
+bootstrap/ssr
+bootstrap/cache/*.php
+resources/js/actions
+resources/js/routes
+resources/js/wayfinder
+
+# Never ship local state or secrets
+.env
+.env.*
+!.env.example
+storage/logs
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+storage/app
+
+# Not needed to run
+tests
+docs
+scripts
+ml
+*.md
+phpunit.xml
+pint.json
+eslint.config.js
+.prettierrc
+.prettierignore
+.editorconfig
+Dockerfile
+docker-compose*.yml
+.dockerignore

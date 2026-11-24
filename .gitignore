@@ -39,3 +39,12 @@ TEST_INVENTORY.md
 scripts/test-prod-prediction-levels.ps1
 /database/dumps
 /scripts/db_backups
+
+# Local Docker Compose settings (see .env.docker.example)
+.env.docker
+
+# Windows and Python leftovers
+desktop.ini
+Thumbs.db
+__pycache__/
+*.pyc

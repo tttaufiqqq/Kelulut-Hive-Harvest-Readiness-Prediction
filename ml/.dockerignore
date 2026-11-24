@@ -1,0 +1,9 @@
+# Only app.py, runtime.py, the model files and dataset.csv go in the image.
+*
+!app.py
+!runtime.py
+!model.pkl
+!scaler.pkl
+!model_metadata.json
+!dataset.csv
+!requirements-serve.txt

@@ -91,6 +91,9 @@ buzzyhive/
 │   ├── deploy.yml              # tests, build, FTP upload, deploy hook
 │   ├── lint.yml                # ESLint + Prettier + Pint
 │   └── deploy-ml.yml           # smoke-test, upload ml/, Passenger restart
+├── Dockerfile                  # Laravel image (web, worker, scheduler, migrate)
+├── docker-compose.yml          # local stack: MySQL, flask-ml, Laravel roles
+├── docker/                     # Caddyfile, php.ini, entrypoint.sh
 ├── scripts/
 │   └── trigger-prod-ready-alert.ps1  # Manual diagnostic: injects a synthetic "Ready" prediction + Telegram alert
 └── public/
@@ -133,7 +136,7 @@ php artisan key:generate
 
 # Configure .env:
 # DB_DATABASE, DB_USERNAME, DB_PASSWORD
-# ML_API_URL=http://localhost:5000
+# ML_URL=http://localhost:5000
 # BROADCAST_CONNECTION=pusher
 # PUSHER_APP_ID, PUSHER_APP_KEY, PUSHER_APP_SECRET, PUSHER_APP_CLUSTER
 # VITE_PUSHER_APP_KEY, VITE_PUSHER_APP_CLUSTER, VITE_PUSHER_HOST, VITE_PUSHER_PORT, VITE_PUSHER_SCHEME
@@ -149,7 +152,16 @@ npm run dev
 php artisan serve
 ```
 
-### 7.3 ML API (Flask)
+### 7.3 Docker
+
+To run the whole stack in containers instead, see [Running in containers](docs/docker/docker.md). It lists the build-time and runtime settings and what the app needs from its host.
+
+```bash
+cp .env.docker.example .env.docker
+docker compose up --build   # http://localhost:8080
+```
+
+### 7.4 ML API (Flask)
 
 ```bash
 cd ml

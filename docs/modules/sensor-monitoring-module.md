@@ -76,7 +76,7 @@ ESP32 POST /api/sensor-data
 | Key | Value | Location |
 |-----|-------|----------|
 | `IOT_API_KEY` | `buzzyhive-iot-key-2026` | `.env` → `config('app.iot_api_key')` |
-| `ML_API_URL` | `http://localhost:5000` | `.env` → `config('services.ml.url')` |
+| `ML_URL` | `http://localhost:5000` | `.env` → `config('services.ml.url')` |
 | `TELEGRAM_BOT_TOKEN` | set in env | `.env` → `config('services.telegram.token')` |
 | `TEST_TELEGRAM_SECRET` | set in env | `.env` → `config('services.telegram.test_secret')` — guards the diagnostic endpoint |
 

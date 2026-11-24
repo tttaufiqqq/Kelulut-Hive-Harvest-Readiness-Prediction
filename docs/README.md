@@ -30,6 +30,7 @@ Grouped by topic. Start with Requirements, then the modules, then the rest as yo
 ## Delivery and operations
 
 - [CI/CD pipelines](ci-cd-pipeline/cicd-pipeline.md): the lint, app deploy and ML deploy workflows. Read before changing anything under `.github/`.
+- [Running in containers](docker/docker.md): the Docker images, the local Compose stack, and what the app needs from its host (build-time Pusher values, the MySQL trigger, trusted proxies, uploads). Read before deploying the app anywhere other than Exabytes.
 - [Realtime broadcasting rollout](websocket-live-data-reading/realtime-broadcasting-rollout.md): Pusher and Echo live updates.
 
 ## Analytics
