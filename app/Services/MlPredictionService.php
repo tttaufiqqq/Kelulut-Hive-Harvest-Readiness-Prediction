@@ -178,6 +178,10 @@ class MlPredictionService
 
     private function persistPrediction(SensorLog $log, array $attributes, bool $queueAlert = true): PredictionRunResult
     {
+        // trg_predictions_after_insert re-aggregates the hive's whole day on every insert, so
+        // concurrent readings for one hive can deadlock (seen at about 10 requests/s on
+        // Azure, 24/11/2026). The deadlock is raised by the insert below, before the event
+        // is broadcast and before the alert is queued, so a retry cannot send either twice.
         return DB::transaction(function () use ($log, $attributes, $queueAlert) {
             $prediction = Prediction::create($attributes);
 
@@ -199,7 +203,7 @@ class MlPredictionService
                 : 'not_attempted';
 
             return PredictionRunResult::predictionCreated($prediction, $telegramDispatch);
-        });
+        }, 3); // retry up to 3 times if MySQL aborts the transaction with a deadlock (error 1213)
     }
 
     private function updateHriSummaryFallback(SensorLog $log, Prediction $prediction): void
