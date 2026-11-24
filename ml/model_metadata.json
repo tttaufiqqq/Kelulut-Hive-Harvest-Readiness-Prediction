@@ -1,6 +1,6 @@
 {
   "model_version": "knn_k7_distance-synthetic_readiness_training_flat_v1-sklearn-1.8.0",
-  "training_dataset": "C:\\Users\\taufi\\Documents\\Degree\\Year 3 sem 2\\FYP 1\\buzzyhive\\ml\\datasets\\synthetic_readiness_training_flat_v1.csv",
+  "training_dataset": "/mnt/azureml/cr/j/2f8fc921e0af44c8ba2edf77c213c4df/exe/wd/datasets/synthetic_readiness_training_flat_v1.csv",
   "training_rows": 1600,
   "feature_order": [
     "mq2_value",
